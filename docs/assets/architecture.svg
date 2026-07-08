@@ -27,39 +27,35 @@
   </defs>
   <rect width="960" height="420" fill="url(#bg)" rx="16"/>
   <text x="480" y="42" text-anchor="middle" fill="#f8fafc" font-family="system-ui,Segoe UI,sans-serif" font-size="24" font-weight="700">Cloud Healthcare Exchange</text>
-  <text x="480" y="68" text-anchor="middle" fill="#94a3b8" font-family="system-ui,Segoe UI,sans-serif" font-size="14">Sovereign cells · PHI-free global plane · Policy-as-code</text>
+  <text x="480" y="68" text-anchor="middle" fill="#94a3b8" font-family="system-ui,Segoe UI,sans-serif" font-size="14">Sovereign cells | PHI-free global plane | Policy-as-code</text>
 
-  <!-- Global plane -->
   <g filter="url(#shadow)">
     <rect x="280" y="92" width="400" height="88" rx="12" fill="url(#global)" opacity="0.95"/>
     <text x="480" y="118" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="13" font-weight="700">GLOBAL CONTROL PLANE (no PHI)</text>
-    <text x="480" y="142" text-anchor="middle" fill="#ede9fe" font-family="system-ui,sans-serif" font-size="12">Gateway · OPA/OPAL · Consent · Identity broker · Routing</text>
-    <text x="480" y="162" text-anchor="middle" fill="#ddd6fe" font-family="system-ui,sans-serif" font-size="11">healthcare-policy mirror ’ OPAL policy bundles</text>
+    <text x="480" y="142" text-anchor="middle" fill="#ede9fe" font-family="system-ui,sans-serif" font-size="12">Gateway | OPA/OPAL | Consent | Identity broker | Routing</text>
+    <text x="480" y="162" text-anchor="middle" fill="#ddd6fe" font-family="system-ui,sans-serif" font-size="11">healthcare-policy mirror -&gt; OPAL policy bundles</text>
   </g>
 
-  <!-- EU cell -->
   <g filter="url(#shadow)">
     <rect x="48" y="220" width="360" height="150" rx="14" fill="url(#eu)" opacity="0.95"/>
     <text x="228" y="252" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="700">EU JURISDICTION CELL</text>
-    <text x="228" y="278" text-anchor="middle" fill="#e0f2fe" font-family="system-ui,sans-serif" font-size="12">HAPI FHIR · Synthetic patients</text>
+    <text x="228" y="278" text-anchor="middle" fill="#e0f2fe" font-family="system-ui,sans-serif" font-size="12">HAPI FHIR | Synthetic patients</text>
     <text x="228" y="300" text-anchor="middle" fill="#e0f2fe" font-family="system-ui,sans-serif" font-size="12">GDPR / EHDS residency rules</text>
     <text x="228" y="340" text-anchor="middle" fill="#bae6fd" font-family="system-ui,sans-serif" font-size="11">PHI + keys stay in-region</text>
   </g>
 
-  <!-- US cell -->
   <g filter="url(#shadow)">
     <rect x="552" y="220" width="360" height="150" rx="14" fill="url(#us)" opacity="0.95"/>
     <text x="732" y="252" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="700">US JURISDICTION CELL</text>
-    <text x="732" y="278" text-anchor="middle" fill="#ffedd5" font-family="system-ui,sans-serif" font-size="12">HAPI FHIR · Synthetic patients</text>
+    <text x="732" y="278" text-anchor="middle" fill="#ffedd5" font-family="system-ui,sans-serif" font-size="12">HAPI FHIR | Synthetic patients</text>
     <text x="732" y="300" text-anchor="middle" fill="#ffedd5" font-family="system-ui,sans-serif" font-size="12">TEFCA + SSRAA auth stub</text>
     <text x="732" y="340" text-anchor="middle" fill="#fed7aa" font-family="system-ui,sans-serif" font-size="11">PHI + keys stay in-region</text>
   </g>
 
-  <!-- Arrows -->
   <line x1="380" y1="180" x2="228" y2="218" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
   <line x1="580" y1="180" x2="732" y2="218" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
   <line x1="408" y1="295" x2="552" y2="295" stroke="#64748b" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
   <text x="480" y="288" text-anchor="middle" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="10">cross-bloc policy (deny / exception)</text>
 
-  <text x="480" y="400" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="11">Reference implementation  not production-certified</text>
+  <text x="480" y="400" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="11">Reference implementation - not production-certified</text>
 </svg>
