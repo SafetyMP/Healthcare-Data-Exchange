@@ -47,8 +47,56 @@ test_cross_bloc_default_denied {
 	}
 }
 
+test_us_to_eu_treatment_denied_even_if_cross_bloc_permitted {
+	not authz.allow with input as {
+		"subject_id": "patient-eu-001",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"consent_research": false,
+		"cross_bloc": true,
+		"cross_bloc_permitted": true,
+	}
+}
+
 test_cross_bloc_derivative_exception {
 	authz.allow with input as {
+		"subject_id": "patient-eu-001",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "derivative",
+		"consent_research": false,
+		"cross_bloc": true,
+		"cross_bloc_permitted": true,
+	}
+}
+
+test_cross_bloc_derivative_exception_labeled {
+	authz.exception_label == "cross_bloc_derivative" with input as {
+		"subject_id": "patient-eu-001",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "derivative",
+		"consent_research": false,
+		"cross_bloc": true,
+		"cross_bloc_permitted": true,
+	}
+}
+
+test_cross_bloc_treatment_has_no_exception_label {
+	authz.exception_label == "" with input as {
+		"subject_id": "patient-eu-001",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"consent_research": false,
+		"cross_bloc": true,
+		"cross_bloc_permitted": true,
+	}
+}
+
+test_cross_bloc_derivative_minimum_fields {
+	authz.min_necessary_fields == ["id", "resourceType"] with input as {
 		"subject_id": "patient-eu-001",
 		"home_jurisdiction": "eu-home",
 		"requester_jurisdiction": "us-clinician",

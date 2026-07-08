@@ -8,16 +8,26 @@ default allow := false
 
 default deny_reason := "policy_denied"
 
+default exception_label := ""
+
 allow if {
 	consent_ok
 	residency_ok
 }
 
 allow if {
+	cross_bloc_derivative_exception
+}
+
+cross_bloc_derivative_exception if {
+	consent_ok
 	input.cross_bloc == true
 	input.cross_bloc_permitted == true
 	input.purpose == "derivative"
-	consent_ok
+}
+
+exception_label := "cross_bloc_derivative" if {
+	cross_bloc_derivative_exception
 }
 
 consent_ok if {
@@ -54,6 +64,11 @@ deny_reason := "residency_denied" if {
 
 min_necessary_fields := ["id", "resourceType", "name", "birthDate", "gender"] if {
 	allow
+	not cross_bloc_derivative_exception
+}
+
+min_necessary_fields := ["id", "resourceType"] if {
+	cross_bloc_derivative_exception
 }
 
 min_necessary_fields := [] if {
