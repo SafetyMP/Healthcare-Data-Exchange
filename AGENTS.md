@@ -12,6 +12,7 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 | `./scripts/demo.sh` | E2E: intra-EU, US TEFCA, cross-bloc deny/exception, live consent revoke, AI oversight, crypto-shred |
 | `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) (OPAL, ADR 0007) |
 | `./scripts/check-portfolio.sh` | Portfolio contract + policy sync drift |
+| `./scripts/check-portfolio-cross-repo.sh` | Cross-repo stamp vs mirror pointer (CI / local with `CHEX_PORTFOLIO_MIRROR_PATH`) |
 | `./scripts/setup-phase3-worktrees.sh` | Create worktrees for parallel tracks (historical) |
 | `./scripts/teardown-phase3-worktrees.sh` | Remove merged phase 3 worktrees and agent branches |
 

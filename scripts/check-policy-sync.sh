@@ -12,11 +12,9 @@ if [[ ! -d "$POLICY_DIR" ]]; then
 fi
 
 current_hash() {
-  find "$POLICY_DIR" -maxdepth 1 -name '*.rego' ! -name '*_test.rego' -print0 \
-    | sort -z \
-    | xargs -0 shasum -a 256 2>/dev/null \
-    | shasum -a 256 \
-    | awk '{print $1}'
+  # shellcheck source=lib/portfolio.sh
+  source "$ROOT/scripts/lib/portfolio.sh"
+  portfolio_rego_bundle_hash "$POLICY_DIR"
 }
 
 HASH="$(current_hash)"

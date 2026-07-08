@@ -14,7 +14,7 @@ CANONICAL_SHORT="$(git -C "$ROOT" rev-parse --short HEAD)"
 rego_bundle_hash() {
   find "$ROOT/policy" -maxdepth 1 -name '*.rego' ! -name '*_test.rego' -print0 \
     | sort -z \
-    | xargs -0 shasum -a 256 2>/dev/null \
+    | xargs -0 cat 2>/dev/null \
     | shasum -a 256 \
     | awk '{print $1}'
 }
