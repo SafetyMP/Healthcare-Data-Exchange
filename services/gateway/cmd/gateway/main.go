@@ -49,6 +49,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/", srv.Landing)
 	mux.HandleFunc("/health", srv.Health)
 	mux.HandleFunc("/v1/patients/", srv.GetPatient)
 	mux.HandleFunc("/v1/admin/erasure/tenant", srv.ShredTenant)

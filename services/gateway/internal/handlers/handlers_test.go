@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
@@ -15,6 +16,19 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
 )
+
+func TestLanding(t *testing.T) {
+	srv := &handlers.Server{}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	srv.Landing(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Body.String(), "Cloud Healthcare Exchange") {
+		t.Fatal("expected landing page title")
+	}
+}
 
 func TestGetPatientAllowed(t *testing.T) {
 	root := findRoot(t)
