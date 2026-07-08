@@ -233,7 +233,7 @@ Parent runs `./scripts/demo.sh` and integration verify **from main checkout only
 3. `ruff check`, `pytest` (ai-governance — unit only, no live services)
 4. `opa test policy/`
 
-**`demo.sh`:** intra-EU + US TEFCA secondary, cross-bloc deny/derivative exception, consent denial, region-level erasure, AI human-oversight gate — against docker-compose.
+**`demo.sh`:** intra-EU + US TEFCA secondary, cross-bloc deny/derivative exception, consent denial, **live consent revoke/grant via OPAL (ADR 0007)**, region-level erasure, AI human-oversight gate — against docker-compose.
 
 ---
 

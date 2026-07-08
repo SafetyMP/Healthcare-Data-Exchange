@@ -73,14 +73,27 @@ Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--para
 
 **Exit criteria:** US TEFCA demo + documented cross-bloc deny-by-default — **met** on `main`.
 
-### Phase 4 — Production hardening (next)
+### Phase 4a — Dynamic consent with OPAL (complete)
+
+| Item | Deliverable | Status |
+|------|-------------|--------|
+| Policy repo | `SafetyMP/healthcare-policy` tracked by OPAL | **Done** |
+| consent-service | Consent state + OPAL data source + publish trigger (ADR 0007) | **Done** |
+| Policy | `data.consent`-driven research gate; hermetic Rego tests | **Done** |
+| Demo | Live revoke/grant flips research 200↔403 with no restart | **Done** |
+
+**Exit criteria:** `demo.sh` proves consent withdrawal propagates to the PDP at
+runtime — **met**.
+
+### Phase 4b — Production hardening (next)
 
 | Item | Notes |
 |------|-------|
+| SSRAA production auth | Before 2027-01-01 (US FHIR nodes) |
 | Kubernetes + mesh + `ext_authz` | ADR 0002 target |
-| OPAL consent sync | Real-time revocation |
-| SSRAA production auth | Before 2027-01-01 |
+| Identity broker | Beyond config stub; NCP / ITI-78 patterns |
 | HSM KMS | Replace software stand-in |
+| OPAL hardening | Auth/JWT, signed bundles, git webhooks |
 | FedRAMP ATO path | Agency sponsorship (Proc) |
 | EHDS secondary use | HealthData@EU |
 

@@ -1,4 +1,8 @@
 # Cloud Healthcare Exchange — authorization policy (OPA/Rego)
+#
+# Consent is NOT baked into this policy or the request input. It is synced as
+# external data at `data.consent` by OPAL (ADR 0007), so revocation propagates
+# to the PDP without a redeploy. Residency + purpose logic stays in git.
 package chex.authz
 
 import future.keywords.if
@@ -30,13 +34,15 @@ exception_label := "cross_bloc_derivative" if {
 	cross_bloc_derivative_exception
 }
 
+# Research requires an active consent record synced via OPAL (data.consent).
+# All other purposes (treatment, derivative) are consent-gated elsewhere.
 consent_ok if {
 	input.purpose != "research"
 }
 
 consent_ok if {
 	input.purpose == "research"
-	input.consent_research == true
+	data.consent[input.subject_id].research == true
 }
 
 residency_ok if {

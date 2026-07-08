@@ -19,6 +19,10 @@ type AIGovernance interface {
 	Triage(ctx context.Context, payload map[string]any) (map[string]any, error)
 }
 
+type ConsentAdmin interface {
+	Set(ctx context.Context, subject, action, purpose string) (map[string]any, int, error)
+}
+
 type Server struct {
 	Routing *appconfig.Routing
 	Broker  *broker.Broker
@@ -27,6 +31,7 @@ type Server struct {
 	Audit   *audit.Sink
 	Keys    *crypto.KeyStore
 	AI      AIGovernance
+	Consent ConsentAdmin
 }
 
 func (s *Server) Health(w http.ResponseWriter, _ *http.Request) {
@@ -175,6 +180,40 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 		Detail:  tenant,
 	})
 	writeJSON(w, http.StatusOK, map[string]string{"status": "shredded", "tenant": tenant})
+}
+
+// ConsentAdmin grants or revokes consent via the consent-service, which syncs
+// the change to the PDP through OPAL (ADR 0007). Single entry point via gateway.
+func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
+	if s.Consent == nil {
+		http.Error(w, "consent service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	subject := r.URL.Query().Get("subject")
+	action := r.URL.Query().Get("action")
+	purpose := r.URL.Query().Get("purpose")
+	if purpose == "" {
+		purpose = "research"
+	}
+	if subject == "" || action == "" {
+		http.Error(w, "subject and action required", http.StatusBadRequest)
+		return
+	}
+	out, status, err := s.Consent.Set(r.Context(), subject, action, purpose)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	_ = s.Audit.Append(audit.Event{
+		Action:  "consent." + action,
+		Outcome: "ok",
+		Detail:  subject + ":" + purpose,
+	})
+	writeJSON(w, status, out)
 }
 
 func (s *Server) AITriage(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,9 @@ cd "$ROOT"
 echo "== verify: harness =="
 ./scripts/check-harness.sh
 
+echo "== verify: portfolio =="
+./scripts/check-portfolio.sh
+
 echo "== verify: go (gateway) =="
 (
   cd services/gateway
@@ -30,6 +33,18 @@ echo "== verify: python (ai-governance) =="
   fi
   "$VENV/bin/ruff" check chex_ai_governance tests
   "$VENV/bin/pytest" -q
+)
+
+echo "== verify: python (consent-service) =="
+(
+  cd services/consent-service
+  VENV=".venv"
+  if [[ ! -x "$VENV/bin/python" ]]; then
+    python3 -m venv "$VENV"
+    "$VENV/bin/pip" install -q -e ".[dev]"
+  fi
+  "$VENV/bin/ruff" check chex_consent tests
+  CHEX_OPAL_PUBLISH=0 "$VENV/bin/pytest" -q
 )
 
 echo "== verify: opa policy =="

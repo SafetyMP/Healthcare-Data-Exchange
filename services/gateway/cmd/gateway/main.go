@@ -10,6 +10,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/broker"
 	appconfig "github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/config"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/consent"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
@@ -26,6 +27,7 @@ func main() {
 	keyDir := env("CHEX_KEY_DIR", filepath.Join(root, "data/keys"))
 	addr := env("CHEX_GATEWAY_ADDR", ":8081")
 	aiURL := env("CHEX_AI_GOV_URL", "http://localhost:8082")
+	consentURL := env("CHEX_CONSENT_URL", "http://localhost:8084")
 
 	routing, err := appconfig.LoadRouting(cfgPath)
 	if err != nil {
@@ -48,6 +50,7 @@ func main() {
 		Audit:   audit.NewSink(auditPath),
 		Keys:    keys,
 		AI:      aigov.NewClient(aiURL),
+		Consent: consent.NewClient(consentURL),
 	}
 
 	mux := http.NewServeMux()
@@ -56,6 +59,7 @@ func main() {
 	mux.HandleFunc("/v1/identity/resolve", srv.ResolveIdentity)
 	mux.HandleFunc("/v1/patients/", srv.GetPatient)
 	mux.HandleFunc("/v1/admin/erasure/tenant", srv.ShredTenant)
+	mux.HandleFunc("/v1/admin/consent", srv.ConsentAdminHandler)
 	mux.HandleFunc("/v1/ai/triage", srv.AITriage)
 
 	log.Printf("gateway listening on %s", addr)

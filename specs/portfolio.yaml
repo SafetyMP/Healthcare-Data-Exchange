@@ -1,0 +1,25 @@
+schema: portfolio/v1
+name: cloud-healthcare-exchange
+description: CHEX application + OPAL policy mirror (ADR 0007)
+
+repos:
+  canonical:
+    role: canonical
+    url: https://github.com/SafetyMP/Healthcare-Data-Exchange
+    verify: ./scripts/verify.sh
+    agent_root: true
+    sync_script: ./scripts/sync-policy-repo.sh
+
+  healthcare-policy:
+    role: policy-mirror
+    url: https://github.com/SafetyMP/healthcare-policy
+    local_path: ../healthcare-policy
+    canonical_repo: canonical
+    sync_script: ./scripts/sync-policy-repo.sh
+    verify: ./scripts/verify.sh
+    edit_policy: canonical_only
+
+rules:
+  - Edit policy in policy/ here; OPA tests run in this repo only.
+  - After policy/*.rego changes, run ./scripts/sync-policy-repo.sh before demo.sh or OPAL claims.
+  - healthcare-policy is OPAL consumption only — no *_test.rego in mirror.

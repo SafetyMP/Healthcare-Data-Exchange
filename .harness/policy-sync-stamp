@@ -1,0 +1,5 @@
+# Updated by sync-policy-repo.sh — used by check-policy-sync.sh
+canonical_commit: be2cd28878f754e6e39144af3278bdd0f808a35a
+rego_bundle_hash: 8bb3ac2bb48831177f35e45412af677e8c630d055e398ee6739b52ec3c17c981
+synced_at: 2026-07-08T04:13:05Z
+mirror_url: https://github.com/SafetyMP/healthcare-policy

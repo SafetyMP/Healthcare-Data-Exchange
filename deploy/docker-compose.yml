@@ -69,23 +69,74 @@ services:
       retries: 30
       start_period: 120s
 
-  opa:
-    image: openpolicyagent/opa:0.70.0
+  # --- OPAL: dynamic policy + consent data sync (ADR 0007) ---
+  broadcast_channel:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  consent-service:
+    build:
+      context: ../services/consent-service
+    environment:
+      OPAL_SERVER_URL: http://opal-server:7002
+      CHEX_CONSENT_DATA_URL: http://consent-service:8084/policy-data
+      CHEX_CONSENT_DST_PATH: /consent
+      CHEX_OPAL_PUBLISH: "1"
+    ports:
+      - "8084:8084"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8084/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  opal-server:
+    image: permitio/opal-server:latest
     platform: linux/amd64
-    command:
-      - run
-      - --server
-      - --addr=0.0.0.0:8181
-      - /policies
-    volumes:
-      - ../policy:/policies:ro
+    depends_on:
+      broadcast_channel:
+        condition: service_healthy
+    environment:
+      OPAL_BROADCAST_URI: postgres://postgres:postgres@broadcast_channel:5432/postgres
+      UVICORN_NUM_WORKERS: "4"
+      OPAL_POLICY_REPO_URL: https://github.com/SafetyMP/healthcare-policy
+      OPAL_POLICY_REPO_MAIN_BRANCH: main
+      OPAL_POLICY_REPO_POLLING_INTERVAL: "30"
+      OPAL_DATA_CONFIG_SOURCES: '{"config":{"entries":[{"url":"http://consent-service:8084/policy-data","topics":["policy_data"],"dst_path":"/consent"}]}}'
+      OPAL_LOG_FORMAT_INCLUDE_PID: "true"
+    ports:
+      - "7002:7002"
+
+  opal-client:
+    image: permitio/opal-client:latest
+    platform: linux/amd64
+    depends_on:
+      opal-server:
+        condition: service_started
+      consent-service:
+        condition: service_healthy
+    environment:
+      OPAL_SERVER_URL: http://opal-server:7002
+      OPAL_INLINE_OPA_LOG_FORMAT: http
+      OPAL_LOG_FORMAT_INCLUDE_PID: "true"
+    command: sh -c "exec ./wait-for.sh opal-server:7002 --timeout=40 -- ./start.sh"
     ports:
       - "8181:8181"
+      - "7766:7000"
     healthcheck:
-      test: ["CMD", "/opa", "eval", "true"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8181/health')\" || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 10
+      timeout: 5s
+      retries: 30
+      start_period: 30s
 
   ai-governance:
     build:
@@ -102,21 +153,24 @@ services:
     build:
       context: ../services/gateway
     depends_on:
-      opa:
+      opal-client:
         condition: service_healthy
       ai-governance:
+        condition: service_healthy
+      consent-service:
         condition: service_healthy
       hapi-eu:
         condition: service_started
     environment:
       CHEX_ROOT: /workspace
       CHEX_ROUTING_CONFIG: /workspace/config/routing.yaml
-      CHEX_OPA_URL: http://opa:8181
+      CHEX_OPA_URL: http://opal-client:8181
       CHEX_FHIR_BASE: http://hapi-eu:8080/fhir
       CHEX_FHIR_SAMPLES: /workspace/fhir/samples
       CHEX_AUDIT_PATH: /workspace/data/audit/eu.jsonl
       CHEX_KEY_DIR: /workspace/data/keys
       CHEX_AI_GOV_URL: http://ai-governance:8082
+      CHEX_CONSENT_URL: http://consent-service:8084
       CHEX_GATEWAY_ADDR: ":8081"
     volumes:
       - ..:/workspace

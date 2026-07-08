@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -186,6 +187,49 @@ func TestCryptoShred(t *testing.T) {
 	}
 	if err := keys.EnsureTenant("demo-tenant"); err == nil {
 		t.Fatal("expected ensure to fail after shred")
+	}
+}
+
+type stubConsent struct {
+	gotSubject string
+	gotAction  string
+	gotPurpose string
+}
+
+func (s *stubConsent) Set(_ context.Context, subject, action, purpose string) (map[string]any, int, error) {
+	s.gotSubject = subject
+	s.gotAction = action
+	s.gotPurpose = purpose
+	return map[string]any{"subject": subject, "action": action, "consent": map[string]any{purpose: action == "grant"}}, http.StatusOK, nil
+}
+
+func TestConsentAdminProxies(t *testing.T) {
+	srv := newTestServer(t, allowOPA(), "", "")
+	stub := &stubConsent{}
+	srv.Consent = stub
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/admin/consent?subject=patient-eu-002&action=revoke&purpose=research", nil)
+	rec := httptest.NewRecorder()
+	srv.ConsentAdminHandler(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	if stub.gotSubject != "patient-eu-002" || stub.gotAction != "revoke" || stub.gotPurpose != "research" {
+		t.Fatalf("proxied args: %+v", stub)
+	}
+}
+
+func TestConsentAdminUnavailable(t *testing.T) {
+	srv := newTestServer(t, allowOPA(), "", "")
+	srv.Consent = nil
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/admin/consent?subject=x&action=grant", nil)
+	rec := httptest.NewRecorder()
+	srv.ConsentAdminHandler(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 got %d", rec.Code)
 	}
 }
 

@@ -22,6 +22,7 @@ require_file ".harness/VERSION"
 require_file "AGENTS.md"
 require_file "scripts/verify.sh"
 require_file ".cursor/hooks.json"
+require_file "specs/portfolio.yaml"
 
 if [[ "$PROFILE" == "fleet" ]]; then
   require_file "specs/MANDATE.md"
