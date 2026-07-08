@@ -1,0 +1,9 @@
+# SSRAA application associations — US FHIR node auth stub (ADR 0009)
+# Production: UDAP/SSRAA token exchange; PoC uses shared-secret bearer tokens.
+required: true
+
+associations:
+  tefca-demo-client:
+    secret: demo-ssraa-secret
+    scopes:
+      - patient.read

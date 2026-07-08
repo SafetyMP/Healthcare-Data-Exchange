@@ -17,6 +17,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
 
 func TestLanding(t *testing.T) {
@@ -81,6 +82,19 @@ func TestGetPatientCrossBlocDenied(t *testing.T) {
 	}
 }
 
+func TestGetPatientUSRequiresSSRA(t *testing.T) {
+	srv := newTestServer(t, allowOPA(), "", "")
+	srv.SSRAA = testSSRA()
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician", nil)
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 got %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestGetPatientUSRouted(t *testing.T) {
 	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/fhir/Patient/patient-us-001" {
@@ -96,6 +110,7 @@ func TestGetPatientUSRouted(t *testing.T) {
 	defer fhirSrv.Close()
 
 	srv := newTestServer(t, allowOPA(), "", "")
+	srv.SSRAA = testSSRA()
 	srv.Routing.Jurisdictions["us-home"] = appconfig.Jurisdiction{
 		Cell:     "us",
 		FHIRBase: fhirSrv.URL + "/fhir",
@@ -103,6 +118,7 @@ func TestGetPatientUSRouted(t *testing.T) {
 	srv.Broker = broker.New(srv.Routing)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-home", nil)
+	req.Header.Set("Authorization", ssraaAuth())
 	rec := httptest.NewRecorder()
 	srv.GetPatient(rec, req)
 
@@ -134,6 +150,7 @@ func TestGetPatientByIdentifier(t *testing.T) {
 	defer fhirSrv.Close()
 
 	srv := newTestServer(t, allowOPA(), "", "")
+	srv.SSRAA = testSSRA()
 	srv.Routing.Jurisdictions["us-home"] = appconfig.Jurisdiction{
 		Cell:     "us",
 		FHIRBase: fhirSrv.URL + "/fhir",
@@ -141,6 +158,7 @@ func TestGetPatientByIdentifier(t *testing.T) {
 	srv.Broker = broker.New(srv.Routing)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/_?identifier=urn:tefca:patient:us-001&purpose=treatment&requester_jurisdiction=us-home", nil)
+	req.Header.Set("Authorization", ssraaAuth())
 	rec := httptest.NewRecorder()
 	srv.GetPatient(rec, req)
 
@@ -231,6 +249,19 @@ func TestConsentAdminUnavailable(t *testing.T) {
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Fatalf("expected 503 got %d", rec.Code)
 	}
+}
+
+func testSSRA() *ssraa.Validator {
+	return ssraa.NewValidator(&ssraa.Config{
+		Required: true,
+		Associations: map[string]ssraa.Association{
+			"tefca-demo-client": {Secret: "demo-ssraa-secret", Scopes: []string{"patient.read"}},
+		},
+	})
+}
+
+func ssraaAuth() string {
+	return "Bearer tefca-demo-client.demo-ssraa-secret"
 }
 
 func newTestServer(t *testing.T, opaHandler http.HandlerFunc, fhirBase, sampleDir string) *handlers.Server {

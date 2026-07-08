@@ -4,10 +4,30 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/deploy"
 
+DOWN_FIRST=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --down-first)
+      DOWN_FIRST=1
+      shift
+      ;;
+    *)
+      echo "usage: $0 [--down-first]" >&2
+      exit 1
+      ;;
+  esac
+done
+
 mkdir -p "$ROOT/data/keys"
 rm -f "$ROOT"/data/keys/*.shredded
 
-echo "Starting Cloud Healthcare Exchange EU + US cells (with OPAL consent sync)..."
+if [[ "$DOWN_FIRST" -eq 1 ]]; then
+  echo "Recycling stack (--down-first)..."
+  docker compose down --remove-orphans
+fi
+
+ARCH="$("$ROOT/scripts/lib/docker-platform.sh")"
+echo "Starting Cloud Healthcare Exchange EU + US cells (OPAL consent sync; arch=$ARCH)..."
 docker compose up -d --build
 
 wait_for() {
@@ -26,7 +46,6 @@ wait_for() {
 
 wait_for "gateway" "http://localhost:8081/health"
 wait_for "consent-service" "http://localhost:8084/health"
-# OPAL client runs the OPA PDP on 8181; policy is pulled from the git policy repo.
 wait_for "OPA (via opal-client)" "http://localhost:8181/health"
 wait_for "EU HAPI" "http://localhost:8080/fhir/metadata"
 wait_for "US HAPI" "http://localhost:8083/fhir/metadata" || echo "(US demo steps may fail)"
@@ -39,3 +58,4 @@ echo "  OPAL server:     http://localhost:7002"
 echo "  EU HAPI:         http://localhost:8080/fhir"
 echo "  US HAPI:         http://localhost:8083/fhir"
 echo "Run ./scripts/demo.sh for end-to-end proof."
+echo "Stop with: ./scripts/teardown-dev.sh"

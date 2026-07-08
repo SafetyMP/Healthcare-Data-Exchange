@@ -7,6 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 GW="http://localhost:8081"
+SSRA_AUTH="Bearer tefca-demo-client.demo-ssraa-secret"
 
 if ! curl -fsS "$GW/health" >/dev/null 2>&1; then
   echo "Gateway not running. Start with: ./scripts/run-dev.sh" >&2
@@ -100,8 +101,16 @@ assert fields == {'id', 'resourceType'}, fields
 assert set(patient.keys()) <= {'id', 'resourceType'}, patient.keys()
 "
 
-log "5. US TEFCA secondary — intra-US treatment read (expect 200)"
-curl -fsS "$GW/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician" \
+log "5a. US read without SSRAA association (expect 401)"
+code=$(curl -s -o /tmp/chex-demo-ssraa-deny.json -w "%{http_code}" \
+  "$GW/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician")
+[[ "$code" == "401" ]]
+grep -q 'ssraa_required' /tmp/chex-demo-ssraa-deny.json
+echo "  401 ssraa_required (as expected)"
+
+log "5. US TEFCA secondary — intra-US treatment read with SSRAA (expect 200)"
+curl -fsS -H "Authorization: $SSRA_AUTH" \
+  "$GW/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician" \
   | tee /tmp/chex-demo-us.json
 grep -q 'us-home' /tmp/chex-demo-us.json
 

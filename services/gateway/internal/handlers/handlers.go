@@ -13,6 +13,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
 
 type AIGovernance interface {
@@ -32,6 +33,7 @@ type Server struct {
 	Keys    *crypto.KeyStore
 	AI      AIGovernance
 	Consent ConsentAdmin
+	SSRAA   *ssraa.Validator
 }
 
 func (s *Server) Health(w http.ResponseWriter, _ *http.Request) {
@@ -61,6 +63,25 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Error(w, "subject not found", http.StatusNotFound)
 		return
+	}
+
+	if token.Cell == "us" && strings.HasPrefix(requester, "us-") && s.SSRAA != nil && s.SSRAA.Required() {
+		clientID, ssraaOK := s.SSRAA.Validate(r.Header.Get("Authorization"))
+		if !ssraaOK {
+			_ = s.Audit.Append(audit.Event{
+				Action:                "patient.read",
+				RequesterJurisdiction: requester,
+				Purpose:               purpose,
+				Outcome:               "deny",
+				Detail:                "ssraa_invalid",
+			})
+			writeJSON(w, http.StatusUnauthorized, map[string]any{
+				"error":  "ssraa_required",
+				"reason": "invalid_or_missing_association",
+			})
+			return
+		}
+		_ = clientID
 	}
 
 	crossBloc := s.Routing.IsCrossBloc(requester, token.HomeJurisdiction)

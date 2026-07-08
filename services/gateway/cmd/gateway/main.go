@@ -15,6 +15,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
 
 func main() {
@@ -28,10 +29,15 @@ func main() {
 	addr := env("CHEX_GATEWAY_ADDR", ":8081")
 	aiURL := env("CHEX_AI_GOV_URL", "http://localhost:8082")
 	consentURL := env("CHEX_CONSENT_URL", "http://localhost:8084")
+	ssraaPath := env("CHEX_SSRAa_CONFIG", filepath.Join(root, "config/ssraa.yaml"))
 
 	routing, err := appconfig.LoadRouting(cfgPath)
 	if err != nil {
 		log.Fatalf("load routing: %v", err)
+	}
+	ssraaCfg, err := ssraa.LoadConfig(ssraaPath)
+	if err != nil {
+		log.Fatalf("load ssraa config: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Dir(auditPath), 0o750); err != nil {
 		log.Fatalf("audit dir: %v", err)
@@ -51,6 +57,7 @@ func main() {
 		Keys:    keys,
 		AI:      aigov.NewClient(aiURL),
 		Consent: consent.NewClient(consentURL),
+		SSRAA:   ssraa.NewValidator(ssraaCfg),
 	}
 
 	mux := http.NewServeMux()

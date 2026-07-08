@@ -8,8 +8,10 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 |---------|---------|
 | `./scripts/check-harness.sh` | Validate harness files and hook syntax |
 | `./scripts/verify.sh` | Definition of Done (hermetic: harness + go + python×2 + opa) |
-| `./scripts/run-dev.sh` | Start EU + US cells + OPAL consent sync via `deploy/docker-compose.yml` (requires Docker) |
-| `./scripts/demo.sh` | E2E: intra-EU, US TEFCA, cross-bloc deny/exception, live consent revoke, AI oversight, crypto-shred |
+| `./scripts/run-dev.sh` | Start EU + US cells + OPAL (`--down-first` to recycle). OPAL alpine images run native on arm64. |
+| `./scripts/teardown-dev.sh` | Stop compose stack (`--volumes` to drop DB volumes) |
+| `./scripts/setup-portfolio.sh` | Clone sibling repos from `specs/portfolio.yaml` (e.g. healthcare-policy) |
+| `./scripts/demo.sh` | E2E: intra-EU, US TEFCA + SSRAA, cross-bloc, live consent revoke, AI, crypto-shred |
 | `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) (OPAL, ADR 0007) |
 | `./scripts/check-portfolio.sh` | Portfolio contract + policy sync drift |
 | `./scripts/check-portfolio-cross-repo.sh` | Cross-repo stamp vs mirror pointer (CI / local with `CHEX_PORTFOLIO_MIRROR_PATH`) |
@@ -47,8 +49,9 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 | `policy/` | OPA Rego policies + tests (canonical; consent from `data.consent`) |
 | `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
 | `config/routing.yaml` | Identity broker stub + jurisdiction routing |
+| `config/ssraa.yaml` | SSRAA application association stub (ADR 0009) |
 | `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
-| `docs/` | Product mandate, architecture, ADRs (incl. 0007 mirror, 0008 consent), roadmap |
+| `docs/` | Product mandate, architecture, ADRs (incl. 0007–0009), roadmap |
 
 ## Coding rules
 

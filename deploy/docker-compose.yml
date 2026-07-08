@@ -99,8 +99,7 @@ services:
       retries: 10
 
   opal-server:
-    image: permitio/opal-server:latest
-    platform: linux/amd64
+    image: permitio/opal-server:latest-alpine
     depends_on:
       broadcast_channel:
         condition: service_healthy
@@ -116,8 +115,7 @@ services:
       - "7002:7002"
 
   opal-client:
-    image: permitio/opal-client:latest
-    platform: linux/amd64
+    image: permitio/opal-client:latest-alpine
     depends_on:
       opal-server:
         condition: service_started
@@ -171,6 +169,7 @@ services:
       CHEX_KEY_DIR: /workspace/data/keys
       CHEX_AI_GOV_URL: http://ai-governance:8082
       CHEX_CONSENT_URL: http://consent-service:8084
+      CHEX_SSRAa_CONFIG: /workspace/config/ssraa.yaml
       CHEX_GATEWAY_ADDR: ":8081"
     volumes:
       - ..:/workspace

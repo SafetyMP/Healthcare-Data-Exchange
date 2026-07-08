@@ -85,17 +85,17 @@ Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--para
 **Exit criteria:** `demo.sh` proves consent withdrawal propagates to the PDP at
 runtime — **met**.
 
-### Phase 4b — Production hardening (next)
+### Phase 4b — Production hardening (in progress)
 
-| Item | Notes |
-|------|-------|
-| SSRAA production auth | Before 2027-01-01 (US FHIR nodes) |
-| Kubernetes + mesh + `ext_authz` | ADR 0002 target |
-| Identity broker | Beyond config stub; NCP / ITI-78 patterns |
-| HSM KMS | Replace software stand-in |
-| OPAL hardening | Auth/JWT, signed bundles, git webhooks |
-| FedRAMP ATO path | Agency sponsorship (Proc) |
-| EHDS secondary use | HealthData@EU |
+| Item | Deliverable | Status |
+|------|-------------|--------|
+| SSRAA auth stub | US-cell gateway gate + demo 401/200 (ADR 0009) | **Done** |
+| Kubernetes + mesh + `ext_authz` | ADR 0002 target | Planned |
+| Identity broker | Beyond config stub; NCP / ITI-78 | Planned |
+| HSM KMS | Replace software stand-in | Planned |
+| OPAL hardening | Auth/JWT, signed bundles, git webhooks | Planned |
+| FedRAMP ATO path | Agency sponsorship (Proc) | Planned |
+| EHDS secondary use | HealthData@EU | Planned |
 
 ---
 
