@@ -85,11 +85,14 @@ services:
   consent-service:
     build:
       context: ../services/consent-service
+    env_file:
+      - opal/dev-secrets.env
     environment:
       OPAL_SERVER_URL: http://opal-server:7002
       CHEX_CONSENT_DATA_URL: http://consent-service:8084/policy-data
       CHEX_CONSENT_DST_PATH: /consent
       CHEX_OPAL_PUBLISH: "1"
+      CHEX_OPAL_SECURE: "1"
     ports:
       - "8084:8084"
     healthcheck:
@@ -118,14 +121,16 @@ services:
     depends_on:
       broadcast_channel:
         condition: service_healthy
+    env_file:
+      - opal/dev-secrets.env
     environment:
       OPAL_BROADCAST_URI: postgres://postgres:postgres@broadcast_channel:5432/postgres
       UVICORN_NUM_WORKERS: "4"
       OPAL_POLICY_REPO_URL: https://github.com/SafetyMP/healthcare-policy
       OPAL_POLICY_REPO_MAIN_BRANCH: main
-      OPAL_POLICY_REPO_POLLING_INTERVAL: "30"
       OPAL_DATA_CONFIG_SOURCES: '{"config":{"entries":[{"url":"http://consent-service:8084/policy-data","topics":["policy_data"],"dst_path":"/consent"}]}}'
       OPAL_LOG_FORMAT_INCLUDE_PID: "true"
+      LOG_DIAGNOSE: "false"
     ports:
       - "7002:7002"
 
@@ -136,11 +141,15 @@ services:
         condition: service_started
       consent-service:
         condition: service_healthy
+    env_file:
+      - opal/dev-secrets.env
     environment:
       OPAL_SERVER_URL: http://opal-server:7002
       OPAL_INLINE_OPA_LOG_FORMAT: http
       OPAL_LOG_FORMAT_INCLUDE_PID: "true"
-    command: sh -c "exec ./wait-for.sh opal-server:7002 --timeout=40 -- ./start.sh"
+    volumes:
+      - ./opal/entrypoint-client.sh:/entrypoint-client.sh:ro
+    command: sh -c "exec sh /entrypoint-client.sh"
     ports:
       - "8181:8181"
       - "7766:7000"

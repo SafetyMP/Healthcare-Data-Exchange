@@ -73,6 +73,22 @@ if ! curl -fsS -X POST "$GW/v1/admin/consent?subject=patient-eu-002&action=grant
 fi
 wait_for_code patient-eu-002 research eu-home 200
 
+if [[ -f "$ROOT/deploy/opal/dev-secrets.env" ]]; then
+  CHEX_OPAL_SECURE="$(grep '^CHEX_OPAL_SECURE=' "$ROOT/deploy/opal/dev-secrets.env" | cut -d= -f2- | tr -d '"')"
+fi
+if [[ "${CHEX_OPAL_SECURE:-0}" == "1" ]]; then
+  log "0. OPAL secure mode — unauthenticated publish denied (expect 401/403)"
+  code=$(curl -s -o /tmp/chex-opal-unauth.json -w "%{http_code}" \
+    -X POST "http://localhost:7002/data/config" \
+    -H "Content-Type: application/json" \
+    -d '{"entries":[]}')
+  [[ "$code" == "401" || "$code" == "403" ]]
+  echo "  ${code} (as expected)"
+
+  log "0b. Policy bundle hash matches canonical stamp"
+  "$ROOT/scripts/check-policy-bundle.sh"
+fi
+
 log "1. Intra-EU treatment read (expect 200)"
 curl -fsS "$GW/v1/patients/patient-eu-001?purpose=treatment&requester_jurisdiction=eu-visiting" | tee /tmp/chex-demo-allow.json
 grep -q '"patient"' /tmp/chex-demo-allow.json

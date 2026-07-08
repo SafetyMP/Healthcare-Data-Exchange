@@ -1,0 +1,43 @@
+# OPAL production hardening profile (ADR 0011).
+# PoC defaults: secure mode ON in docker-compose when deploy/opal/dev-secrets.env exists.
+# Secrets are generated locally by scripts/generate-opal-dev-secrets.sh (never committed).
+
+profile: poc-hardened
+
+secure_mode:
+  enabled: true
+  server:
+    auth_private_key_env: OPAL_AUTH_PRIVATE_KEY
+    auth_public_key_env: OPAL_AUTH_PUBLIC_KEY
+    master_token_env: OPAL_AUTH_MASTER_TOKEN
+  client:
+    token_env: OPAL_CLIENT_TOKEN
+    obtain_via: opal-client obtain-token
+  publish:
+    token_env: OPAL_AUTH_MASTER_TOKEN
+    jwt_type: datasource
+
+policy_sync:
+  primary: webhook
+  fallback: polling
+  polling_interval_seconds: 300
+  webhook:
+    path: /webhook
+    secret_env: OPAL_POLICY_REPO_WEBHOOK_SECRET
+    provider: github
+    trigger_script: scripts/trigger-opal-policy-webhook.sh
+
+bundle_integrity:
+  # PoC: SHA-256 over canonical policy/*.rego (excl. *_test.rego)
+  algorithm: sha256
+  stamp_file: .harness/policy-sync-stamp
+  verify_script: scripts/check-policy-bundle.sh
+  # Production gap: cosign/sigstore signed bundles not implemented
+  signed_bundles: false
+
+gaps:
+  - cosign or sigstore signatures on policy bundles
+  - mTLS between OPAL server and clients
+  - consent-service /policy-data auth (internal network only in PoC)
+  - HSM-backed key storage for OPAL auth keys
+  - rate limiting on /webhook and /data/config

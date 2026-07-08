@@ -11,6 +11,10 @@ echo "== verify: harness =="
 echo "== verify: portfolio =="
 ./scripts/check-portfolio.sh
 
+echo "== verify: opal hardening =="
+./scripts/check-opal-hardening.sh
+./scripts/check-policy-bundle.sh
+
 echo "== verify: go (gateway) =="
 (
   cd services/gateway

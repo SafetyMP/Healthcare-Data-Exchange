@@ -21,6 +21,12 @@ done
 mkdir -p "$ROOT/data/keys"
 rm -f "$ROOT"/data/keys/*.shredded
 
+if [[ ! -f "$ROOT/deploy/opal/dev-secrets.env" ]]; then
+  echo "Generating OPAL dev secrets (first run)..."
+  "$ROOT/scripts/generate-opal-dev-secrets.sh"
+fi
+chmod +x "$ROOT/deploy/opal/entrypoint-client.sh"
+
 if [[ "$DOWN_FIRST" -eq 1 ]]; then
   echo "Recycling stack (--down-first)..."
   docker compose down --remove-orphans

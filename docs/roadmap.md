@@ -94,7 +94,7 @@ runtime — **met**.
 | Kubernetes + mesh + `ext_authz` | ADR 0002 target | Planned |
 | Identity broker | NCP federation / live PDQm | Planned |
 | HSM KMS | Replace software stand-in | Planned |
-| OPAL hardening | Auth/JWT, signed bundles, git webhooks | Planned |
+| OPAL hardening | Auth/JWT, webhooks, bundle hash verify (ADR 0011) | **Done** |
 | FedRAMP ATO path | Agency sponsorship (Proc) | Planned |
 | EHDS secondary use | HealthData@EU | Planned |
 

@@ -6,6 +6,8 @@ __pycache__/
 .tools/
 data/
 *.key
+deploy/opal/dev-secrets.env
+deploy/opal/keys/
 .cursor/session-mode.json
 
 # Python

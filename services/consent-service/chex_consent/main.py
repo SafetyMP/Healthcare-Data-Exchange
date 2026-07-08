@@ -11,11 +11,11 @@ Consent is control-plane data only (subject pseudonym + boolean flags); no PHI.
 from __future__ import annotations
 
 import logging
-import os
 from datetime import UTC, datetime
 
-import httpx
 from fastapi import FastAPI, HTTPException
+
+from chex_consent.opal_publish import publish_data_update
 
 logger = logging.getLogger("chex.consent")
 
@@ -33,33 +33,6 @@ _SEED: dict[str, dict[str, bool]] = {
 }
 
 _consent: dict[str, dict[str, bool]] = {s: dict(flags) for s, flags in _SEED.items()}
-
-
-def _opal_publish(reason: str) -> bool:
-    """Ask OPAL server to publish a data update so clients re-fetch consent.
-
-    Best-effort: the state change is authoritative even if OPAL is unreachable
-    (clients still pick it up on their next periodic fetch). Disabled in tests
-    via CHEX_OPAL_PUBLISH=0 to keep unit tests network-free.
-    """
-    if os.getenv("CHEX_OPAL_PUBLISH", "1") != "1":
-        return False
-
-    server = os.getenv("OPAL_SERVER_URL", "http://opal-server:7002")
-    data_url = os.getenv("CHEX_CONSENT_DATA_URL", "http://consent-service:8084/policy-data")
-    dst_path = os.getenv("CHEX_CONSENT_DST_PATH", "/consent")
-    topics = os.getenv("CHEX_CONSENT_TOPICS", "policy_data").split(",")
-    update = {
-        "entries": [{"url": data_url, "topics": topics, "dst_path": dst_path}],
-        "reason": reason,
-    }
-    try:
-        resp = httpx.post(f"{server}/data/config", json=update, timeout=5.0)
-        resp.raise_for_status()
-        return True
-    except httpx.HTTPError as exc:  # pragma: no cover - network path
-        logger.warning("OPAL publish failed (clients will poll): %s", exc)
-        return False
 
 
 @app.get("/health")
@@ -90,7 +63,7 @@ def set_consent(subject: str, action: str, purpose: str = "research") -> dict[st
 
     flags = _consent.setdefault(subject, {})
     flags[purpose] = action == "grant"
-    published = _opal_publish(reason=f"consent.{action}:{subject}:{purpose}")
+    published = publish_data_update(reason=f"consent.{action}:{subject}:{purpose}")
 
     return {
         "subject": subject,

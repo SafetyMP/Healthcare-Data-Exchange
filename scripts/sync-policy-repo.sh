@@ -47,7 +47,12 @@ else
   git add -A
   git commit -q -m "sync: policy from Healthcare-Data-Exchange@${CANONICAL_SHORT}"
   git push -q origin HEAD
-  echo "policy repo updated; OPAL will pick up changes on its next poll."
+  if curl -fsS "http://localhost:7002/" >/dev/null 2>&1 && [[ -x "$ROOT/scripts/trigger-opal-policy-webhook.sh" ]]; then
+    "$ROOT/scripts/trigger-opal-policy-webhook.sh" || true
+    echo "OPAL policy webhook triggered."
+  else
+    echo "policy repo updated; OPAL will pick up changes on webhook or next poll."
+  fi
 fi
 
 mkdir -p "$ROOT/.harness"

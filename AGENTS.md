@@ -12,7 +12,9 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 | `./scripts/teardown-dev.sh` | Stop compose stack (`--volumes` to drop DB volumes) |
 | `./scripts/setup-portfolio.sh` | Clone sibling repos from `specs/portfolio.yaml` (e.g. healthcare-policy) |
 | `./scripts/demo.sh` | E2E: intra-EU, US TEFCA + SSRAA, cross-bloc, live consent revoke, AI, crypto-shred |
+| `./scripts/generate-opal-dev-secrets.sh` | Create local OPAL secure-mode secrets (first `run-dev.sh`) |
 | `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) (OPAL, ADR 0007) |
+| `./scripts/trigger-opal-policy-webhook.sh` | Simulate GitHub push webhook to OPAL after policy sync |
 | `./scripts/check-portfolio.sh` | Portfolio contract + policy sync drift |
 | `./scripts/check-portfolio-cross-repo.sh` | Cross-repo stamp vs mirror pointer (CI / local with `CHEX_PORTFOLIO_MIRROR_PATH`) |
 | `./scripts/setup-phase3-worktrees.sh` | Create worktrees for parallel tracks (historical) |
@@ -51,9 +53,10 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 | `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
 | `config/routing.yaml` | Jurisdiction routing + subject registry (identifier fallback) |
 | `config/identity-registry.yaml` | Preferred identifiers for identity-broker (ADR 0010) |
+| `config/opal-hardening.yaml` | OPAL secure mode + webhook + bundle integrity profile (ADR 0011) |
 | `config/ssraa.yaml` | SSRAA application association stub (ADR 0009) |
 | `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
-| `docs/` | Product mandate, architecture, ADRs (incl. 0007–0010), roadmap |
+| `docs/` | Product mandate, architecture, ADRs (incl. 0007–0011), roadmap |
 
 ## Coding rules
 
