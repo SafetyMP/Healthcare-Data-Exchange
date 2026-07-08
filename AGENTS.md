@@ -1,6 +1,6 @@
 # AGENTS.md — Cloud Healthcare Exchange
 
-Harness profile: **solo** (see `docs/plan.md` — [fleet gates](docs/plan.md#fleet-gates-when-to-init) and [init playbook](docs/plan.md#fleet-initialization-playbook)).
+Harness profile: **solo** — phase 1 docs complete; see `docs/plan.md` for phase 2 slice work.
 
 ## Commands
 
