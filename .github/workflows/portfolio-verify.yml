@@ -30,6 +30,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install verify dependencies
+        run: pip install pyyaml
+
       - name: Portfolio verify (canonical + mirror cross-check)
         env:
           CHEX_PORTFOLIO_MIRROR_PATH: healthcare-policy
