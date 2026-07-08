@@ -47,6 +47,18 @@ echo "== verify: python (consent-service) =="
   CHEX_OPAL_PUBLISH=0 "$VENV/bin/pytest" -q
 )
 
+echo "== verify: python (identity-broker) =="
+(
+  cd services/identity-broker
+  VENV=".venv"
+  if [[ ! -x "$VENV/bin/python" ]]; then
+    python3 -m venv "$VENV"
+    "$VENV/bin/pip" install -q -e ".[dev]"
+  fi
+  "$VENV/bin/ruff" check chex_identity tests
+  "$VENV/bin/pytest" -q
+)
+
 echo "== verify: opa policy =="
 ./scripts/ensure-opa.sh
 "$ROOT/.tools/bin/opa" test policy/

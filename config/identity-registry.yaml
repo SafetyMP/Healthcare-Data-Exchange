@@ -1,0 +1,21 @@
+# Identity broker registry — preferred identifiers → home routing (no PHI).
+# Authoritative for identifier lookup when identity-broker service is running (ADR 0010).
+# config/routing.yaml retains subject tenant/consent; identifiers here drive ITI-78 resolve.
+
+identifiers:
+  urn:ehds:patient:eu-001:
+    subject: patient-eu-001
+    home_jurisdiction: eu-home
+  urn:tefca:patient:us-001:
+    subject: patient-us-001
+    home_jurisdiction: us-home
+
+subjects:
+  patient-eu-001:
+    home_jurisdiction: eu-home
+  patient-eu-002:
+    home_jurisdiction: eu-home
+  patient-us-001:
+    home_jurisdiction: us-home
+  patient-us-002:
+    home_jurisdiction: us-home

@@ -19,8 +19,8 @@ tenants:
   us-demo-tenant:
     home_jurisdiction: us-home
 
-# Identity broker stub (ADR 0006) — resolves home cell without a global MPI.
-# Full NCP federation is out of scope; PoC uses config-backed routing tokens.
+# Identity broker stub (ADR 0006) — fallback when identity-broker service is down.
+# Preferred identifiers are authoritative in config/identity-registry.yaml (ADR 0010).
 identity_broker:
   # Preferred identifier → routing token (subject + home jurisdiction)
   identifiers:

@@ -46,6 +46,7 @@ wait_for() {
 
 wait_for "gateway" "http://localhost:8081/health"
 wait_for "consent-service" "http://localhost:8084/health"
+wait_for "identity-broker" "http://localhost:8085/health"
 wait_for "OPA (via opal-client)" "http://localhost:8181/health"
 wait_for "EU HAPI" "http://localhost:8080/fhir/metadata"
 wait_for "US HAPI" "http://localhost:8083/fhir/metadata" || echo "(US demo steps may fail)"
@@ -53,6 +54,7 @@ wait_for "US HAPI" "http://localhost:8083/fhir/metadata" || echo "(US demo steps
 echo "Stack is up."
 echo "  Gateway:         http://localhost:8081"
 echo "  Consent service: http://localhost:8084"
+echo "  Identity broker: http://localhost:8085"
 echo "  OPA (opal):      http://localhost:8181"
 echo "  OPAL server:     http://localhost:7002"
 echo "  EU HAPI:         http://localhost:8080/fhir"

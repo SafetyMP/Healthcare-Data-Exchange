@@ -85,6 +85,11 @@ func (r *Routing) ResolveRouting(subjectID, identifier string) (RoutingToken, bo
 	return RoutingToken{}, false
 }
 
+// TokenForSubject builds a routing token from subject registry + jurisdiction map.
+func (r *Routing) TokenForSubject(subjectID, overrideHome string) (RoutingToken, bool) {
+	return r.tokenForSubject(subjectID, overrideHome)
+}
+
 func (r *Routing) tokenForSubject(subjectID, overrideHome string) (RoutingToken, bool) {
 	sub, ok := r.Subjects[subjectID]
 	if !ok {

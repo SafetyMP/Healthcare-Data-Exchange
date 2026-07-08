@@ -114,9 +114,22 @@ curl -fsS -H "Authorization: $SSRA_AUTH" \
   | tee /tmp/chex-demo-us.json
 grep -q 'us-home' /tmp/chex-demo-us.json
 
-log "6. Identity broker — TEFCA identifier resolve (expect 200)"
+log "6a. Identity broker service — direct ITI-78 resolve (expect 200)"
+curl -fsS "http://localhost:8085/v1/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker-svc.json
+grep -q 'patient-us-001' /tmp/chex-demo-broker-svc.json
+
+log "6. Identity broker via gateway (expect 200)"
 curl -fsS "$GW/v1/identity/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker.json
 grep -q 'patient-us-001' /tmp/chex-demo-broker.json
+
+log "6b. Register EU-002 identifier on broker; gateway patient read by identifier only (expect 200)"
+curl -fsS -X POST "http://localhost:8085/v1/identifiers" \
+  -H "Content-Type: application/json" \
+  -d '{"identifier":"urn:ehds:patient:eu-002","subject":"patient-eu-002","home_jurisdiction":"eu-home"}' \
+  >/dev/null
+curl -fsS "$GW/v1/patients/_?identifier=urn:ehds:patient:eu-002&purpose=research&requester_jurisdiction=eu-home" \
+  | tee /tmp/chex-demo-broker-read.json
+grep -q 'patient-eu-002' /tmp/chex-demo-broker-read.json
 
 log "7. Dynamic consent — patient-eu-002 research allowed now (expect 200)"
 code=$(read_code patient-eu-002 research eu-home)
@@ -147,5 +160,5 @@ curl -fsS -X POST "$GW/v1/admin/erasure/tenant?tenant=demo-tenant"
 code=$(read_code patient-eu-001 treatment eu-visiting)
 [[ "$code" == "410" ]]
 
-log "demo: ok — intra-EU, US TEFCA, cross-bloc deny/exception, DYNAMIC consent revoke/grant, AI, erasure"
+log "demo: ok — intra-EU, US TEFCA, cross-bloc deny/exception, identity broker, DYNAMIC consent revoke/grant, AI, erasure"
 echo "Audit sink: $ROOT/data/audit/eu.jsonl"

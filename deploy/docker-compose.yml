@@ -98,6 +98,21 @@ services:
       timeout: 5s
       retries: 10
 
+  identity-broker:
+    build:
+      context: ../services/identity-broker
+    environment:
+      CHEX_IDENTITY_REGISTRY: /workspace/config/identity-registry.yaml
+    volumes:
+      - ..:/workspace
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8085/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   opal-server:
     image: permitio/opal-server:latest-alpine
     depends_on:
@@ -157,6 +172,8 @@ services:
         condition: service_healthy
       consent-service:
         condition: service_healthy
+      identity-broker:
+        condition: service_healthy
       hapi-eu:
         condition: service_started
     environment:
@@ -169,6 +186,7 @@ services:
       CHEX_KEY_DIR: /workspace/data/keys
       CHEX_AI_GOV_URL: http://ai-governance:8082
       CHEX_CONSENT_URL: http://consent-service:8084
+      CHEX_IDENTITY_BROKER_URL: http://identity-broker:8085
       CHEX_SSRAa_CONFIG: /workspace/config/ssraa.yaml
       CHEX_GATEWAY_ADDR: ":8081"
     volumes:

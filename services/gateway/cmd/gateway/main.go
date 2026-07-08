@@ -14,6 +14,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/identity"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
@@ -29,6 +30,7 @@ func main() {
 	addr := env("CHEX_GATEWAY_ADDR", ":8081")
 	aiURL := env("CHEX_AI_GOV_URL", "http://localhost:8082")
 	consentURL := env("CHEX_CONSENT_URL", "http://localhost:8084")
+	identityURL := env("CHEX_IDENTITY_BROKER_URL", "http://localhost:8085")
 	ssraaPath := env("CHEX_SSRAa_CONFIG", filepath.Join(root, "config/ssraa.yaml"))
 
 	routing, err := appconfig.LoadRouting(cfgPath)
@@ -50,7 +52,7 @@ func main() {
 
 	srv := &handlers.Server{
 		Routing: routing,
-		Broker:  broker.New(routing),
+		Broker:  broker.New(routing, identity.NewClient(identityURL)),
 		PEP:     pep.NewClient(opaURL),
 		FHIR:    fhir.NewClient(fhirBase, sampleDir),
 		Audit:   audit.NewSink(auditPath),

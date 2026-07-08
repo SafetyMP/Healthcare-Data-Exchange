@@ -115,7 +115,7 @@ func TestGetPatientUSRouted(t *testing.T) {
 		Cell:     "us",
 		FHIRBase: fhirSrv.URL + "/fhir",
 	}
-	srv.Broker = broker.New(srv.Routing)
+	srv.Broker = broker.New(srv.Routing, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-home", nil)
 	req.Header.Set("Authorization", ssraaAuth())
@@ -155,7 +155,7 @@ func TestGetPatientByIdentifier(t *testing.T) {
 		Cell:     "us",
 		FHIRBase: fhirSrv.URL + "/fhir",
 	}
-	srv.Broker = broker.New(srv.Routing)
+	srv.Broker = broker.New(srv.Routing, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/_?identifier=urn:tefca:patient:us-001&purpose=treatment&requester_jurisdiction=us-home", nil)
 	req.Header.Set("Authorization", ssraaAuth())
@@ -284,7 +284,7 @@ func newTestServer(t *testing.T, opaHandler http.HandlerFunc, fhirBase, sampleDi
 
 	return &handlers.Server{
 		Routing: routing,
-		Broker:  broker.New(routing),
+		Broker:  broker.New(routing, nil),
 		PEP:     pep.NewClient(opa.URL),
 		FHIR:    fhir.NewClient(fhirBase, sampleDir),
 		Audit:   audit.NewSink(filepath.Join(t.TempDir(), "audit.jsonl")),

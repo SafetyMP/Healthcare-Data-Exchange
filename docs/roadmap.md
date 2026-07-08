@@ -68,7 +68,7 @@ Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--para
 |------|-------------|--------|
 | US cell | HAPI US + Postgres (SA-9(5) placement) | **Done** |
 | Cross-bloc policy | Exception flow; deny-by-default; SCC+TIA in architecture docs | **Done** |
-| Identity broker | Config stub + `/v1/identity/resolve`; NCP patterns | **Stub** (Phase 4) |
+| Identity broker | Config stub + `/v1/identity/resolve`; NCP patterns | **Stub** (superseded by ADR 0010) |
 | Integration | `demo.sh` US TEFCA + cross-bloc scenarios; verify green | **Done** |
 
 **Exit criteria:** US TEFCA demo + documented cross-bloc deny-by-default — **met** on `main`.
@@ -90,8 +90,9 @@ runtime — **met**.
 | Item | Deliverable | Status |
 |------|-------------|--------|
 | SSRAA auth stub | US-cell gateway gate + demo 401/200 (ADR 0009) | **Done** |
+| Identity broker service | ITI-78 resolve + dynamic register; gateway HTTP client (ADR 0010) | **Done** |
 | Kubernetes + mesh + `ext_authz` | ADR 0002 target | Planned |
-| Identity broker | Beyond config stub; NCP / ITI-78 | Planned |
+| Identity broker | NCP federation / live PDQm | Planned |
 | HSM KMS | Replace software stand-in | Planned |
 | OPAL hardening | Auth/JWT, signed bundles, git webhooks | Planned |
 | FedRAMP ATO path | Agency sponsorship (Proc) | Planned |

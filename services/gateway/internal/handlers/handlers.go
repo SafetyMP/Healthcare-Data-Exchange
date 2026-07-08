@@ -59,7 +59,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		purpose = "treatment"
 	}
 
-	token, ok := s.Broker.Resolve(subjectID, identifier)
+	token, ok := s.Broker.Resolve(ctx, subjectID, identifier)
 	if !ok {
 		http.Error(w, "subject not found", http.StatusNotFound)
 		return
@@ -158,7 +158,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ResolveIdentity exposes the identity broker stub (routing token only, no PHI).
+// ResolveIdentity exposes identity broker resolution (routing token only, no PHI).
 func (s *Server) ResolveIdentity(w http.ResponseWriter, r *http.Request) {
 	subjectID := r.URL.Query().Get("subject")
 	identifier := r.URL.Query().Get("identifier")
@@ -167,7 +167,7 @@ func (s *Server) ResolveIdentity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, ok := s.Broker.Resolve(subjectID, identifier)
+	token, ok := s.Broker.Resolve(r.Context(), subjectID, identifier)
 	if !ok {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
