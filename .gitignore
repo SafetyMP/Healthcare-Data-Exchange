@@ -1,3 +1,5 @@
 .harness/trajectories/
 .harness/feedback/
 .harness/disclosure.json
+__pycache__/
+*.pyc
