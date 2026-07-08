@@ -27,17 +27,30 @@ func NewClient(baseURL, sampleDir string) *Client {
 }
 
 func (c *Client) GetPatient(ctx context.Context, id string) (map[string]any, error) {
-	if c.baseURL != "" {
-		patient, err := c.fetchRemote(ctx, id)
+	return c.GetPatientForCell(ctx, id, "eu", "")
+}
+
+// GetPatientForCell reads from the home cell FHIR endpoint or regional sample dir.
+func (c *Client) GetPatientForCell(ctx context.Context, id, cell, fhirBase string) (map[string]any, error) {
+	base := fhirBase
+	if base == "" {
+		base = c.baseURL
+	}
+	if base != "" {
+		patient, err := c.fetchRemoteAt(ctx, base, id)
 		if err == nil {
 			return patient, nil
 		}
 	}
-	return c.loadSample(id)
+	return c.loadSample(id, cell)
 }
 
 func (c *Client) fetchRemote(ctx context.Context, id string) (map[string]any, error) {
-	url := fmt.Sprintf("%s/Patient/%s", c.baseURL, id)
+	return c.fetchRemoteAt(ctx, c.baseURL, id)
+}
+
+func (c *Client) fetchRemoteAt(ctx context.Context, baseURL, id string) (map[string]any, error) {
+	url := fmt.Sprintf("%s/Patient/%s", baseURL, id)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -59,8 +72,11 @@ func (c *Client) fetchRemote(ctx context.Context, id string) (map[string]any, er
 	return patient, nil
 }
 
-func (c *Client) loadSample(id string) (map[string]any, error) {
-	path := fmt.Sprintf("%s/eu/%s.json", c.sampleDir, id)
+func (c *Client) loadSample(id, cell string) (map[string]any, error) {
+	if cell == "" {
+		cell = "eu"
+	}
+	path := fmt.Sprintf("%s/%s/%s.json", c.sampleDir, cell, id)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
