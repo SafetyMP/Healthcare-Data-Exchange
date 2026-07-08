@@ -6,12 +6,34 @@ jurisdictions:
   eu-visiting:
     cell: eu
     fhir_base: http://hapi-eu:8080/fhir
+  us-home:
+    cell: us
+    fhir_base: http://hapi-us:8080/fhir
+  us-clinician:
+    cell: us
+    fhir_base: http://hapi-us:8080/fhir
 
 tenants:
   demo-tenant:
     home_jurisdiction: eu-home
+  us-demo-tenant:
+    home_jurisdiction: us-home
 
-# Identity broker stub: subject → home jurisdiction (PoC; ADR 0006)
+# Identity broker stub (ADR 0006) — resolves home cell without a global MPI.
+# Full NCP federation is out of scope; PoC uses config-backed routing tokens.
+identity_broker:
+  # Preferred identifier → routing token (subject + home jurisdiction)
+  identifiers:
+    urn:ehds:patient:eu-001:
+      subject: patient-eu-001
+      home_jurisdiction: eu-home
+    urn:tefca:patient:us-001:
+      subject: patient-us-001
+      home_jurisdiction: us-home
+  # Tenant default when subject record omits home_jurisdiction (fallback only)
+  tenant_defaults: true
+
+# Subject registry — home jurisdiction + consent flags (no PHI)
 subjects:
   patient-eu-001:
     tenant: demo-tenant
@@ -21,3 +43,7 @@ subjects:
     tenant: demo-tenant
     home_jurisdiction: eu-home
     consent_research: true
+  patient-us-001:
+    tenant: us-demo-tenant
+    home_jurisdiction: us-home
+    consent_research: false

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/broker"
 	appconfig "github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/config"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
@@ -20,6 +21,7 @@ type AIGovernance interface {
 
 type Server struct {
 	Routing *appconfig.Routing
+	Broker  *broker.Broker
 	PEP     *pep.Client
 	FHIR    *fhir.Client
 	Audit   *audit.Sink
@@ -35,8 +37,9 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	subjectID := strings.TrimPrefix(r.URL.Path, "/v1/patients/")
 	subjectID = strings.Trim(subjectID, "/")
-	if subjectID == "" {
-		http.Error(w, "missing patient id", http.StatusBadRequest)
+	identifier := r.URL.Query().Get("identifier")
+	if subjectID == "" && identifier == "" {
+		http.Error(w, "missing patient id or identifier", http.StatusBadRequest)
 		return
 	}
 
@@ -48,16 +51,21 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	if purpose == "" {
 		purpose = "treatment"
 	}
-	crossBloc := r.URL.Query().Get("cross_bloc") == "true"
-	crossPermitted := r.URL.Query().Get("cross_bloc_permitted") == "true"
 
-	sub, _, tenant, ok := s.Routing.ResolveSubject(subjectID)
+	token, ok := s.Broker.Resolve(subjectID, identifier)
 	if !ok {
 		http.Error(w, "subject not found", http.StatusNotFound)
 		return
 	}
-	if err := s.Keys.EnsureTenant(tenant); err != nil {
-		if s.Keys.IsShredded(tenant) {
+
+	crossBloc := s.Routing.IsCrossBloc(requester, token.HomeJurisdiction)
+	if r.URL.Query().Get("cross_bloc") == "true" {
+		crossBloc = true
+	}
+	crossPermitted := r.URL.Query().Get("cross_bloc_permitted") == "true"
+
+	if err := s.Keys.EnsureTenant(token.Tenant); err != nil {
+		if s.Keys.IsShredded(token.Tenant) {
 			http.Error(w, "tenant keys shredded", http.StatusGone)
 			return
 		}
@@ -66,11 +74,11 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decision, err := s.PEP.Evaluate(ctx, pep.PolicyInput{
-		SubjectID:             subjectID,
-		HomeJurisdiction:      sub.HomeJurisdiction,
+		SubjectID:             token.SubjectID,
+		HomeJurisdiction:      token.HomeJurisdiction,
 		RequesterJurisdiction: requester,
 		Purpose:               purpose,
-		ConsentResearch:       sub.ConsentResearch,
+		ConsentResearch:       token.ConsentResearch,
 		CrossBloc:             crossBloc,
 		CrossBlocPermitted:    crossPermitted,
 	})
@@ -79,7 +87,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pseudo := audit.Pseudonym(subjectID, tenant)
+	pseudo := audit.Pseudonym(token.SubjectID, token.Tenant)
 	if !decision.Allow {
 		_ = s.Audit.Append(audit.Event{
 			Action:                "patient.read",
@@ -96,14 +104,14 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patient, err := s.FHIR.GetPatient(ctx, subjectID)
+	patient, err := s.FHIR.GetPatientForCell(ctx, token.SubjectID, token.Cell, token.FHIRBase)
 	if err != nil {
 		http.Error(w, "fhir error", http.StatusBadGateway)
 		return
 	}
 	filtered := fhir.FilterFields(patient, decision.MinNecessaryFields)
 
-	enc, _ := s.Keys.Encrypt(tenant, subjectID)
+	enc, _ := s.Keys.Encrypt(token.Tenant, token.SubjectID)
 	_ = s.Audit.Append(audit.Event{
 		Action:                "patient.read",
 		SubjectPseudonym:      pseudo,
@@ -115,8 +123,35 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"patient":              filtered,
-		"home_jurisdiction":    sub.HomeJurisdiction,
+		"subject":              token.SubjectID,
+		"home_jurisdiction":    token.HomeJurisdiction,
+		"home_cell":            token.Cell,
+		"routed_fhir_base":     token.FHIRBase,
+		"cross_bloc":           crossBloc,
 		"min_necessary_fields": decision.MinNecessaryFields,
+	})
+}
+
+// ResolveIdentity exposes the identity broker stub (routing token only, no PHI).
+func (s *Server) ResolveIdentity(w http.ResponseWriter, r *http.Request) {
+	subjectID := r.URL.Query().Get("subject")
+	identifier := r.URL.Query().Get("identifier")
+	if subjectID == "" && identifier == "" {
+		http.Error(w, "subject or identifier required", http.StatusBadRequest)
+		return
+	}
+
+	token, ok := s.Broker.Resolve(subjectID, identifier)
+	if !ok {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"subject":           token.SubjectID,
+		"home_jurisdiction": token.HomeJurisdiction,
+		"cell":              token.Cell,
+		"tenant":            token.Tenant,
 	})
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/aigov"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/broker"
 	appconfig "github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/config"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
@@ -41,6 +42,7 @@ func main() {
 
 	srv := &handlers.Server{
 		Routing: routing,
+		Broker:  broker.New(routing),
 		PEP:     pep.NewClient(opaURL),
 		FHIR:    fhir.NewClient(fhirBase, sampleDir),
 		Audit:   audit.NewSink(auditPath),
@@ -51,6 +53,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", srv.Landing)
 	mux.HandleFunc("/health", srv.Health)
+	mux.HandleFunc("/v1/identity/resolve", srv.ResolveIdentity)
 	mux.HandleFunc("/v1/patients/", srv.GetPatient)
 	mux.HandleFunc("/v1/admin/erasure/tenant", srv.ShredTenant)
 	mux.HandleFunc("/v1/ai/triage", srv.AITriage)
