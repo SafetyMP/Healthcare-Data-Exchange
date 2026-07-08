@@ -9,10 +9,10 @@ data/
 .cursor/session-mode.json
 
 # Python
-services/ai-governance/.pytest_cache/
-services/ai-governance/*.egg-info/
-services/ai-governance/.ruff_cache/
-services/ai-governance/.venv/
+services/*/.pytest_cache/
+services/*/*.egg-info/
+services/*/.ruff_cache/
+services/*/.venv/
 
 # Go
 services/gateway/bin/
