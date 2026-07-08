@@ -3,3 +3,15 @@
 .harness/disclosure.json
 __pycache__/
 *.pyc
+.tools/
+data/
+*.key
+
+# Python
+services/ai-governance/.pytest_cache/
+services/ai-governance/*.egg-info/
+services/ai-governance/.ruff_cache/
+services/ai-governance/.venv/
+
+# Go
+services/gateway/bin/

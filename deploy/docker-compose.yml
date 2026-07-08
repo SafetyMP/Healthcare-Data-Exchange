@@ -1,0 +1,93 @@
+services:
+  postgres-eu:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hapi
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres-eu-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hapi-eu:
+    image: hapiproject/hapi:latest
+    depends_on:
+      postgres-eu:
+        condition: service_healthy
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres-eu:5432/hapi
+      spring.datasource.username: admin
+      spring.datasource.password: admin
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      hapi.fhir.fhir_version: R4
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/fhir/metadata >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+
+  opa:
+    image: openpolicyagent/opa:0.70.0
+    platform: linux/amd64
+    command:
+      - run
+      - --server
+      - --addr=0.0.0.0:8181
+      - /policies
+    volumes:
+      - ../policy:/policies:ro
+    ports:
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD", "/opa", "eval", "true"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ai-governance:
+    build:
+      context: ../services/ai-governance
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  gateway:
+    build:
+      context: ../services/gateway
+    depends_on:
+      opa:
+        condition: service_healthy
+      ai-governance:
+        condition: service_healthy
+      hapi-eu:
+        condition: service_started
+    environment:
+      CHEX_ROOT: /workspace
+      CHEX_ROUTING_CONFIG: /workspace/config/routing.yaml
+      CHEX_OPA_URL: http://opa:8181
+      CHEX_FHIR_BASE: http://hapi-eu:8080/fhir
+      CHEX_FHIR_SAMPLES: /workspace/fhir/samples
+      CHEX_AUDIT_PATH: /workspace/data/audit/eu.jsonl
+      CHEX_KEY_DIR: /workspace/data/keys
+      CHEX_AI_GOV_URL: http://ai-governance:8082
+      CHEX_GATEWAY_ADDR: ":8081"
+    volumes:
+      - ..:/workspace
+    ports:
+      - "8081:8081"
+    working_dir: /workspace
+
+volumes:
+  postgres-eu-data:

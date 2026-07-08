@@ -1,0 +1,61 @@
+# Cloud Healthcare Exchange — authorization policy (OPA/Rego)
+package chex.authz
+
+import future.keywords.if
+import future.keywords.in
+
+default allow := false
+
+default deny_reason := "policy_denied"
+
+allow if {
+	consent_ok
+	residency_ok
+}
+
+allow if {
+	input.cross_bloc == true
+	input.cross_bloc_permitted == true
+	input.purpose == "derivative"
+	consent_ok
+}
+
+consent_ok if {
+	input.purpose != "research"
+}
+
+consent_ok if {
+	input.purpose == "research"
+	input.consent_research == true
+}
+
+residency_ok if {
+	input.requester_jurisdiction == input.home_jurisdiction
+}
+
+residency_ok if {
+	eu_prefix(input.requester_jurisdiction)
+	eu_prefix(input.home_jurisdiction)
+	input.cross_bloc != true
+}
+
+eu_prefix(j) if {
+	startswith(j, "eu-")
+}
+
+deny_reason := "consent_required" if {
+	not consent_ok
+}
+
+deny_reason := "residency_denied" if {
+	consent_ok
+	not residency_ok
+}
+
+min_necessary_fields := ["id", "resourceType", "name", "birthDate", "gender"] if {
+	allow
+}
+
+min_necessary_fields := [] if {
+	not allow
+}

@@ -1,0 +1,23 @@
+# Jurisdiction routing — global control plane config (no PHI)
+jurisdictions:
+  eu-home:
+    cell: eu
+    fhir_base: http://hapi-eu:8080/fhir
+  eu-visiting:
+    cell: eu
+    fhir_base: http://hapi-eu:8080/fhir
+
+tenants:
+  demo-tenant:
+    home_jurisdiction: eu-home
+
+# Identity broker stub: subject → home jurisdiction (PoC; ADR 0006)
+subjects:
+  patient-eu-001:
+    tenant: demo-tenant
+    home_jurisdiction: eu-home
+    consent_research: false
+  patient-eu-002:
+    tenant: demo-tenant
+    home_jurisdiction: eu-home
+    consent_research: true

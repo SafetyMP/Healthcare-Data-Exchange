@@ -189,19 +189,19 @@ scripts/
 | `docs-architecture` | Write `docs/architecture/*` with mermaid; **intra-EU primary demo**; cross-bloc exception | solo | **done** |
 | `docs-adrs` | ADRs 0001–0006 (add **patient identity/matching**); crypto-shred at region/tenant | solo | **done** |
 | `docs-roadmap` | `docs/roadmap.md` — **adopted** AI Act dates; EHDS/SSRAA deadlines | solo | **done** |
-| `slice-scaffold` | Scaffold repo; **1-cell** compose first (gateway, HAPI, Postgres, OPA, ai-governance) | solo serial · **fleet if parallel tracks** | pending |
-| `slice-gateway-policy` | Go router + OPA PEP: residency, purpose, consent, minimum-necessary | child track | pending |
-| `slice-region-fhir` | HAPI + Postgres; sample patients; **region-level** key envelope + shred demo | child track | pending |
-| `slice-ai-governance` | AI stub scoped to high-risk AI features only | child track | pending |
-| `verify-wiring` | `verify.sh` hermetic only; `run-dev.sh` + `demo.sh` for compose | parent or serial | pending |
-| `test-demo` | pytest + Rego unit tests; E2E demo = **intra-EU** path + evidence | parent integrates | pending |
+| `slice-scaffold` | Scaffold repo; **1-cell** compose first (gateway, HAPI, Postgres, OPA, ai-governance) | solo serial · **fleet if parallel tracks** | **done** |
+| `slice-gateway-policy` | Go router + OPA PEP: residency, purpose, consent, minimum-necessary | child track | **done** |
+| `slice-region-fhir` | HAPI + Postgres; sample patients; **region-level** key envelope + shred demo | child track | **done** |
+| `slice-ai-governance` | AI stub scoped to high-risk AI features only | child track | **done** |
+| `verify-wiring` | `verify.sh` hermetic only; `run-dev.sh` + `demo.sh` for compose | parent or serial | **done** |
+| `test-demo` | pytest + Rego unit tests; E2E demo = **intra-EU** path + evidence | parent integrates | **done** |
 
 ### Phased delivery
 
 | Phase | Todos | Harness | Notes |
 |-------|-------|---------|-------|
 | **1 — Docs PR** | `docs-mandate` … `docs-roadmap` | **solo** | **Complete** |
-| **2a — Walking skeleton (serial)** | `slice-scaffold` through `test-demo`, one agent | **solo** | Default path; one integration owner |
+| **2a — Walking skeleton (serial)** | `slice-scaffold` through `test-demo`, one agent | **solo** | **Complete** |
 | **2b — Walking skeleton (parallel)** | Same todos, split by track (see below) | **fleet** | Init fleet at [Gate A](#fleet-gate-a--parallel-slice-scaffold) before spawning children |
 | **3 — Second cell** | EU/US second cell + cross-bloc exception demo | **fleet** | Init at [Gate B](#fleet-gate-b--phase-3-second-cell) if not already on fleet |
 

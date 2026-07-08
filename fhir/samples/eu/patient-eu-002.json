@@ -1,0 +1,21 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-eu-002",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/StructureDefinition/Patient"]
+  },
+  "identifier": [
+    {
+      "system": "urn:chex:eu:national-id",
+      "value": "EU-002-TEST"
+    }
+  ],
+  "name": [
+    {
+      "family": "Dupont",
+      "given": ["Jean"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1972-11-08"
+}
