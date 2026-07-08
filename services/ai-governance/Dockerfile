@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 WORKDIR /app
 COPY pyproject.toml ./
 COPY chex_ai_governance ./chex_ai_governance
