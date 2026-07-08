@@ -49,8 +49,18 @@ residency_ok if {
 	input.cross_bloc != true
 }
 
+residency_ok if {
+	us_prefix(input.requester_jurisdiction)
+	us_prefix(input.home_jurisdiction)
+	input.cross_bloc != true
+}
+
 eu_prefix(j) if {
 	startswith(j, "eu-")
+}
+
+us_prefix(j) if {
+	startswith(j, "us-")
 }
 
 deny_reason := "consent_required" if {

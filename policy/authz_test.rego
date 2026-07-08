@@ -35,6 +35,17 @@ test_research_allowed_with_consent {
 	}
 }
 
+test_intra_us_treatment_allowed {
+	authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"consent_research": false,
+		"cross_bloc": false,
+	}
+}
+
 test_cross_bloc_default_denied {
 	not authz.allow with input as {
 		"subject_id": "patient-eu-001",

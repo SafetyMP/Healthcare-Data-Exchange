@@ -203,7 +203,7 @@ scripts/
 | **1 — Docs PR** | `docs-mandate` … `docs-roadmap` | **solo** | **Complete** |
 | **2a — Walking skeleton (serial)** | `slice-scaffold` through `test-demo`, one agent | **solo** | **Complete** |
 | **2b — Walking skeleton (parallel)** | Same todos, split by track (see below) | **fleet** | Init fleet at [Gate A](#fleet-gate-a--parallel-slice-scaffold) before spawning children |
-| **3 — Second cell** | EU/US second cell + cross-bloc exception demo | **fleet** | Init at [Gate B](#fleet-gate-b--phase-3-second-cell) if not already on fleet |
+| **3 — Second cell** | EU/US second cell + cross-bloc exception demo | **fleet** | **Complete** — merged `agent/policy` → `agent/gateway-policy` → `agent/us-cell`; verify + demo green on `main` |
 
 **Parallel track split (phase 2b — requires fleet):**
 
@@ -233,7 +233,7 @@ Parent runs `./scripts/demo.sh` and integration verify **from main checkout only
 3. `ruff check`, `pytest` (ai-governance — unit only, no live services)
 4. `opa test policy/`
 
-**`demo.sh`:** residency enforcement, consent denial, region-level erasure demo, AI decision with human-oversight gate — against docker-compose.
+**`demo.sh`:** intra-EU + US TEFCA secondary, cross-bloc deny/derivative exception, consent denial, region-level erasure, AI human-oversight gate — against docker-compose.
 
 ---
 
