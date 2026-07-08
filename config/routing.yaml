@@ -47,3 +47,7 @@ subjects:
     tenant: us-demo-tenant
     home_jurisdiction: us-home
     consent_research: false
+  patient-us-002:
+    tenant: us-demo-tenant
+    home_jurisdiction: us-home
+    consent_research: true

@@ -1,0 +1,21 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-us-002",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"]
+  },
+  "identifier": [
+    {
+      "system": "urn:chex:us:mrn",
+      "value": "US-002-TEST"
+    }
+  ],
+  "name": [
+    {
+      "family": "Williams",
+      "given": ["James"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1978-04-15"
+}
