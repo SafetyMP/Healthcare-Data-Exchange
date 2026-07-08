@@ -34,6 +34,41 @@ services:
       retries: 30
       start_period: 120s
 
+  postgres-us:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: hapi
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres-us-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hapi-us:
+    image: hapiproject/hapi:latest
+    depends_on:
+      postgres-us:
+        condition: service_healthy
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres-us:5432/hapi
+      spring.datasource.username: admin
+      spring.datasource.password: admin
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      hapi.fhir.fhir_version: R4
+    ports:
+      - "8083:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/fhir/metadata >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+
   opa:
     image: openpolicyagent/opa:0.70.0
     platform: linux/amd64
@@ -91,3 +126,4 @@ services:
 
 volumes:
   postgres-eu-data:
+  postgres-us-data:
