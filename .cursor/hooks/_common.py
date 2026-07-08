@@ -263,3 +263,105 @@ def find_worktree_integration_block(payload: dict[str, Any]) -> str | None:
 def find_worktree_compose_block(payload: dict[str, Any]) -> str | None:
     """Backward-compatible alias."""
     return find_worktree_integration_block(payload)
+
+
+# --- Fleet / multi-agent session mode (fleet-instruction bundle) ------------
+def repo_root(payload: dict[str, Any]) -> Path:
+    roots = payload.get("workspace_roots") or []
+    if roots:
+        return Path(str(roots[0]))
+    return Path(resolve_workspace_root(payload))
+
+
+def mode_file(root: Path) -> Path:
+    return root / ".cursor" / "session-mode.json"
+
+
+def load_mode(root: Path) -> dict[str, Any]:
+    path = mode_file(root)
+    if not path.is_file():
+        return {"mode": "CLEAR"}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"mode": "CLEAR"}
+
+
+def save_mode(root: Path, mode: str, reason: str) -> None:
+    path = mode_file(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"mode": mode, "reason": reason}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def mandate_status(root: Path) -> str | None:
+    mandate = root / "specs" / "MANDATE.md"
+    if not mandate.is_file():
+        return None
+    text = mandate.read_text(encoding="utf-8")
+    match = re.search(r"^Status:\s*(\w+)", text, re.MULTILINE)
+    return match.group(1).upper() if match else None
+
+
+HALT_PATTERNS = [
+    re.compile(r"\b(stop|halt)\b", re.IGNORECASE),
+    re.compile(r"neither agent", re.IGNORECASE),
+    re.compile(r"(?:no|don't|do not)\s+(?:allow|permit)?\s*(?:either of you|you).{0,40}work", re.IGNORECASE),
+    re.compile(r"debrief only", re.IGNORECASE),
+]
+NEGOTIATE_PATTERNS = [
+    re.compile(r"\bnegotiate\b", re.IGNORECASE),
+    re.compile(r"joint conclusion", re.IGNORECASE),
+    re.compile(r"no implement", re.IGNORECASE),
+    re.compile(r"negotiat(?:e|ion)[\s-]*only", re.IGNORECASE),
+]
+PROCEED_PATTERNS = [
+    re.compile(r"\bproceed\b", re.IGNORECASE),
+    re.compile(r"\byou may work\b", re.IGNORECASE),
+    re.compile(r"lift the pause", re.IGNORECASE),
+    re.compile(r"resume work", re.IGNORECASE),
+    re.compile(r"(?:^|\.\s*)execute\b", re.IGNORECASE),
+]
+
+MUTATING_TOOLS = frozenset({
+    "Write", "StrReplace", "Delete", "Shell", "Task", "ApplyPatch",
+})
+
+
+def detect_instruction_mode(prompt: str) -> str | None:
+    for pattern in PROCEED_PATTERNS:
+        if pattern.search(prompt):
+            return "CLEAR"
+    for pattern in HALT_PATTERNS:
+        if pattern.search(prompt):
+            return "HALTED"
+    for pattern in NEGOTIATE_PATTERNS:
+        if pattern.search(prompt):
+            return "NEGOTIATE_ONLY"
+    return None
+
+
+def effective_mode(root: Path) -> tuple[str, str]:
+    state = load_mode(root)
+    mode = state.get("mode", "CLEAR")
+    reason = state.get("reason", "session file")
+    if mandate_status(root) == "HALTED":
+        return "HALTED", "MANDATE Status: HALTED"
+    return mode, reason
+
+
+def tool_path(tool_name: str, tool_input: dict[str, Any]) -> str:
+    for key in ("path", "file_path", "target_file", "target_directory"):
+        value = tool_input.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def is_specs_write(path: str) -> bool:
+    if not path:
+        return False
+    normalized = path.replace("\\", "/").lstrip("./")
+    return normalized.startswith("specs/")

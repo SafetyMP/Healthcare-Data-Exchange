@@ -28,12 +28,34 @@
       {
         "command": "python3 .cursor/hooks/scan-prompt.py",
         "failClosed": true
+      },
+      {
+        "command": "python3 .cursor/hooks/guard-instruction.py",
+        "failClosed": false
       }
     ],
     "stop": [
       {
         "command": "python3 .cursor/hooks/verify-on-stop.py",
         "loop_limit": 3
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3 .cursor/hooks/session-mode.py",
+        "failClosed": false
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python3 .cursor/hooks/subagent-handoff.py",
+        "failClosed": false
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "python3 .cursor/hooks/session-start.py",
+        "failClosed": false
       }
     ]
   }

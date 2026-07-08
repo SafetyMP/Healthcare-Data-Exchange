@@ -1,6 +1,6 @@
 # AGENTS.md — Cloud Healthcare Exchange
 
-Harness profile: **solo** — phase 2a EU walking skeleton complete. See `docs/plan.md`.
+Harness profile: **fleet** — phase 3 parallel tracks active. See `specs/MANDATE.md` and `docs/plan.md`.
 
 ## Commands
 
@@ -10,6 +10,16 @@ Harness profile: **solo** — phase 2a EU walking skeleton complete. See `docs/p
 | `./scripts/verify.sh` | Definition of Done (hermetic: harness + go + python + opa) |
 | `./scripts/run-dev.sh` | Start EU cell via `deploy/docker-compose.yml` (requires Docker) |
 | `./scripts/demo.sh` | End-to-end demo: intra-EU read, consent deny, AI oversight, crypto-shred |
+| `./scripts/setup-phase3-worktrees.sh` | Create worktrees for phase 3 parallel child agents |
+
+## Fleet tracks (phase 3)
+
+| Track | Branch | Scope |
+|-------|--------|-------|
+| `us-cell` | `agent/us-cell` | US HAPI + Postgres in compose, `fhir/samples/us/` |
+| `gateway-policy` | `agent/gateway-policy` | `services/gateway/`, `config/routing.yaml` |
+| `policy` | `agent/policy` | `policy/` cross-bloc Rego |
+| `integrate` | `main` | merge, `demo.sh`, `verify.sh` — **parent only** |
 
 ## Definition of Done
 
@@ -17,30 +27,32 @@ Harness profile: **solo** — phase 2a EU walking skeleton complete. See `docs/p
 ./scripts/verify.sh
 ```
 
-`verify.sh` does **not** require Docker. Compose E2E is `demo.sh` only.
+`verify.sh` does **not** require Docker. Compose E2E is `demo.sh` only (parent on `main`).
 
 ## Layout
 
 | Path | Purpose |
 |------|---------|
+| `specs/MANDATE.md` | Multi-agent coordination contract (ACTIVE) |
 | `services/gateway/` | Go jurisdiction router + OPA PEP |
 | `services/ai-governance/` | Python FastAPI AI governance stub |
 | `policy/` | OPA Rego policies + tests |
-| `deploy/docker-compose.yml` | EU walking skeleton (HAPI, Postgres, OPA, gateway, AI gov) |
+| `deploy/docker-compose.yml` | EU walking skeleton (+ US cell in phase 3) |
 | `config/routing.yaml` | Identity broker stub + jurisdiction routing |
-| `fhir/samples/` | Synthetic EU Patient resources |
+| `fhir/samples/` | Synthetic Patient resources |
 | `docs/` | Product mandate, architecture, ADRs |
 
 ## Cloud agents
 
-- Guards vendored under `.cursor/hooks/`.
+- Guards vendored under `.cursor/hooks/` (fleet halt/negotiate + subagent handoff).
 - `stop` / verify-on-stop is IDE-only; cloud agents run `./scripts/verify.sh` + CI.
-- Repo linked at [cursor.com/dashboard](https://cursor.com/dashboard) for `/in-cloud`.
+- Spawn **one cloud agent per branch**; parent merges on `main`.
 
 ## Coding rules
 
 - Smallest correct diff; match existing conventions.
 - Never read or print `.env` contents.
+- Children stay within `specs/MANDATE.md` ownership; parent re-verifies after merge.
 
 ## Cursor Cloud specific instructions
 

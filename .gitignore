@@ -6,6 +6,7 @@ __pycache__/
 .tools/
 data/
 *.key
+.cursor/session-mode.json
 
 # Python
 services/ai-governance/.pytest_cache/
