@@ -1,7 +1,8 @@
 # MANDATE — multi-agent contract (phase 3)
 
-Status: ACTIVE  
+Status: HALTED  
 Signed: phase-3-parallel-2026-07-08  
+Halted: phase-3-complete-2026-07-08  
 Integration executor: parent agent (integration owner on `main`)  
 Verify gate: `./scripts/verify.sh`
 
@@ -9,38 +10,35 @@ Verify gate: `./scripts/verify.sh`
 
 ## Phase
 
-**Phase 3** — US second cell + cross-bloc exception demo (parallel tracks).
+**Phase 3** — US second cell + cross-bloc exception demo (parallel tracks). **Complete** on `main` (verify + demo green).
 
-Parent integrates on `main`, runs `./scripts/verify.sh` and `./scripts/demo.sh`. Do not trust child integration claims.
+Reopen with `proceed` and a new mandate scope before spawning parallel child tracks again.
 
 ---
 
-## Ownership
+## Ownership (archived)
 
-| Track | Branch (suggested) | Paths | Agent role |
-|-------|-------------------|-------|------------|
-| `us-cell` | `agent/us-cell` | `deploy/docker-compose.yml` (US services), `fhir/samples/us/`, US jurisdiction in `config/routing.yaml` | Child — add US HAPI + Postgres cell only |
-| `gateway-policy` | `agent/gateway-policy` | `services/gateway/`, `config/routing.yaml` (identity broker), gateway tests | Child — routing + broker; no compose US block edits |
-| `policy` | `agent/policy` | `policy/` (cross-bloc Rego + tests) | Child — policy only |
-| `integrate` | `main` | `scripts/demo.sh`, `scripts/run-dev.sh`, `scripts/verify.sh`, `docs/`, merge | Parent only |
+| Track | Branch | Paths | Agent role |
+|-------|--------|-------|------------|
+| `us-cell` | `agent/us-cell` | `deploy/docker-compose.yml` (US services), `fhir/samples/us/`, US jurisdiction in `config/routing.yaml` | Child — merged |
+| `gateway-policy` | `agent/gateway-policy` | `services/gateway/`, `config/routing.yaml` (identity broker), gateway tests | Child — merged |
+| `policy` | `agent/policy` | `policy/` (cross-bloc Rego + tests) | Child — merged |
+| `integrate` | `main` | `scripts/demo.sh`, `scripts/run-dev.sh`, `scripts/verify.sh`, `docs/`, merge | Parent — done |
 
-### Boundaries
+### Boundaries (when ACTIVE)
 
 - Children: package-level tests for their paths only; **no** `./scripts/demo.sh` or `docker compose` from worktrees.
 - Parent: merge child branches, resolve conflicts, run verify + demo from **main repo root**.
-- Shared file `config/routing.yaml`: **gateway-policy** owns broker/routing keys; **us-cell** may append US jurisdiction + subjects only via parent merge coordination (prefer gateway-policy merges routing structure first).
+- Shared file `config/routing.yaml`: **gateway-policy** owns broker/routing keys; **us-cell** appends US jurisdiction + subjects only via parent merge.
 
 ---
 
-## Worktrees (optional)
-
-From repo root after pulling this mandate:
+## Worktrees
 
 ```bash
-./scripts/setup-phase3-worktrees.sh
+./scripts/setup-phase3-worktrees.sh    # create (historical)
+./scripts/teardown-phase3-worktrees.sh # remove after merge
 ```
-
-Opens sibling directories with isolated branches. One Cursor chat (or cloud agent) per worktree.
 
 ---
 

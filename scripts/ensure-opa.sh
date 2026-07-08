@@ -7,8 +7,14 @@ BIN_DIR="$ROOT/.tools/bin"
 OPA="$BIN_DIR/opa"
 VERSION="0.70.0"
 
+opa_version_line() {
+  local ver
+  ver="$("$OPA" version 2>/dev/null || true)"
+  echo "${ver%%$'\n'*}"
+}
+
 if [[ -x "$OPA" ]]; then
-  "$OPA" version 2>/dev/null | head -1
+  opa_version_line
   exit 0
 fi
 
@@ -25,4 +31,4 @@ URL="https://github.com/open-policy-agent/opa/releases/download/v${VERSION}/opa_
 echo "downloading opa ${VERSION} for ${OS}/${ARCH}..."
 curl -fsSL "$URL" -o "$OPA"
 chmod +x "$OPA"
-"$OPA" version | head -1
+opa_version_line

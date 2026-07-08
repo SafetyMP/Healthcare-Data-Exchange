@@ -62,17 +62,18 @@ Aligns delivery phases with **regulatory deadlines** and the [implementation pla
 
 Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--parallel-slice-scaffold).
 
-### Phase 3 — Second cell + exception path (**fleet** if parallel)
+### Phase 3 — Second cell + exception path (complete)
 
-| Item | Deliverable |
-|------|-------------|
-| US cell | HAPI US + Postgres (SA-9(5) placement) |
-| Cross-bloc policy | Exception flow only; SCC+TIA documented |
-| Identity broker | Beyond config stub; NCP patterns |
+| Item | Deliverable | Status |
+|------|-------------|--------|
+| US cell | HAPI US + Postgres (SA-9(5) placement) | **Done** |
+| Cross-bloc policy | Exception flow; deny-by-default; SCC+TIA in architecture docs | **Done** |
+| Identity broker | Config stub + `/v1/identity/resolve`; NCP patterns | **Stub** (Phase 4) |
+| Integration | `demo.sh` US TEFCA + cross-bloc scenarios; verify green | **Done** |
 
-**Exit criteria:** US TEFCA demo + documented cross-bloc deny-by-default.
+**Exit criteria:** US TEFCA demo + documented cross-bloc deny-by-default — **met** on `main`.
 
-### Phase 4 — Production hardening (future)
+### Phase 4 — Production hardening (next)
 
 | Item | Notes |
 |------|-------|
@@ -89,7 +90,7 @@ Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--para
 
 | Phase | Profile |
 |-------|---------|
-| 0–1, 2a | **solo** |
+| 0–1, 2a, 3 complete | **solo** |
 | 2b, 3 (parallel agents) | **fleet** — [init playbook](plan.md#fleet-initialization-playbook) |
 
 ---

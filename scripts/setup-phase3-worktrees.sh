@@ -29,4 +29,5 @@ create_wt policy agent/policy
 
 echo ""
 echo "Worktrees ready. Parent stays on: $ROOT (main)"
+echo "After merge on main, run: ./scripts/teardown-phase3-worktrees.sh"
 echo "Open each path in a separate agent session."

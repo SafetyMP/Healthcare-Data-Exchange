@@ -1,7 +1,7 @@
 # Healthcare Exchange — Implementation Plan (corrected)
 
 **Status:** Active plan (post hostile self-audit, 2026-07-08)  
-**Harness profile:** `fleet` — phase 3 parallel tracks (Gate B). See [Fleet playbook](#fleet-initialization-playbook).  
+**Harness profile:** `solo` — phase 3 complete; fleet mandate HALTED. See [Fleet playbook](#fleet-initialization-playbook) for future parallel work.  
 **Deliverable default:** Design-document set + minimal runnable **walking skeleton** (one jurisdiction cell first), wired into `scripts/verify.sh` (hermetic) and `scripts/demo.sh` (compose E2E).
 
 ---
@@ -266,7 +266,7 @@ GovCloud/K8s/Terraform deployment, 3PAO assessment, full US Core resource covera
 
 ## Harness profile: fleet vs solo
 
-**Now:** `fleet` — phase 3 parallel split active (`specs/MANDATE.md` ACTIVE).
+**Now:** `solo` — phase 3 complete (`specs/MANDATE.md` HALTED). Re-init `fleet` at the next [fleet gate](#fleet-gates-when-to-init) if parallel agents return.
 
 **Upgrade to `fleet`** at a [fleet gate](#fleet-gates-when-to-init) below — not for compliance ambition, only when **2+ write-capable agents** share this repo.
 
