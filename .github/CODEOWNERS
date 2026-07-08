@@ -1,0 +1,8 @@
+# Default owners for review on sensitive paths
+* @SafetyMP
+
+/policy/ @SafetyMP
+/deploy/ @SafetyMP
+/.github/ @SafetyMP
+/services/gateway/ @SafetyMP
+/specs/ @SafetyMP

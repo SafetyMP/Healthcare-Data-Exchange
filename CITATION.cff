@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: Cloud Healthcare Exchange
+message: >-
+  If you use this software, please cite it using these metadata.
+type: software
+authors:
+  - name: SafetyMP
+repository-code: https://github.com/SafetyMP/Healthcare-Data-Exchange
+url: https://github.com/SafetyMP/Healthcare-Data-Exchange
+license: Apache-2.0
+version: 0.4.0
+date-released: 2026-07-08
+keywords:
+  - healthcare
+  - fhir
+  - open-policy-agent
+  - opa
+  - opal
+  - gdpr
+  - health-information-exchange
+  - reference-architecture
+abstract: >-
+  Reference implementation of a federated health information exchange with EU and
+  US jurisdiction cells, policy-as-code (OPA/Rego), dynamic consent (OPAL), and
+  regulatory-aligned architecture documentation.

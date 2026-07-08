@@ -1,6 +1,6 @@
 # AGENTS.md — Cloud Healthcare Exchange
 
-Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HALTED. See `docs/plan.md` and `docs/roadmap.md`.
+Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HALTED. See [README.md](README.md), [docs/plan.md](docs/plan.md), and [docs/roadmap.md](docs/roadmap.md).
 
 ## Commands
 
@@ -22,7 +22,7 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 
 ## Portfolio (multi-repo)
 
-This repo is the **canonical** agent root. See `specs/portfolio.yaml` and ADR `docs/adr/0007-opal-policy-mirror.md`.
+This repo is the **canonical** agent root. See `specs/portfolio.yaml` and [ADR 0007](docs/adr/0007-opal-policy-mirror.md) (policy mirror; ADR 0008 covers consent sync).
 
 | Repo | Role | Agent edits |
 |------|------|-------------|

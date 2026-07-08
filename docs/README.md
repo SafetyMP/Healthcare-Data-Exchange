@@ -2,6 +2,8 @@
 
 Design authority for the **Cloud Healthcare Exchange** reference implementation.
 
+New here? Start with the [repository README](../README.md) for quick start and demo overview.
+
 ## Start here
 
 | Document | Description |
@@ -28,8 +30,19 @@ Design authority for the **Cloud Healthcare Exchange** reference implementation.
 | [0004](adr/0004-fhir-us-core-interop.md) | FHIR R4 / US Core |
 | [0005](adr/0005-ai-governance-layer.md) | AI governance layer |
 | [0006](adr/0006-patient-identity-matching.md) | Federated patient identity |
+| [0007](adr/0007-opal-policy-mirror.md) | OPAL policy-mirror repository |
+| [0008](adr/0008-opal-consent-sync.md) | Dynamic consent sync with OPAL |
+| [0009](adr/0009-ssraa-auth-stub.md) | SSRAA US auth stub |
+| [0010](adr/0010-identity-broker-service.md) | Identity broker service |
+| [0011](adr/0011-opal-production-hardening.md) | OPAL production hardening |
+
+Policy mirror (two-repo split): [ADR 0007](adr/0007-opal-policy-mirror.md), [specs/portfolio.yaml](../specs/portfolio.yaml), and [healthcare-policy](https://github.com/SafetyMP/healthcare-policy).
 
 ## Reference
 
 - [glossary.md](glossary.md)
 - [references.md](references.md)
+- [CHANGELOG.md](../CHANGELOG.md) — release history
+- [GOVERNANCE.md](../GOVERNANCE.md) — maintainers and decision process
+- [assets/](assets/) — architecture and social preview graphics
+- [maintainer-github-settings.md](maintainer-github-settings.md) — GitHub UI settings checklist

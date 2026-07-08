@@ -1,0 +1,44 @@
+name: Bug report
+description: Report incorrect behavior in verify, demo, or services
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use synthetic data only. Do not include real PHI or credentials.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect vs what you observed?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ./scripts/run-dev.sh
+        2. ./scripts/demo.sh
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or branch
+      placeholder: main @ abc1234
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - verify.sh / CI
+        - demo.sh / docker-compose
+        - gateway
+        - policy / OPA
+        - OPAL / consent
+        - identity-broker
+        - documentation
+        - other

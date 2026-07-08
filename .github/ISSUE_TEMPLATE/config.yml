@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/SafetyMP/Healthcare-Data-Exchange/tree/main/docs
+    about: Architecture, ADRs, roadmap, and compliance mapping
+  - name: Security advisory
+    url: https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new
+    about: Report a vulnerability privately

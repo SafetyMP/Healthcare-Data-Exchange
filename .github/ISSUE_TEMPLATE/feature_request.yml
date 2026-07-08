@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest an enhancement aligned with the product mandate
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        CHEX is a reference implementation toward FedRAMP / GDPR / EHDS / TEFCA patterns — not a production HIE product. Features should fit [docs/product-mandate.md](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/product-mandate.md) and [docs/roadmap.md](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/roadmap.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What gap does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: High-level solution or ADR-worthy decision
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: Fits reference / walking-skeleton scope (not production ATO claim)
+          required: true
+        - label: Can be verified with verify.sh and/or demo.sh
+          required: false
