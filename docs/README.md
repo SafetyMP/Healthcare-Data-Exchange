@@ -44,5 +44,5 @@ Policy mirror (two-repo split): [ADR 0007](adr/0007-opal-policy-mirror.md), [spe
 - [references.md](references.md)
 - [CHANGELOG.md](../CHANGELOG.md) — release history
 - [GOVERNANCE.md](../GOVERNANCE.md) — maintainers and decision process
-- [assets/](assets/) — architecture and social preview graphics
+- [assets/](assets/) — architecture diagram and [social preview](assets/social-preview.png) (source: `social-preview.svg`)
 - [maintainer-github-settings.md](maintainer-github-settings.md) — GitHub UI settings checklist
