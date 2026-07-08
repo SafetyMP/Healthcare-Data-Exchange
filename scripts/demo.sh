@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # End-to-end demo: intra-EU, US TEFCA secondary, cross-bloc deny/exception,
-# dynamic consent revocation via OPAL, crypto-shred, AI oversight.
+# dynamic consent revocation via OPAL (ADR 0008), crypto-shred, AI oversight.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

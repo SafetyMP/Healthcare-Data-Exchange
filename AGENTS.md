@@ -42,12 +42,12 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 | `specs/portfolio.yaml` | Multi-repo contract (canonical + healthcare-policy) |
 | `services/gateway/` | Go jurisdiction router + OPA PEP + identity broker + consent proxy |
 | `services/ai-governance/` | Python FastAPI AI governance stub |
-| `services/consent-service/` | Python FastAPI consent state + OPAL data source (ADR 0007) |
+| `services/consent-service/` | Python FastAPI consent state + OPAL data source (ADR 0008) |
 | `policy/` | OPA Rego policies + tests (canonical; consent from `data.consent`) |
 | `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
 | `config/routing.yaml` | Identity broker stub + jurisdiction routing |
 | `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
-| `docs/` | Product mandate, architecture, ADRs (incl. 0007), roadmap |
+| `docs/` | Product mandate, architecture, ADRs (incl. 0007 mirror, 0008 consent), roadmap |
 
 ## Coding rules
 

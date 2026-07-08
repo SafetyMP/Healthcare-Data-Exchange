@@ -78,7 +78,7 @@ Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--para
 | Item | Deliverable | Status |
 |------|-------------|--------|
 | Policy repo | `SafetyMP/healthcare-policy` tracked by OPAL | **Done** |
-| consent-service | Consent state + OPAL data source + publish trigger (ADR 0007) | **Done** |
+| consent-service | Consent state + OPAL data source + publish trigger (ADR 0008) | **Done** |
 | Policy | `data.consent`-driven research gate; hermetic Rego tests | **Done** |
 | Demo | Live revoke/grant flips research 200↔403 with no restart | **Done** |
 

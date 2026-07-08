@@ -1,4 +1,4 @@
-"""Cloud Healthcare Exchange — consent service (ADR 0007).
+"""Cloud Healthcare Exchange — consent service (ADR 0008).
 
 Holds dynamic consent state and serves it to OPAL as an external data source at
 `GET /policy-data`. On every change the service asks the OPAL server to publish a

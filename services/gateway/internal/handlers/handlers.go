@@ -183,7 +183,7 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 }
 
 // ConsentAdmin grants or revokes consent via the consent-service, which syncs
-// the change to the PDP through OPAL (ADR 0007). Single entry point via gateway.
+// the change to the PDP through OPAL (ADR 0008). Single entry point via gateway.
 func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 	if s.Consent == nil {
 		http.Error(w, "consent service unavailable", http.StatusServiceUnavailable)

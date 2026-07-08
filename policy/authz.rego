@@ -1,7 +1,7 @@
 # Cloud Healthcare Exchange — authorization policy (OPA/Rego)
 #
 # Consent is NOT baked into this policy or the request input. It is synced as
-# external data at `data.consent` by OPAL (ADR 0007), so revocation propagates
+# external data at `data.consent` by OPAL (ADR 0008), so revocation propagates
 # to the PDP without a redeploy. Residency + purpose logic stays in git.
 package chex.authz
 

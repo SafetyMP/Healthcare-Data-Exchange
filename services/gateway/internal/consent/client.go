@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Client proxies consent admin actions to the consent-service (ADR 0007).
+// Client proxies consent admin actions to the consent-service (ADR 0008).
 // The gateway stays the single entry point; consent state + OPAL sync live in
 // the consent-service.
 type Client struct {
