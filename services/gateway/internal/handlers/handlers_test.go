@@ -72,8 +72,19 @@ func TestGetPatientDenied(t *testing.T) {
 
 func TestGetPatientCrossBlocDenied(t *testing.T) {
 	srv := newTestServer(t, denyOPA("residency_denied"), "", "")
+	srv.SSRAA = ssraa.NewValidator(&ssraa.Config{
+		Required: true,
+		Associations: map[string]ssraa.Association{
+			"us-clinician-client": {
+				Secret:       "us-secret",
+				Jurisdiction: "us-clinician",
+				Scopes:       []string{"patient.read"},
+			},
+		},
+	})
 
-	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment&requester_jurisdiction=us-clinician", nil)
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", "Bearer us-clinician-client.us-secret")
 	rec := httptest.NewRecorder()
 	srv.GetPatient(rec, req)
 
@@ -255,7 +266,11 @@ func testSSRA() *ssraa.Validator {
 	return ssraa.NewValidator(&ssraa.Config{
 		Required: true,
 		Associations: map[string]ssraa.Association{
-			"tefca-demo-client": {Secret: "demo-ssraa-secret", Scopes: []string{"patient.read"}},
+			"tefca-demo-client": {
+				Secret:       "demo-ssraa-secret",
+				Jurisdiction: "us-home",
+				Scopes:       []string{"patient.read"},
+			},
 		},
 	})
 }
