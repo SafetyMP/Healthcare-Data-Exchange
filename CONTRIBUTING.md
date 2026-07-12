@@ -16,7 +16,7 @@ Thank you for your interest in this project. CHEX is a **reference implementatio
 ./scripts/demo.sh            # E2E after stack is up
 ```
 
-**Prerequisites:** Docker, Go 1.22+, Python 3.12+. First `run-dev.sh` generates OPAL dev secrets locally (`deploy/opal/dev-secrets.env`, gitignored).
+**Prerequisites:** Docker, Go 1.22+, Python 3.12+, `curl`, PyYAML (`pip install pyyaml`). First `run-dev.sh` generates OPAL dev secrets locally (`deploy/opal/dev-secrets.env`, gitignored). First `./scripts/verify.sh` may download OPA and create Python venvs (network required once).
 
 ## Definition of done
 

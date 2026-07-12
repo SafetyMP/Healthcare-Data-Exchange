@@ -5,6 +5,8 @@
 **Secondary:** US TEFCA path  
 **Exception:** Cross-bloc derivative (labeled, policy-gated)
 
+> **PoC note:** Sequence diagrams label separate "Home EU Gateway" / "US Gateway" participants. The walking skeleton runs a **single `gateway` service** that routes to EU/US FHIR cells via `config/routing.yaml`. Treat "Gateway" in diagrams as that global PEP.
+
 ---
 
 ## Flow 1 — Intra-EU primary (visiting clinician, home data)
@@ -16,7 +18,7 @@ sequenceDiagram
   participant C as Clinician (visiting MS)
   participant R as Jurisdiction Router
   participant B as Identity Broker
-  participant G as Home EU Gateway
+  participant G as Gateway (PEP)
   participant O as OPA PDP
   participant F as HAPI FHIR (home)
   participant K as Key Custody
@@ -44,7 +46,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant C as Clinician
-  participant G as EU Gateway
+  participant G as Gateway (PEP)
   participant O as OPA PDP
   participant A as Audit Sink
 
@@ -65,7 +67,7 @@ US clinician accesses US patient via QHIN. All processing in **US cell** (SA-9(5
 sequenceDiagram
   participant Q as QHIN Client
   participant R as Router
-  participant G as US Gateway
+  participant G as Gateway (PEP)
   participant O as OPA PDP
   participant F as HAPI FHIR US
 
@@ -88,7 +90,7 @@ EU-origin patient; **minimum-necessary derivative** requested by US requester. R
 sequenceDiagram
   participant U as US Requester
   participant R as Router
-  participant G as EU Gateway
+  participant G as Gateway (PEP)
   participant O as OPA PDP
   participant F as HAPI FHIR EU
 
@@ -116,7 +118,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant Admin as Tenant Admin
-  participant G as EU Gateway
+  participant G as Gateway (PEP)
   participant K as Key Custody
   participant F as HAPI FHIR EU
 
