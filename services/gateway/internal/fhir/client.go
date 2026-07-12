@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pathsafe"
 )
 
 type Client struct {
@@ -76,7 +78,16 @@ func (c *Client) loadSample(id, cell string) (map[string]any, error) {
 	if cell == "" {
 		cell = "eu"
 	}
-	path := fmt.Sprintf("%s/%s/%s.json", c.sampleDir, cell, id)
+	if err := pathsafe.ValidateSegment(id, "patient id"); err != nil {
+		return nil, err
+	}
+	if err := pathsafe.ValidateSegment(cell, "cell"); err != nil {
+		return nil, err
+	}
+	path, err := pathsafe.SafeJoin(c.sampleDir, cell, id+".json")
+	if err != nil {
+		return nil, err
+	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

@@ -103,7 +103,7 @@ def log_event(
             "event": event,
             "workspace_root": workspace_root,
             "profile": _repo_profile_name_for(workspace_root),
-            **data,
+            **redact_secrets(data),
         }
         if ctx and ctx.get("loop_count") is not None and "loop_count" not in record:
             record["loop_count"] = ctx.get("loop_count")
@@ -128,7 +128,7 @@ def read_input() -> dict[str, Any]:
 
 def emit(obj: dict[str, Any]) -> None:
     """Write a JSON response and flush."""
-    sys.stdout.write(json.dumps(obj))
+    sys.stdout.write(json.dumps(redact_secrets(obj)))
     sys.stdout.flush()
 
 
@@ -169,6 +169,19 @@ def find_secret(text: str) -> str | None:
         if pattern.search(text):
             return label
     return None
+
+
+def redact_secrets(value: Any) -> Any:
+    """Recursively redact secret-like strings before logging or emitting."""
+    if isinstance(value, str):
+        if find_secret(value):
+            return "[REDACTED]"
+        return value
+    if isinstance(value, dict):
+        return {k: redact_secrets(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_secrets(v) for v in value]
+    return value
 
 
 # --- Sensitive-file detection ----------------------------------------------

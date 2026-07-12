@@ -8,9 +8,10 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pathsafe"
 )
 
 // KeyStore is a software KMS stand-in for per-tenant master keys (ADR 0003).
@@ -45,6 +46,9 @@ func (k *KeyStore) loadShreddedMarkers() error {
 }
 
 func (k *KeyStore) EnsureTenant(tenant string) error {
+	if err := pathsafe.ValidateSegment(tenant, "tenant"); err != nil {
+		return err
+	}
 	if k.IsShredded(tenant) {
 		return errors.New("tenant shredded")
 	}
@@ -53,7 +57,10 @@ func (k *KeyStore) EnsureTenant(tenant string) error {
 	if _, ok := k.keys[tenant]; ok {
 		return nil
 	}
-	path := k.tenantPath(tenant)
+	path, err := k.tenantPath(tenant)
+	if err != nil {
+		return err
+	}
 	if data, err := os.ReadFile(path); err == nil {
 		k.keys[tenant] = data
 		return nil
@@ -93,14 +100,23 @@ func (k *KeyStore) Encrypt(tenant, plaintext string) (string, error) {
 }
 
 func (k *KeyStore) ShredTenant(tenant string) error {
+	if err := pathsafe.ValidateSegment(tenant, "tenant"); err != nil {
+		return err
+	}
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	delete(k.keys, tenant)
-	path := k.tenantPath(tenant)
+	path, err := k.tenantPath(tenant)
+	if err != nil {
+		return err
+	}
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	marker := filepath.Join(k.dir, tenant+".shredded")
+	marker, err := pathsafe.SafeJoin(k.dir, tenant+".shredded")
+	if err != nil {
+		return err
+	}
 	if err := os.WriteFile(marker, []byte("1"), 0o600); err != nil {
 		return err
 	}
@@ -124,6 +140,6 @@ func (k *KeyStore) HasTenant(tenant string) bool {
 	return ok
 }
 
-func (k *KeyStore) tenantPath(tenant string) string {
-	return filepath.Join(k.dir, tenant+".key")
+func (k *KeyStore) tenantPath(tenant string) (string, error) {
+	return pathsafe.SafeJoin(k.dir, tenant+".key")
 }
