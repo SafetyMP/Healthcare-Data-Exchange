@@ -5,5 +5,6 @@ required: true
 associations:
   tefca-demo-client:
     secret: demo-ssraa-secret
+    jurisdiction: us-home
     scopes:
       - patient.read

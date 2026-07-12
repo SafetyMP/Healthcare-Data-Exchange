@@ -1,6 +1,7 @@
 package ssraa
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"os"
 	"strings"
@@ -15,8 +16,9 @@ type Config struct {
 }
 
 type Association struct {
-	Secret string   `yaml:"secret"`
-	Scopes []string `yaml:"scopes"`
+	Secret       string   `yaml:"secret"`
+	Scopes       []string `yaml:"scopes"`
+	Jurisdiction string   `yaml:"jurisdiction"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -64,10 +66,28 @@ func (v *Validator) Validate(authHeader string) (clientID string, ok bool) {
 	}
 	clientID, secret := parts[0], parts[1]
 	assoc, ok := v.cfg.Associations[clientID]
-	if !ok || assoc.Secret != secret {
+	if !ok || !secretMatch(assoc.Secret, secret) {
 		return "", false
 	}
 	return clientID, true
+}
+
+func secretMatch(expected, actual string) bool {
+	if len(expected) != len(actual) {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(expected), []byte(actual)) == 1
+}
+
+func (v *Validator) Jurisdiction(clientID string) (string, bool) {
+	if v == nil || v.cfg == nil || clientID == "" {
+		return "", false
+	}
+	assoc, ok := v.cfg.Associations[clientID]
+	if !ok || strings.TrimSpace(assoc.Jurisdiction) == "" {
+		return "", false
+	}
+	return assoc.Jurisdiction, true
 }
 
 func (v *Validator) String() string {
