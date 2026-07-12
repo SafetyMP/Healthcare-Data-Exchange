@@ -44,6 +44,14 @@ Centralizing health data in one global database fails sovereignty, erasure, and 
 
 See [architecture overview](docs/architecture/overview.md) and [product mandate](docs/product-mandate.md).
 
+## Visual overview
+
+| Jurisdiction cells | Component architecture | Policy + OPAL flow |
+|:------------------:|:----------------------:|:------------------:|
+| ![Jurisdiction architecture](docs/assets/architecture.png) | ![Component architecture](docs/assets/architecture-detailed.png) | ![Policy and OPAL flow](docs/assets/policy-opal-flow.png) |
+
+_Synthetic FHIR only — screenshots are architecture diagrams, not clinical UI._
+
 ## Quick start
 
 **Prerequisites:** Docker, Go 1.22+, Python 3.12+
@@ -80,7 +88,11 @@ First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitign
 ## Architecture
 
 <p align="center">
-  <img src="docs/assets/architecture.svg" alt="Architecture diagram" width="640"/>
+  <img src="docs/assets/architecture-detailed.png" alt="CHEX PoC component architecture with services and ports" width="900"/>
+</p>
+
+<p align="center">
+  <img src="docs/assets/architecture.png" alt="EU and US jurisdiction cells with PHI-free global control plane" width="720"/>
 </p>
 
 ```mermaid

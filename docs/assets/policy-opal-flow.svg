@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 420" role="img" aria-labelledby="title desc">
+  <title id="title">CHEX policy and OPAL sync flow</title>
+  <desc id="desc">Canonical policy in Healthcare-Data-Exchange syncs to healthcare-policy for OPAL bundles and OPA.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="420" fill="url(#bg)" rx="16"/>
+  <text x="550" y="42" text-anchor="middle" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="22" font-weight="700">Policy-as-code distribution (ADR 0007 / 0008)</text>
+  <text x="550" y="68" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="13">Slow-changing Rego in git | fast-changing consent via OPAL data source</text>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="120" width="220" height="100" rx="12" fill="#0ea5e9"/>
+    <text x="150" y="152" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="14" font-weight="700">Healthcare-Data-Exchange</text>
+    <text x="150" y="176" text-anchor="middle" fill="#e0f2fe" font-family="system-ui,sans-serif" font-size="11">policy/*.rego + opa test</text>
+    <text x="150" y="196" text-anchor="middle" fill="#bae6fd" font-family="system-ui,sans-serif" font-size="11">canonical source</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="320" y="148" width="160" height="44" rx="8" fill="#475569"/>
+    <text x="400" y="176" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="12" font-weight="600">sync-policy-repo.sh</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="540" y="120" width="200" height="100" rx="12" fill="#8b5cf6"/>
+    <text x="640" y="152" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="14" font-weight="700">healthcare-policy</text>
+    <text x="640" y="176" text-anchor="middle" fill="#ede9fe" font-family="system-ui,sans-serif" font-size="11">authz.rego mirror</text>
+    <text x="640" y="196" text-anchor="middle" fill="#ddd6fe" font-family="system-ui,sans-serif" font-size="11">OPAL git track</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="800" y="100" width="130" height="56" rx="10" fill="#a855f7"/>
+    <text x="865" y="126" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="12" font-weight="700">OPAL server</text>
+    <text x="865" y="144" text-anchor="middle" fill="#f3e8ff" font-family="system-ui,sans-serif" font-size="10">policy bundle</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="800" y="184" width="130" height="56" rx="10" fill="#ec4899"/>
+    <text x="865" y="210" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="12" font-weight="700">consent-svc</text>
+    <text x="865" y="228" text-anchor="middle" fill="#fce7f3" font-family="system-ui,sans-serif" font-size="10">data source</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="980" y="142" width="100" height="56" rx="10" fill="#22c55e"/>
+    <text x="1030" y="168" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="12" font-weight="700">OPA PDP</text>
+    <text x="1030" y="186" text-anchor="middle" fill="#dcfce7" font-family="system-ui,sans-serif" font-size="10">:8181</text>
+  </g>
+
+  <line x1="260" y1="170" x2="318" y2="170" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="480" y1="170" x2="538" y2="170" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="740" y1="155" x2="798" y2="128" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="930" y1="128" x2="978" y2="155" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="930" y1="212" x2="978" y2="185" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="865" y1="184" x2="865" y2="156" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="120" y="280" width="860" height="88" rx="12" fill="#1e293b" stroke="#334155"/>
+    <text x="550" y="310" text-anchor="middle" fill="#e2e8f0" font-family="system-ui,sans-serif" font-size="13" font-weight="600">Gateway PEP calls OPA with structured input</text>
+    <text x="550" y="334" text-anchor="middle" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="11">Policy from healthcare-policy | consent from data.consent (live revoke via OPAL)</text>
+    <text x="550" y="354" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="11">Bundle integrity: check-policy-bundle.sh | webhook: trigger-opal-policy-webhook.sh</text>
+  </g>
+
+  <text x="550" y="400" text-anchor="middle" fill="#64748b" font-family="system-ui,sans-serif" font-size="11">ADR 0007 policy mirror | ADR 0008 consent sync | ADR 0011 OPAL hardening</text>
+</svg>
