@@ -26,7 +26,28 @@ gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/topics \
 
 ## Social preview
 
-Upload `docs/assets/social-preview.svg` (or export as PNG 1280×640) as the repository social preview image under **Settings → General → Social preview**.
+Canonical assets:
+
+| File | Purpose |
+|------|---------|
+| `docs/assets/social-preview.svg` | Editable source (1280×630 viewBox) |
+| `docs/assets/social-preview.png` | Rendered PNG for GitHub upload (1280px wide) |
+| `.github/social-preview.png` | Copy for discoverability in repo root metadata |
+
+Render PNG from SVG:
+
+```bash
+./scripts/render-social-preview.sh
+```
+
+Upload to **Settings → Social preview** (no public API — uses Playwright UI automation):
+
+```bash
+./scripts/upload-social-preview.sh --login   # once, saves browser session
+./scripts/upload-social-preview.sh           # after render
+```
+
+Manual alternative: **Settings → General → Social preview → Edit** → upload `docs/assets/social-preview.png`.
 
 ## Branch protection (recommended)
 

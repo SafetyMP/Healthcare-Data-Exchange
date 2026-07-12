@@ -11,8 +11,8 @@
   <circle cx="180" cy="120" r="80" fill="#0ea5e9" opacity="0.25"/>
   <circle cx="1020" cy="520" r="120" fill="#a78bfa" opacity="0.2"/>
   <text x="80" y="200" fill="#f8fafc" font-family="system-ui,Segoe UI,sans-serif" font-size="56" font-weight="800">Cloud Healthcare Exchange</text>
-  <text x="80" y="270" fill="#bae6fd" font-family="system-ui,sans-serif" font-size="28">Federated HIE reference · OPA · OPAL · FHIR</text>
-  <text x="80" y="340" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="22">EU + US jurisdiction cells · policy-as-code · live consent</text>
+  <text x="80" y="270" fill="#bae6fd" font-family="system-ui,sans-serif" font-size="28">Federated HIE reference | OPA | OPAL | FHIR</text>
+  <text x="80" y="340" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="22">EU + US jurisdiction cells | policy-as-code | live consent</text>
   <rect x="80" y="400" width="220" height="44" rx="8" fill="#0ea5e9"/>
   <text x="190" y="428" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600">verify.sh</text>
   <rect x="320" y="400" width="220" height="44" rx="8" fill="#8b5cf6"/>
