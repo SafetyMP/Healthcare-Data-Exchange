@@ -19,7 +19,8 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#what-the-demo-proves">Demo</a> ·
+  <a href="#demo">Demo</a> ·
+  <a href="#what-the-demo-proves">Scenarios</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="docs/README.md">Docs</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
@@ -29,6 +30,26 @@
 ---
 
 > **Scope:** Design authority + walking skeleton. Demonstrates patterns toward FedRAMP High, GDPR/EHDS, and EU AI Act alignment — **not** certification, an ATO, or production deployment guidance.
+
+## Demo
+
+<p align="center">
+  <img src="docs/assets/demo.gif" alt="Cloud Healthcare Exchange clinician console — overview, patient lookup, consent, and AI triage (synthetic demo data)" width="900" />
+</p>
+
+### Screenshots
+
+| Overview | Patient lookup | Consent | AI triage |
+|:--------:|:--------------:|:-------:|:---------:|
+| ![Overview](docs/assets/overview.png) | ![Patient lookup](docs/assets/patients.png) | ![Consent](docs/assets/consent.png) | ![AI triage](docs/assets/ai-triage.png) |
+
+| Identity resolve |
+|:----------------:|
+| ![Identity resolve](docs/assets/identity.png) |
+
+The **clinician console** in [`web/`](web/) proxies gateway APIs for local demos. Start the backend with `./scripts/run-dev.sh`, then `cd web && npm install && npm run dev` on port **3100**. Regenerate visuals with `cd web && npm run screenshots` (requires a running dev server); see [`docs/assets/README.md`](docs/assets/README.md).
+
+_Synthetic FHIR only — no real PHI._
 
 ## Why this exists
 
@@ -44,13 +65,13 @@ Centralizing health data in one global database fails sovereignty, erasure, and 
 
 See [architecture overview](docs/architecture/overview.md) and [product mandate](docs/product-mandate.md).
 
-## Visual overview
+## Architecture overview
 
 | Jurisdiction cells | Component architecture | Policy + OPAL flow |
 |:------------------:|:----------------------:|:------------------:|
 | ![Jurisdiction architecture](docs/assets/architecture.png) | ![Component architecture](docs/assets/architecture-detailed.png) | ![Policy and OPAL flow](docs/assets/policy-opal-flow.png) |
 
-_Synthetic FHIR only — screenshots are architecture diagrams, not clinical UI._
+_Diagrams show jurisdiction cells and policy distribution — not clinical UI._
 
 ## Quick start
 
@@ -71,6 +92,9 @@ cd Healthcare-Data-Exchange
 
 # Tear down when finished
 ./scripts/teardown-dev.sh
+
+# Clinician console (optional — requires backend stack above)
+cd web && npm install && npm run dev   # http://localhost:3100
 ```
 
 First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitignored).
@@ -145,6 +169,7 @@ flowchart TB
 | `policy/` | Canonical OPA Rego (+ tests) |
 | `config/` | Routing, SSRAA, identity registry, OPAL profile |
 | `deploy/docker-compose.yml` | EU + US cells + OPAL stack |
+| `web/` | Next.js clinician console (BFF → gateway) |
 | `docs/` | Mandate, architecture, ADRs, roadmap |
 | `scripts/verify.sh` | Hermetic definition of done |
 | `scripts/demo.sh` | Compose E2E demonstration |
