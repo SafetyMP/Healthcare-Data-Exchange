@@ -51,15 +51,16 @@ func main() {
 	}
 
 	srv := &handlers.Server{
-		Routing: routing,
-		Broker:  broker.New(routing, identity.NewClient(identityURL)),
-		PEP:     pep.NewClient(opaURL),
-		FHIR:    fhir.NewClient(fhirBase, sampleDir),
-		Audit:   audit.NewSink(auditPath),
-		Keys:    keys,
-		AI:      aigov.NewClient(aiURL),
-		Consent: consent.NewClient(consentURL),
-		SSRAA:   ssraa.NewValidator(ssraaCfg),
+		Routing:        routing,
+		Broker:         broker.New(routing, identity.NewClient(identityURL)),
+		PEP:            pep.NewClient(opaURL),
+		FHIR:           fhir.NewClient(fhirBase, sampleDir),
+		Audit:          audit.NewSink(auditPath),
+		Keys:           keys,
+		AI:             aigov.NewClient(aiURL),
+		Consent:        consent.NewClient(consentURL),
+		SSRAA:          ssraa.NewValidator(ssraaCfg),
+		ClinicianUIURL: env("CHEX_CLINICIAN_UI_URL", "http://localhost:3100"),
 	}
 
 	mux := http.NewServeMux()

@@ -22,6 +22,8 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 | `./scripts/upload-social-preview.sh` | Upload social preview to GitHub settings (Playwright; run `--login` once) |
 | `./scripts/setup-phase3-worktrees.sh` | Create worktrees for parallel tracks (historical) |
 | `./scripts/teardown-phase3-worktrees.sh` | Remove merged phase 3 worktrees and agent branches |
+| `cd web && npm run dev` | Clinician console (port 3100; requires `./scripts/run-dev.sh`) |
+| `cd web && npm run verify` | Web UI: typecheck + build + @smoke Playwright + axe-core |
 
 ## Portfolio (multi-repo)
 
@@ -38,6 +40,7 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 
 ```bash
 ./scripts/verify.sh
+cd web && npm run verify   # optional: clinician console (requires gateway for live API)
 ```
 
 `verify.sh` does **not** require Docker. Compose E2E is `demo.sh` only.
@@ -52,6 +55,7 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 | `services/ai-governance/` | Python FastAPI AI governance stub |
 | `services/consent-service/` | Python FastAPI consent state + OPAL data source (ADR 0008) |
 | `services/identity-broker/` | Python FastAPI ITI-78 identifier resolve (ADR 0010) |
+| `web/` | Next.js clinician console (BFF → gateway :8081) |
 | `policy/` | OPA Rego policies + tests (canonical; consent from `data.consent`) |
 | `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
 | `config/routing.yaml` | Jurisdiction routing + subject registry (identifier fallback) |
