@@ -1,6 +1,29 @@
 # Repository assets
 
-Visual assets for README, docs, and GitHub social preview. Sources are SVG; PNGs are generated for crisp rendering on GitHub and social platforms.
+Visual assets for README, docs, and GitHub social preview.
+
+## Clinician console (web UI)
+
+| File | Purpose |
+|------|---------|
+| [`demo.gif`](demo.gif) | README hero — overview, patient lookup, consent, AI triage (4 frames, 2s each). Regenerate with `cd web && npm run screenshots`. |
+| [`overview.png`](overview.png) | Dashboard / workflow index |
+| [`patients.png`](patients.png) | Policy-gated FHIR patient read |
+| [`consent.png`](consent.png) | Consent grant/revoke admin |
+| [`ai-triage.png`](ai-triage.png) | AI governance triage stub |
+| [`identity.png`](identity.png) | ITI-78-style identifier resolve |
+
+Synthetic demo data only — no real PHI. Regenerate when the clinician console layout changes materially:
+
+```bash
+./scripts/run-dev.sh          # backend stack (optional for static UI capture)
+cd web && npm ci && npm run build && npm run start
+cd web && npm run screenshots # or npm run screenshots:rebuild-gif from existing PNGs
+```
+
+## Architecture diagrams
+
+Sources are SVG; PNGs are generated for crisp rendering on GitHub and social platforms.
 
 | File | Purpose |
 |------|---------|

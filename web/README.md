@@ -19,6 +19,8 @@ npm run verify       # typecheck + build + @smoke Playwright + axe-core
 
 Start the backend first from repo root: `./scripts/run-dev.sh`
 
+Regenerate README screenshots: `npm run build && npm run start` then `npm run screenshots` (see [`docs/assets/README.md`](../docs/assets/README.md)).
+
 ## Pages
 
 | Route | Purpose |
