@@ -8,7 +8,7 @@ Authoritative external sources cited in mandate, architecture, and ADRs. Verify 
 
 | ID | Source | Use in this project |
 |----|--------|---------------------|
-| REF-FED-01 | [FedRAMP Help Center](https://help.fedramp.gov/hc/en-us) | No government-wide US-person citizenship requirement |
+| REF-FED-01 | [FedRAMP.gov](https://www.fedramp.gov/) | No government-wide US-person citizenship requirement |
 | REF-FED-02 | NIST SP 800-53 Rev 5 **SA-9(5)** — External System Services (location) | US jurisdiction for High-impact data processing/storage |
 | REF-FED-03 | [FedRAMP High baseline](https://www.fedramp.gov/) (410 controls) | Architecture alignment target |
 | REF-FED-04 | [TEFCA / RCE](https://www.healthit.gov/topic/interoperability/trusted-exchange-framework-and-common-agreement-tefca) | US QHIN exchange patterns |
