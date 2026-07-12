@@ -12,11 +12,11 @@ Residency, purpose, consent, and minimum-necessary rules change frequently (EHDS
 
 Use **Open Policy Agent (OPA)** with **Rego** as the primary Policy Decision Point (PDP):
 
-- Policies in `policy/residency.rego`, `consent.rego`, `purpose.rego`.
+- Policies in consolidated `policy/authz.rego` (residency, consent via `data.consent`, purpose).
 - Gateway (Go PEP) calls OPA with structured JSON input; enforces allow/deny and obligation hints (field filters).
 - Unit tests via `opa test policy/`.
 
-**Cedar** is noted for future **entity-centric authorization** (fine-grained resource attributes) but is not the PoC PDP. **OPAL** is the target for real-time consent revocation propagation to OPA bundles in production.
+**Cedar** is noted for future **entity-centric authorization** (fine-grained resource attributes) but is not the PoC PDP. **OPAL consent sync is implemented in the PoC** (ADR 0008); `consent-service` publishes revocations to the opal-client bundle.
 
 ### Deployment evolution
 
