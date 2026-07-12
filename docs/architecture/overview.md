@@ -16,6 +16,18 @@ Cloud Healthcare Exchange solves this as a **federation of jurisdiction cells** 
 
 ## Logical architecture
 
+<p align="center">
+  <img src="../assets/architecture.png" alt="Jurisdiction cells and global control plane" width="720"/>
+</p>
+
+<p align="center">
+  <img src="../assets/architecture-detailed.png" alt="PoC services, ports, and regional FHIR cells" width="900"/>
+</p>
+
+<p align="center">
+  <img src="../assets/policy-opal-flow.png" alt="Policy mirror and OPAL distribution" width="800"/>
+</p>
+
 ```mermaid
 flowchart TB
   subgraph clients [Clients]
