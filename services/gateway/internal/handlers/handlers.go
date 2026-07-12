@@ -27,15 +27,16 @@ type ConsentAdmin interface {
 }
 
 type Server struct {
-	Routing *appconfig.Routing
-	Broker  *broker.Broker
-	PEP     *pep.Client
-	FHIR    *fhir.Client
-	Audit   *audit.Sink
-	Keys    *crypto.KeyStore
-	AI      AIGovernance
-	Consent ConsentAdmin
-	SSRAA   *ssraa.Validator
+	Routing        *appconfig.Routing
+	Broker         *broker.Broker
+	PEP            *pep.Client
+	FHIR           *fhir.Client
+	Audit          *audit.Sink
+	Keys           *crypto.KeyStore
+	AI             AIGovernance
+	Consent        ConsentAdmin
+	SSRAA          *ssraa.Validator
+	ClinicianUIURL string
 }
 
 func (s *Server) Health(w http.ResponseWriter, _ *http.Request) {

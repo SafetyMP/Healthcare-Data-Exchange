@@ -21,15 +21,19 @@ import (
 )
 
 func TestLanding(t *testing.T) {
-	srv := &handlers.Server{}
+	srv := &handlers.Server{ClinicianUIURL: "http://localhost:3100"}
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	srv.Landing(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200 got %d", rec.Code)
 	}
-	if !strings.Contains(rec.Body.String(), "Cloud Healthcare Exchange") {
+	body := rec.Body.String()
+	if !strings.Contains(body, "Cloud Healthcare Exchange") {
 		t.Fatal("expected landing page title")
+	}
+	if !strings.Contains(body, "http://localhost:3100") {
+		t.Fatal("expected clinician console link")
 	}
 }
 

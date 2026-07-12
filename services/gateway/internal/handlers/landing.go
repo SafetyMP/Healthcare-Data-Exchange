@@ -1,10 +1,34 @@
 package handlers
 
 import (
+	"fmt"
+	"html"
 	"net/http"
+	"strings"
 )
 
-const landingHTML = `<!DOCTYPE html>
+func (s *Server) Landing(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(renderLandingHTML(s.ClinicianUIURL)))
+}
+
+func renderLandingHTML(clinicianUIURL string) string {
+	consoleBlock := ""
+	if u := strings.TrimSpace(clinicianUIURL); u != "" {
+		escaped := html.EscapeString(u)
+		consoleBlock = fmt.Sprintf(
+			`  <p class="note">Clinician console: <a href="%s">%s</a> — run <code>cd web &amp;&amp; npm run dev</code> (port 3100).</p>`+"\n",
+			escaped,
+			escaped,
+		)
+	}
+
+	return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -23,7 +47,7 @@ const landingHTML = `<!DOCTYPE html>
 </head>
 <body>
   <h1>Cloud Healthcare Exchange</h1>
-  <p class="note">Reference-slice gateway (JSON API). This page lists demo endpoints — there is no clinician UI yet.</p>
+` + consoleBlock + `  <p class="note">Reference-slice gateway (JSON API). Demo endpoints below complement the clinician console.</p>
   <p><a href="/health">Health check</a> (<code>GET /health</code>)</p>
   <h2>Demo endpoints</h2>
   <ul>
@@ -50,13 +74,4 @@ const landingHTML = `<!DOCTYPE html>
   <p class="note">Full E2E: <code>./scripts/demo.sh</code> from the repo root. Hermetic tests: <code>./scripts/verify.sh</code>.</p>
 </body>
 </html>`
-
-func (s *Server) Landing(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(landingHTML))
 }

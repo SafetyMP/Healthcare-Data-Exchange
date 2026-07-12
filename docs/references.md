@@ -8,7 +8,7 @@ Authoritative external sources cited in mandate, architecture, and ADRs. Verify 
 
 | ID | Source | Use in this project |
 |----|--------|---------------------|
-| REF-FED-01 | [FedRAMP Help — Personnel screening](https://www.fedramp.gov/help_center/) | No government-wide US-person citizenship requirement |
+| REF-FED-01 | [FedRAMP.gov](https://www.fedramp.gov/) | No government-wide US-person citizenship requirement |
 | REF-FED-02 | NIST SP 800-53 Rev 5 **SA-9(5)** — External System Services (location) | US jurisdiction for High-impact data processing/storage |
 | REF-FED-03 | [FedRAMP High baseline](https://www.fedramp.gov/) (410 controls) | Architecture alignment target |
 | REF-FED-04 | [TEFCA / RCE](https://www.healthit.gov/topic/interoperability/trusted-exchange-framework-and-common-agreement-tefca) | US QHIN exchange patterns |
@@ -33,7 +33,7 @@ Authoritative external sources cited in mandate, architecture, and ADRs. Verify 
 | ID | Source | Use in this project |
 |----|--------|---------------------|
 | REF-EHDS-01 | Regulation (EU) 2025/327 — European Health Data Space | Primary/secondary use framework |
-| REF-EHDS-02 | [MyHealth@EU / eHDSI](https://ec.europa.eu/health/ehealth/myhealth-eu_en) | NCP federated access |
+| REF-EHDS-02 | [MyHealth@EU / eHDSI](https://health.ec.europa.eu/ehealth-digital-health-and-care/digital-health-and-care/electronic-cross-border-health-services_en) | NCP federated access |
 | REF-EHDS-03 | IHE ITI-78 (PDQm), ITI-119 (`$match`) | Patient identity resolution |
 | REF-EHDS-04 | IHE ATNA — audit trail patterns | Audit retention vs erasure tension |
 | REF-EHDS-05 | MyHealth@EU AI Act tutorial; PMC sectoral retention | Identifiers in audit logs |
