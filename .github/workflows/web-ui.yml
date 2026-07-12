@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: actions/setup-node@39370e3970a497959901966a3caed2106fd742a3 # v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
