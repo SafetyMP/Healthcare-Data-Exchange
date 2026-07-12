@@ -47,7 +47,7 @@
 |:----------------:|
 | ![Identity resolve](docs/assets/identity.png) |
 
-The **clinician console** in [`web/`](web/) proxies gateway APIs for local demos. Start the backend with `./scripts/run-dev.sh`, then `cd web && npm install && npm run dev` (http://localhost:3100). Regenerate visuals with `cd web && npm run screenshots` (requires a running dev server); see [`docs/assets/README.md`](docs/assets/README.md).
+The **clinician console** in [`web/`](web/) proxies gateway APIs for local demos. Start the backend with `./scripts/run-dev.sh`, then `cd web && npm install && npm run dev` on port **3100**. Regenerate visuals with `cd web && npm run screenshots` (requires a running dev server); see [`docs/assets/README.md`](docs/assets/README.md).
 
 _Synthetic FHIR only — no real PHI._
 
