@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/adminauth"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/broker"
 	appconfig "github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/config"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/requester"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
 
@@ -50,14 +52,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requester := r.URL.Query().Get("requester_jurisdiction")
-	if requester == "" {
-		requester = "eu-visiting"
-	}
-	purpose := r.URL.Query().Get("purpose")
-	if purpose == "" {
-		purpose = "treatment"
-	}
+	purpose := requester.NormalizePurpose(r.URL.Query().Get("purpose"))
 
 	token, ok := s.Broker.Resolve(ctx, subjectID, identifier)
 	if !ok {
@@ -65,12 +60,14 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if token.Cell == "us" && strings.HasPrefix(requester, "us-") && s.SSRAA != nil && s.SSRAA.Required() {
-		clientID, ssraaOK := s.SSRAA.Validate(r.Header.Get("Authorization"))
+	var ssraaClientID string
+	if token.Cell == "us" && strings.HasPrefix(token.HomeJurisdiction, "us-") && s.SSRAA != nil && s.SSRAA.Required() {
+		var ssraaOK bool
+		ssraaClientID, ssraaOK = s.SSRAA.Validate(r.Header.Get("Authorization"))
 		if !ssraaOK {
 			_ = s.Audit.Append(audit.Event{
 				Action:                "patient.read",
-				RequesterJurisdiction: requester,
+				RequesterJurisdiction: token.HomeJurisdiction,
 				Purpose:               purpose,
 				Outcome:               "deny",
 				Detail:                "ssraa_invalid",
@@ -81,14 +78,12 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		_ = clientID
 	}
 
-	crossBloc := s.Routing.IsCrossBloc(requester, token.HomeJurisdiction)
-	if r.URL.Query().Get("cross_bloc") == "true" {
-		crossBloc = true
-	}
-	crossPermitted := r.URL.Query().Get("cross_bloc_permitted") == "true"
+	reqCtx := requester.Resolve(s.Routing, token.HomeJurisdiction, s.SSRAA, ssraaClientID)
+	requesterJurisdiction := reqCtx.Jurisdiction
+	crossBloc := reqCtx.CrossBloc
+	crossPermitted := reqCtx.CrossBlocPermitted
 
 	if err := s.Keys.EnsureTenant(token.Tenant); err != nil {
 		if s.Keys.IsShredded(token.Tenant) {
@@ -102,7 +97,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	decision, err := s.PEP.Evaluate(ctx, pep.PolicyInput{
 		SubjectID:             token.SubjectID,
 		HomeJurisdiction:      token.HomeJurisdiction,
-		RequesterJurisdiction: requester,
+		RequesterJurisdiction: requesterJurisdiction,
 		Purpose:               purpose,
 		ConsentResearch:       token.ConsentResearch,
 		CrossBloc:             crossBloc,
@@ -118,7 +113,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		_ = s.Audit.Append(audit.Event{
 			Action:                "patient.read",
 			SubjectPseudonym:      pseudo,
-			RequesterJurisdiction: requester,
+			RequesterJurisdiction: requesterJurisdiction,
 			Purpose:               purpose,
 			Outcome:               "deny",
 			Detail:                decision.DenyReason,
@@ -141,7 +136,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	_ = s.Audit.Append(audit.Event{
 		Action:                "patient.read",
 		SubjectPseudonym:      pseudo,
-		RequesterJurisdiction: requester,
+		RequesterJurisdiction: requesterJurisdiction,
 		Purpose:               purpose,
 		Outcome:               "allow",
 		Detail:                "envelope_ref=" + enc[:16],
@@ -186,6 +181,10 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if adminauth.Required() && !adminauth.Authorize(r.Header.Get("Authorization")) {
+		adminauth.Deny(w)
+		return
+	}
 	tenant := r.URL.Query().Get("tenant")
 	if tenant == "" {
 		http.Error(w, "tenant required", http.StatusBadRequest)
@@ -212,6 +211,10 @@ func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if adminauth.Required() && !adminauth.Authorize(r.Header.Get("Authorization")) {
+		adminauth.Deny(w)
 		return
 	}
 	subject := r.URL.Query().Get("subject")

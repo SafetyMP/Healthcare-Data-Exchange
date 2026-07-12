@@ -10,14 +10,34 @@ Consent is control-plane data only (subject pseudonym + boolean flags); no PHI.
 
 from __future__ import annotations
 
+import hmac
 import logging
+import os
 from datetime import UTC, datetime
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from chex_consent.opal_publish import publish_data_update
 
 logger = logging.getLogger("chex.consent")
+_bearer = HTTPBearer(auto_error=False)
+
+
+def _admin_secret() -> str:
+    return os.environ.get("CHEX_ADMIN_SECRET", "").strip()
+
+
+def require_consent_admin(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> None:
+    secret = _admin_secret()
+    if not secret:
+        return
+    token = credentials.credentials if credentials else ""
+    if not hmac.compare_digest(token, secret):
+        raise HTTPException(status_code=401, detail="admin authentication required")
+
 
 app = FastAPI(title="Cloud Healthcare Exchange Consent Service", version="0.1.0")
 
@@ -55,7 +75,12 @@ def get_consent(subject: str) -> dict[str, object]:
 
 
 @app.post("/v1/consent/{subject}/{action}")
-def set_consent(subject: str, action: str, purpose: str = "research") -> dict[str, object]:
+def set_consent(
+    subject: str,
+    action: str,
+    purpose: str = "research",
+    _: None = Depends(require_consent_admin),
+) -> dict[str, object]:
     if action not in ("grant", "revoke"):
         raise HTTPException(status_code=400, detail="action must be grant or revoke")
     if purpose not in CONSENT_PURPOSES:

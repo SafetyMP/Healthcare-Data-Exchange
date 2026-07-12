@@ -35,36 +35,35 @@ flowchart TB
     USClin[US Clinician / QHIN client]
   end
 
-  subgraph global [Global Control Plane — no PHI]
-    Router[Jurisdiction Router]
-    Registry[Tenant + Policy Registry]
-    IdBroker[Identity Broker]
-    AIGov[AI Governance Registry]
+  subgraph poc [PoC runtime — single global gateway]
+    GW[Gateway — router + PEP]
+    OPA[OPA opal-client PDP]
+    CS[consent-service]
+    IB[identity-broker]
+    OPALS[OPAL server]
+    AIGov[ai-governance]
   end
 
-  subgraph eu [EU Jurisdiction Cell]
-    EGW[Region Gateway] --> EPEP[PEP] --> EOPA[OPA PDP]
-    EPEP --> EFHIR[HAPI FHIR + Postgres]
-    EFHIR --> EKMS[Key Custody EU]
-    EGW --> EAudit[Audit Sink EU]
+  subgraph eu [EU jurisdiction cell]
+    EFHIR[HAPI FHIR EU + postgres-eu]
   end
 
-  subgraph us [US Jurisdiction Cell — target]
-    UGW[Region Gateway] --> UPEP[PEP] --> UOPA[OPA PDP]
-    UPEP --> UFHIR[HAPI FHIR + Postgres]
-    UFHIR --> UKMS[Key Custody US]
-    UGW --> UAudit[Audit Sink US]
+  subgraph us [US jurisdiction cell]
+    UFHIR[HAPI FHIR US + postgres-us]
   end
 
-  EUClin --> Router
-  USClin --> Router
-  Router --> IdBroker
-  IdBroker --> EGW
-  Router --> UGW
-  Registry -.-> Router
-  AIGov -.-> EGW
-  AIGov -.-> UGW
+  EUClin --> GW
+  USClin --> GW
+  GW --> OPA
+  GW --> IB
+  GW --> EFHIR
+  GW --> UFHIR
+  GW --> AIGov
+  CS --> OPALS
+  OPALS --> OPA
 ```
+
+> **PoC note:** Production target architecture uses **per-cell region gateways** (see ADR 0001). The walking skeleton runs one `gateway` service that routes to both FHIR cells via `config/routing.yaml`.
 
 ### Planes
 
@@ -91,9 +90,10 @@ flowchart TB
 
 ### OPA (Rego PDP)
 
-- Evaluates `policy/residency.rego`, `consent.rego`, `purpose.rego`.
-- PoC: sidecar container, HTTP API from gateway.
-- Target: Envoy `ext_authz` sidecar; OPAL for consent revocation sync.
+- Evaluates consolidated `policy/authz.rego` (residency, consent via `data.consent`, purpose).
+- PoC: `opal-client` sidecar; HTTP API from gateway.
+- **OPAL consent sync implemented** (ADR 0008): `consent-service` publishes revocations; no gateway restart.
+- Target: Envoy `ext_authz` sidecar in production mesh.
 
 ### FHIR data plane (HAPI + Postgres)
 
@@ -120,16 +120,18 @@ flowchart TB
 
 ## Reference slice (walking skeleton)
 
-Phase 1 delivers **one EU cell**:
+**PoC on `main` (Phase 4b):** dual EU + US cells, single global gateway, OPAL consent sync, identity broker, SSRAA stub.
 
 | Service | Role |
 |---------|------|
-| `gateway` | Router + PEP |
-| `opa` | PDP |
-| `hapi-eu` + `postgres-eu` | Data plane |
-| `ai-governance` | AI stub |
+| `gateway` | Global router + PEP (proxies to identity-broker, consent-service, FHIR cells) |
+| `opal-client` + `opal-server` | PDP + policy/consent distribution |
+| `consent-service` | Dynamic consent + OPAL publish |
+| `identity-broker` | ITI-78-style identifier resolve |
+| `hapi-eu` / `hapi-us` + Postgres | Regional FHIR data planes |
+| `ai-governance` | AI triage + oversight stub |
 
-Phase 2 adds US cell and cross-bloc **exception** path (documented, not headline demo).
+Phase 1–3 delivered the EU-centric skeleton; Phase 4a/4b extended to US cell, OPAL hardening, and dedicated broker service. See [roadmap.md](../roadmap.md).
 
 ---
 
@@ -175,3 +177,8 @@ flowchart LR
 | [0004](../adr/0004-fhir-us-core-interop.md) | FHIR / US Core |
 | [0005](../adr/0005-ai-governance-layer.md) | AI governance |
 | [0006](../adr/0006-patient-identity-matching.md) | Patient identity |
+| [0007](../adr/0007-opal-policy-mirror.md) | Policy mirror repo |
+| [0008](../adr/0008-opal-consent-sync.md) | OPAL consent sync |
+| [0009](../adr/0009-ssraa-auth-stub.md) | SSRAA authentication stub |
+| [0010](../adr/0010-identity-broker-service.md) | Identity broker service |
+| [0011](../adr/0011-opal-production-hardening.md) | OPAL hardening |

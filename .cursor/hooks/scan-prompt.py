@@ -28,7 +28,7 @@ def main() -> int:
         emit({
             "continue": False,
             "user_message": (
-                f"Submission blocked: your prompt appears to contain a {label}. "
+                "Submission blocked: your prompt appears to contain sensitive data. "
                 "Remove or redact the secret and resend. "
                 "(Rotate it if it was ever exposed.)"
             ),

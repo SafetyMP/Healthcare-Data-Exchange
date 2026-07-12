@@ -54,13 +54,13 @@ _Synthetic FHIR only — screenshots are architecture diagrams, not clinical UI.
 
 ## Quick start
 
-**Prerequisites:** Docker, Go 1.22+, Python 3.12+
+**Prerequisites:** Docker, Go 1.22+, Python 3.12+, `curl`, and PyYAML (`pip install pyyaml` for local `./scripts/verify.sh`)
 
 ```bash
 git clone https://github.com/SafetyMP/Healthcare-Data-Exchange.git
 cd Healthcare-Data-Exchange
 
-# Hermetic definition of done (no Docker required)
+# Hermetic definition of done (no Docker; first run may download OPA + Python venvs)
 ./scripts/verify.sh
 
 # Full stack: EU + US HAPI, OPAL, gateway, services (~2 min JVM boot)
@@ -68,6 +68,9 @@ cd Healthcare-Data-Exchange
 
 # End-to-end proof (compose must be running)
 ./scripts/demo.sh
+
+# Tear down when finished
+./scripts/teardown-dev.sh
 ```
 
 First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitignored).
@@ -77,7 +80,7 @@ First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitign
 | Scenario | Evidence |
 |:---------|:---------|
 | Intra-EU treatment read | Residency + minimum-necessary fields |
-| Research without consent | `403 consent_required` |
+| Research without consent | `403 policy_denied` (reason: `consent_required`) |
 | Cross-bloc deny / exception | Deny-by-default + derivative exception path |
 | US TEFCA + SSRAA stub | 401 without token, 200 with association |
 | Identity broker (ITI-78) | Direct resolve + gateway patient read by identifier |
@@ -115,7 +118,7 @@ flowchart TB
   GW --> OPA
   GW --> FHIR_EU
   GW --> FHIR_US
-  IB --> GW
+  GW --> IB
   CS --> OPALS
   POLICY --> OPALS
   OPALS --> OPA

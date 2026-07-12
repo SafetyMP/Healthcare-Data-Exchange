@@ -1,7 +1,7 @@
 # Healthcare Exchange — Implementation Plan (corrected)
 
-**Status:** Active plan (post hostile self-audit, 2026-07-08)  
-**Harness profile:** `solo` — phase 3 complete; fleet mandate HALTED. See [Fleet playbook](#fleet-initialization-playbook) for future parallel work.  
+**Status:** Active plan (portfolio doc audit refresh, 2026-07-12)  
+**Harness profile:** `solo` — phase 4a complete; fleet mandate HALTED. See [Fleet playbook](#fleet-initialization-playbook) for future parallel work.  
 **Deliverable default:** Design-document set + minimal runnable **walking skeleton** (one jurisdiction cell first), wired into `scripts/verify.sh` (hermetic) and `scripts/demo.sh` (compose E2E).
 
 ---
@@ -324,7 +324,7 @@ Run these steps **on `main`**, in order, **the same day** you spawn the first pa
 
 ### Prerequisites (must be true)
 
-- [ ] Phase 1 docs merged (`docs/product-mandate.md`, architecture, ADRs, roadmap)
+- [x] Phase 1 docs merged (`docs/product-mandate.md`, architecture, ADRs, roadmap)
 - [ ] `./scripts/verify.sh` passes on `main`
 - [ ] You have named an **integration executor** (usually the parent chat / you)
 - [ ] Each parallel track has a **branch or worktree** — fleet does not replace isolation

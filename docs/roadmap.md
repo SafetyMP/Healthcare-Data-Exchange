@@ -1,7 +1,7 @@
 # Roadmap — Cloud Healthcare Exchange
 
 **Product:** Cloud Healthcare Exchange  
-**Last updated:** 2026-07-08
+**Last updated:** 2026-07-12
 
 Aligns delivery phases with **regulatory deadlines** and the [implementation plan](plan.md).
 
@@ -34,7 +34,7 @@ Aligns delivery phases with **regulatory deadlines** and the [implementation pla
 | `docs/plan.md` + fleet playbook | Done |
 | GitHub remote | Done |
 
-### Phase 1 — Design authority (this increment)
+### Phase 1 — Design authority (complete)
 
 | Todo | Deliverable | Status |
 |------|-------------|--------|
@@ -43,20 +43,20 @@ Aligns delivery phases with **regulatory deadlines** and the [implementation pla
 | docs-adrs | ADR 0001–0006 | Done |
 | docs-roadmap | This document | Done |
 
-**Exit criteria:** Docs merged on `main`; `./scripts/verify.sh` passes.
+**Exit criteria:** Docs merged on `main`; `./scripts/verify.sh` passes — **met**.
 
-### Phase 2a — EU walking skeleton (serial, solo harness)
+### Phase 2a — EU walking skeleton (serial, solo harness) — complete
 
-| Todo | Deliverable | Target |
-|------|-------------|--------|
-| slice-scaffold | 1-cell docker-compose, module stubs | Q3 2026 |
-| slice-gateway-policy | Go router + OPA PEP | Q3 2026 |
-| slice-region-fhir | HAPI EU + Postgres + region keys | Q3 2026 |
-| slice-ai-governance | FastAPI stub | Q3 2026 |
-| verify-wiring | Hermetic verify.sh; run-dev.sh; demo.sh | Q3 2026 |
-| test-demo | Intra-EU demo evidence | Q3 2026 |
+| Todo | Deliverable | Completed |
+|------|-------------|-----------|
+| slice-scaffold | 1-cell docker-compose, module stubs | 2026 Q3 |
+| slice-gateway-policy | Go router + OPA PEP | 2026 Q3 |
+| slice-region-fhir | HAPI EU + Postgres + region keys | 2026 Q3 |
+| slice-ai-governance | FastAPI stub | 2026 Q3 |
+| verify-wiring | Hermetic verify.sh; run-dev.sh; demo.sh | 2026 Q3 |
+| test-demo | Intra-EU demo evidence | 2026 Q3 |
 
-**Exit criteria:** `demo.sh` proves residency, consent deny, region shred, AI oversight gate.
+**Exit criteria:** `demo.sh` proves residency, consent deny, region shred, AI oversight gate — **met**.
 
 ### Phase 2b — Parallel slice (optional, **fleet harness**)
 

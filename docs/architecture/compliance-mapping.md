@@ -43,7 +43,7 @@ Maps product architecture to **FedRAMP High baseline**, **GDPR**, **EU AI Act**,
 
 | Requirement | Design response | Evidence type |
 |-------------|-----------------|---------------|
-| **Art. 5** — principles | Purpose limitation via OPA `purpose.rego`; minimization at PEP | Arch |
+| **Art. 5** — principles | Purpose limitation via OPA `policy/authz.rego`; minimization at PEP | Arch |
 | **Art. 6** — lawful basis | Consent + treatment legal bases in policy input | Arch |
 | **Art. 9** — special categories | Health data stays in cell; strict cross-border default deny | Arch |
 | **Art. 17** — erasure | Region/tenant crypto-shred; HAPI limits documented (ADR 0003) | Arch + honest limits |

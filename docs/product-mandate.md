@@ -84,12 +84,12 @@ Cloud Healthcare Exchange targets **simultaneous alignment** with three regulato
 
 | | Reference slice (PoC) | Target state |
 |---|----------------------|--------------|
-| Cells | One EU walking skeleton; second cell phased | US-Gov + EU (+ others) |
+| Cells | EU + US cells in compose; single global gateway routes to both | Per-cell region gateways in mesh |
 | FHIR | HAPI R4 + US Core samples | Full USCDI / EHDS coverage |
-| Policy | OPA over HTTP | OPA Envoy `ext_authz` + OPAL consent sync |
+| Policy | OPA HTTP + **OPAL consent sync (PoC)** | OPA Envoy `ext_authz` + hardened OPAL |
 | Keys | Software KMS stand-in | HSM / cloud KMS per region |
 | AI gov | FastAPI stub | Production model registry + incident reporting |
-| Auth | Stub tenants | SSRAA / UDAP, EHDS identity |
+| Auth | SSRAA stub + stub tenants | Full SSRAA / UDAP, EHDS identity |
 
 ---
 
