@@ -27,7 +27,7 @@ Thank you for your interest in this project. CHEX is a **reference implementatio
 | Compose / runtime / consent / OPAL | `./scripts/demo.sh` (stack running) |
 | Portfolio contract | `./scripts/check-portfolio.sh` |
 
-CI runs the same hermetic path via [.github/workflows/portfolio-verify.yml](.github/workflows/portfolio-verify.yml). CodeQL and OpenSSF Scorecard run on push/PR as well.
+CI runs hermetic verify via [.github/workflows/portfolio-verify.yml](.github/workflows/portfolio-verify.yml) and compose E2E via [.github/workflows/demo-e2e.yml](.github/workflows/demo-e2e.yml). CodeQL and OpenSSF Scorecard run on push/PR as well.
 
 For release history, see [CHANGELOG.md](CHANGELOG.md). Governance and maintainer expectations: [GOVERNANCE.md](GOVERNANCE.md).
 

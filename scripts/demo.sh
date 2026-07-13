@@ -120,6 +120,30 @@ code=$(read_code patient-us-001 treatment "$EU_VISITING_AUTH")
 grep -q 'residency_denied' /tmp/chex-read.json
 echo "  403 residency_denied (as expected)"
 
+log "3b. Cross-bloc deny — US clinician to EU patient treatment (expect 403 residency_denied)"
+code=$(read_code patient-eu-001 treatment "$US_CLINICIAN_AUTH")
+[[ "$code" == "403" ]]
+grep -q 'residency_denied' /tmp/chex-read.json
+echo "  403 residency_denied with us-clinician credential (as expected)"
+
+log "3c. Auth required — no bearer on EU patient read (expect 401)"
+code=$(curl -s -o /tmp/chex-read.json -w "%{http_code}" \
+  "$GW/v1/patients/patient-eu-001?purpose=treatment")
+[[ "$code" == "401" ]]
+echo "  401 without Authorization (as expected)"
+
+log "3d. Query-param jurisdiction must not bypass bearer auth (expect 401)"
+code=$(curl -s -o /tmp/chex-read.json -w "%{http_code}" \
+  "$GW/v1/patients/patient-eu-001?purpose=treatment&requester_jurisdiction=us-clinician")
+[[ "$code" == "401" ]]
+echo "  401 with query override only (as expected)"
+
+log "3e. Cross-bloc deny — EU bearer to US home patient treatment (expect 403)"
+code=$(read_code patient-us-001 treatment "$EU_VISITING_AUTH")
+[[ "$code" == "403" ]]
+grep -q 'residency_denied' /tmp/chex-read.json
+echo "  403 eu-visiting to us-home (as expected)"
+
 log "4. Cross-bloc derivative exception — US clinician to EU patient (expect 200, min fields)"
 curl -fsS -H "Authorization: ${US_CLINICIAN_AUTH}" \
   "$GW/v1/patients/patient-eu-001?purpose=derivative" \
