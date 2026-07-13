@@ -65,6 +65,21 @@ wait_for_code() {
   return 1
 }
 
+wait_fhir() {
+  local base="$1"
+  for _ in $(seq 1 60); do
+    if curl -fsS "${base}/metadata" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "timeout waiting for FHIR server at ${base}" >&2
+  return 1
+}
+
+log "Wait for EU HAPI (localhost:8080)"
+wait_fhir "http://localhost:8080/fhir"
+
 log "Load FHIR samples into EU HAPI (localhost:8080)"
 for f in "$ROOT"/fhir/samples/eu/*.json; do
   id=$(basename "$f" .json)
@@ -73,6 +88,9 @@ for f in "$ROOT"/fhir/samples/eu/*.json; do
     --data-binary @"$f" >/dev/null
   echo "  loaded $id (eu)"
 done
+
+log "Wait for US HAPI (localhost:8083)"
+wait_fhir "http://localhost:8083/fhir"
 
 log "Load FHIR samples into US HAPI (localhost:8083)"
 for f in "$ROOT"/fhir/samples/us/*.json; do

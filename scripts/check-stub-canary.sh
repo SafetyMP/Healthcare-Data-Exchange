@@ -16,17 +16,22 @@ fail_if() {
   fi
 }
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "check-stub-canary: rg not found" >&2
-  exit 1
-fi
+canary_match() {
+  local pattern="$1"
+  shift
+  if command -v rg >/dev/null 2>&1; then
+    rg -q "$pattern" "$@"
+  else
+    grep -rEq "$pattern" "$@"
+  fi
+}
 
 fail_if "allowOPA stub in gateway tests" \
-  rg -q 'func\s+allowOPA\b' services/gateway/
+  canary_match 'func[[:space:]]+allowOPA[[:space:]]*' services/gateway/
 fail_if "denyOPA stub in gateway tests" \
-  rg -q 'func\s+denyOPA\b' services/gateway/
+  canary_match 'func[[:space:]]+denyOPA[[:space:]]*' services/gateway/
 fail_if "query-param jurisdiction override in handlers" \
-  rg -q 'Query\(\)\.Get\("requester_jurisdiction"\)|Query\(\)\.Get\("cross_bloc_permitted"\)' \
+  canary_match 'Query\(\)\.Get\("requester_jurisdiction"\)|Query\(\)\.Get\("cross_bloc_permitted"\)' \
   services/gateway/internal/handlers/
 
 if [[ -f scripts/verify.sh ]] && grep -q 'TODO: add real test' scripts/verify.sh; then
