@@ -23,7 +23,7 @@ if [[ ! -f "$policy_file" ]]; then
   exit 1
 fi
 upload_code=$(curl -sS -o /tmp/chex-opa-upload.txt -w "%{http_code}" -X PUT \
-  "${OPA_URL}/v1/policies/chex/authz" \
+  "${OPA_URL}/v1/policies/authz" \
   -H "Content-Type: text/plain" \
   --data-binary @"${policy_file}")
 if [[ "$upload_code" != "200" ]]; then
