@@ -79,6 +79,14 @@ else
   errors=$((errors + 1))
 fi
 
+echo "== harness: threat model tier =="
+if [[ -x "$ROOT/scripts/check-threat-model.sh" ]]; then
+  "$ROOT/scripts/check-threat-model.sh"
+else
+  echo "MISSING: scripts/check-threat-model.sh" >&2
+  errors=$((errors + 1))
+fi
+
 if [[ "$errors" -gt 0 ]]; then
   echo "check-harness: FAILED ($errors errors)" >&2
   exit 1
