@@ -61,7 +61,8 @@ cd web && npm run verify   # optional: clinician console (requires gateway for l
 | `config/routing.yaml` | Jurisdiction routing + subject registry (identifier fallback) |
 | `config/identity-registry.yaml` | Preferred identifiers for identity-broker (ADR 0010) |
 | `config/opal-hardening.yaml` | OPAL secure mode + webhook + bundle integrity profile (ADR 0011) |
-| `config/ssraa.yaml` | SSRAA application association stub (ADR 0009) |
+| `config/eu-auth.yaml` | EU cell caller credential stub |
+| `config/ssraa.yaml` | US SSRAA application association stub (ADR 0009) |
 | `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
 | `docs/` | Product mandate, architecture, ADRs (incl. 0007–0011), roadmap |
 

@@ -2,6 +2,7 @@ package adminauth
 
 import (
 	"crypto/subtle"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -12,9 +13,12 @@ func Secret() string {
 	return strings.TrimSpace(os.Getenv("CHEX_ADMIN_SECRET"))
 }
 
-// Required reports whether admin endpoints must present a valid bearer token.
-func Required() bool {
-	return Secret() != ""
+// MustConfigure exits when CHEX_ADMIN_SECRET is unset (fail closed).
+func MustConfigure() {
+	if Secret() == "" {
+		fmt.Fprintln(os.Stderr, "CHEX_ADMIN_SECRET must be set for admin endpoints")
+		os.Exit(1)
+	}
 }
 
 // Authorize returns true when the Authorization header matches the admin secret.

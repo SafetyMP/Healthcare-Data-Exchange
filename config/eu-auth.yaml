@@ -1,0 +1,15 @@
+# EU cell caller credentials — bearer stub (EHDS-style PoC)
+# Requester jurisdiction is derived ONLY from verified credentials — never query params.
+required: true
+
+associations:
+  eu-home-client:
+    secret: demo-eu-home-secret
+    jurisdiction: eu-home
+    scopes:
+      - patient.read
+  eu-visiting-client:
+    secret: demo-eu-visiting-secret
+    jurisdiction: eu-visiting
+    scopes:
+      - patient.read

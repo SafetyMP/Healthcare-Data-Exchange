@@ -31,6 +31,8 @@
 
 > **Scope:** Design authority + walking skeleton. Demonstrates patterns toward FedRAMP High, GDPR/EHDS, and EU AI Act alignment — **not** certification, an ATO, or production deployment guidance.
 
+> **Honesty check (read this first):** This repo is a **labelled architecture sketch** with runnable stubs — not a deployed exchange. **`./scripts/verify.sh`** (hermetic: Go/Python/OPA unit tests) is the day-to-day definition of done. **`./scripts/demo.sh`** (Docker Compose E2E) is the only proof that runtime paths match the README scenario table; until that script is green in CI, scenario rows are *design intent*, not verified behaviour. Patient-read authorization must derive requester jurisdiction from **verified per-cell caller credentials** (EU auth + US SSRAA stub via a principal abstraction) — not query params and not implicit subject-home defaults. Do not treat compliance mapping, ADRs, or supply-chain badges as evidence that cross-bloc enforcement works in the running stack.
+
 ## Demo
 
 <p align="center">
@@ -59,7 +61,7 @@ Centralizing health data in one global database fails sovereignty, erasure, and 
 |-----------|----------------------------|
 | **Sovereignty by cell** | PHI, keys, and primary audit stay in-region (EU / US HAPI cells) |
 | **Global plane is config-only** | Routing, tenants, policy bundles, consent metadata — no PHI |
-| **Policy-as-code** | OPA Rego at the gateway PEP; tests in CI |
+| **Policy-as-code** | OPA Rego at the gateway PEP; Rego + handler tests in CI (`verify.sh`) |
 | **Federated identity** | ITI-78-style broker stub — no fictional EU-wide MPI |
 | **Live consent** | OPAL propagates revocation to the PDP without restart |
 
@@ -87,7 +89,7 @@ cd Healthcare-Data-Exchange
 # Full stack: EU + US HAPI, OPAL, gateway, services (~2 min JVM boot)
 ./scripts/run-dev.sh
 
-# End-to-end proof (compose must be running)
+# End-to-end proof (compose must be running; this is the runtime acceptance gate)
 ./scripts/demo.sh
 
 # Tear down when finished
@@ -99,18 +101,22 @@ cd web && npm install && npm run dev   # http://localhost:3100
 
 First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitignored).
 
-## What the demo proves
+## What the demo is designed to prove
 
-| Scenario | Evidence |
+**Status:** Rows below describe **target** E2E behaviour exercised by `./scripts/demo.sh`. They are **not** claims about production readiness. A row becomes a verified claim only when `demo.sh` exits 0 locally and in [`.github/workflows/demo-e2e.yml`](.github/workflows/demo-e2e.yml) against Compose.
+
+| Scenario | Target evidence (via `demo.sh`) |
 |:---------|:---------|
-| Intra-EU treatment read | Residency + minimum-necessary fields |
+| Intra-EU treatment read | EU-cell caller credential → residency + minimum-necessary fields |
 | Research without consent | `403 policy_denied` (reason: `consent_required`) |
-| Cross-bloc deny / exception | Deny-by-default + derivative exception path |
-| US TEFCA + SSRAA stub | 401 without token, 200 with association |
+| Cross-bloc deny / exception | Deny-by-default + derivative exception when credential permits |
+| US TEFCA + SSRAA stub | 401 without US association; 200 with US SSRAA bearer |
 | Identity broker (ITI-78) | Direct resolve + gateway patient read by identifier |
 | Live consent revoke/grant | 403↔200 via OPAL with no restart |
 | AI triage gate | Human oversight required (Art. 50 transparency stub) |
 | Tenant crypto-shred | 410 Gone after key destruction |
+
+**Hermetic tests (`verify.sh`)** cover Rego policy, gateway handler + real bundle integration, and service stubs — but **do not** start Compose or HAPI. **Do not** cite `verify.sh` alone as proof of cross-bloc or demo scenarios.
 
 ## Architecture
 
@@ -167,7 +173,7 @@ flowchart TB
 | `services/identity-broker/` | ITI-78 identifier broker |
 | `services/ai-governance/` | AI governance stub |
 | `policy/` | Canonical OPA Rego (+ tests) |
-| `config/` | Routing, SSRAA, identity registry, OPAL profile |
+| `config/` | Routing, **eu-auth**, SSRAA (US), identity registry, OPAL profile |
 | `deploy/docker-compose.yml` | EU + US cells + OPAL stack |
 | `web/` | Next.js clinician console (BFF → gateway) |
 | `docs/` | Mandate, architecture, ADRs, roadmap |
@@ -192,7 +198,7 @@ Policy consumed by OPAL is mirrored to [healthcare-policy](https://github.com/Sa
 
 ## Contributing
 
-Contributions welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `./scripts/verify.sh` before opening a PR, and use `./scripts/demo.sh` when touching compose or runtime paths. Need help? See [SUPPORT.md](SUPPORT.md).
+Contributions welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `./scripts/verify.sh` before opening a PR. When touching gateway auth, compose, or demo paths: **`./scripts/demo.sh` must pass** (same gate as [demo-e2e CI](.github/workflows/demo-e2e.yml)). Need help? See [SUPPORT.md](SUPPORT.md).
 
 ## Security
 

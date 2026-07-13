@@ -18,15 +18,16 @@ claiming full conformance.
 
 ## Decision
 
-- Register application associations in `config/ssraa.yaml` (client id + shared
-  secret + scopes). No PHI; control-plane credentials only.
+- Register **US** application associations in `config/ssraa.yaml` (SSRAA stub).
+  Register **EU** caller associations in `config/eu-auth.yaml` (EHDS-style bearer stub).
+  Both use the shared `principal.Broker` — no single SSRAA registry for all cells.
 - Gateway validates `Authorization: Bearer <client_id>.<secret>` **before** the
-  OPA PEP when the routed home cell is `us` **and** the requester jurisdiction is
-  US (`us-*`). EU requesters hitting US-home data are denied by residency policy
-  without SSRAA (cross-bloc deny demo).
-- EU-cell reads are unchanged (no SSRAA).
-- Hermetic unit tests in `services/gateway/internal/ssraa/`; compose E2E in
-  `demo.sh` steps 5a (401 without token) and 5 (200 with token).
+  OPA PEP on every patient read. Requester jurisdiction and cross-bloc flags are
+  derived only from the verified **principal** (cell + auth kind) — never query
+  params or the subject record.
+- US-home FHIR reads without a valid US SSRAA association → `401` (`ssraa_required`).
+  EU-home reads without a valid EU bearer → `401` (`credential_required`).
+  Cross-bloc residency is enforced by OPA after principal resolution.
 
 ### PoC token shape
 
@@ -51,5 +52,5 @@ Production would replace this with signed JWTs / UDAP token endpoint output.
 ## References
 
 - ADR 0004 (US Core / SSRAA target)
-- `config/ssraa.yaml`, `services/gateway/internal/ssraa/`
+- `config/eu-auth.yaml`, `config/ssraa.yaml`, `services/gateway/internal/principal/`
 - REF-FED-05

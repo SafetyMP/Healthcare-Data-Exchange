@@ -4,38 +4,26 @@ import (
 	"strings"
 
 	appconfig "github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/config"
-	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/principal"
 )
 
-// Context carries requester jurisdiction derived from verified credentials.
+// Context carries requester jurisdiction derived from a verified principal.
 type Context struct {
 	Jurisdiction       string
 	CrossBloc          bool
 	CrossBlocPermitted bool
 }
 
-// Resolve derives OPA inputs from routing + verified SSRAA credentials.
-// Query params must not override jurisdiction or cross-bloc flags.
-func Resolve(
-	routing *appconfig.Routing,
-	homeJurisdiction string,
-	ssraa *ssraa.Validator,
-	ssraaClientID string,
-) Context {
-	requester := homeJurisdiction
-	if ssraaClientID != "" && ssraa != nil {
-		if j, ok := ssraa.Jurisdiction(ssraaClientID); ok {
-			requester = j
-		}
-	}
+// Resolve derives OPA inputs from routing + verified caller principal.
+func Resolve(routing *appconfig.Routing, homeJurisdiction string, p principal.Principal) Context {
 	crossBloc := false
 	if routing != nil {
-		crossBloc = routing.IsCrossBloc(requester, homeJurisdiction)
+		crossBloc = routing.IsCrossBloc(p.Jurisdiction, homeJurisdiction)
 	}
 	return Context{
-		Jurisdiction:       requester,
+		Jurisdiction:       p.Jurisdiction,
 		CrossBloc:          crossBloc,
-		CrossBlocPermitted: false,
+		CrossBlocPermitted: p.CrossBlocPermitted,
 	}
 }
 

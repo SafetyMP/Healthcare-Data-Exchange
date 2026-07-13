@@ -8,12 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getPatient } from "@/lib/api";
+import { DEMO_CREDENTIALS, type CredentialProfile, getPatient } from "@/lib/api";
+
+const CREDENTIAL_OPTIONS: { value: CredentialProfile; label: string }[] = [
+  { value: "eu-visiting", label: "EU visiting clinician" },
+  { value: "eu-home", label: "EU home jurisdiction" },
+  { value: "us-home", label: "US home (TEFCA demo)" },
+  { value: "us-clinician", label: "US clinician (cross-bloc derivative)" },
+];
 
 export default function PatientsPage() {
   const [patientId, setPatientId] = useState("patient-eu-001");
   const [purpose, setPurpose] = useState("treatment");
-  const [jurisdiction, setJurisdiction] = useState("eu-visiting");
+  const [credential, setCredential] = useState<CredentialProfile>("eu-visiting");
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +30,7 @@ export default function PatientsPage() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const res = await getPatient(patientId, { purpose, requester_jurisdiction: jurisdiction });
+    const res = await getPatient(patientId, { purpose }, DEMO_CREDENTIALS[credential]);
     setLoading(false);
     if (!res.ok) {
       setError(`${res.status}: ${res.error}`);
@@ -38,7 +45,7 @@ export default function PatientsPage() {
       <PageHeader
         eyebrow="FHIR"
         title="Patient lookup"
-        description="Gateway PEP enforces OPA policy before returning synthetic Patient resources."
+        description="Gateway PEP enforces OPA policy from verified SSRAA credentials before returning synthetic Patient resources."
       />
 
       <Card>
@@ -57,13 +64,19 @@ export default function PatientsPage() {
                 <Input id="purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} required />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="jurisdiction">Requester jurisdiction</Label>
-                <Input
-                  id="jurisdiction"
-                  value={jurisdiction}
-                  onChange={(e) => setJurisdiction(e.target.value)}
-                  required
-                />
+                <Label htmlFor="credential">Caller credential (SSRAA stub)</Label>
+                <select
+                  id="credential"
+                  className="flex h-11 w-full rounded-md border-2 border-border bg-background px-3 text-sm"
+                  value={credential}
+                  onChange={(e) => setCredential(e.target.value as CredentialProfile)}
+                >
+                  {CREDENTIAL_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <Button type="submit" disabled={loading}>

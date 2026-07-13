@@ -3,9 +3,13 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -62,6 +66,9 @@ func (k *KeyStore) EnsureTenant(tenant string) error {
 		return err
 	}
 	if data, err := os.ReadFile(path); err == nil {
+		if len(data) != 32 {
+			return fmt.Errorf("invalid tenant key length for %q", tenant)
+		}
 		k.keys[tenant] = data
 		return nil
 	}
@@ -97,6 +104,20 @@ func (k *KeyStore) Encrypt(tenant, plaintext string) (string, error) {
 	}
 	out := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
 	return base64.StdEncoding.EncodeToString(out), nil
+}
+
+// Pseudonym returns an HMAC-SHA256 pseudonym for audit records (tenant-scoped key).
+func (k *KeyStore) Pseudonym(tenant, subjectID string) (string, error) {
+	k.mu.RLock()
+	key, ok := k.keys[tenant]
+	k.mu.RUnlock()
+	if !ok {
+		return "", errors.New("tenant key missing")
+	}
+	mac := hmac.New(sha256.New, key)
+	_, _ = mac.Write([]byte(subjectID))
+	sum := mac.Sum(nil)
+	return hex.EncodeToString(sum[:16]), nil
 }
 
 func (k *KeyStore) ShredTenant(tenant string) error {
