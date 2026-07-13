@@ -8,6 +8,9 @@ cd "$ROOT"
 echo "== verify: harness =="
 ./scripts/check-harness.sh
 
+echo "== verify: threat model =="
+./scripts/check-threat-model.sh
+
 echo "== verify: portfolio =="
 ./scripts/check-portfolio.sh
 

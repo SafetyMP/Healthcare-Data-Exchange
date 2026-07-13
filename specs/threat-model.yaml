@@ -1,0 +1,80 @@
+schema: threat-model/v1
+product: Cloud Healthcare Exchange
+updated: "2026-07-13"
+
+cells:
+  - id: eu_patient_read
+    method: GET
+    path: /v1/patients/{subject}
+    principals: [eu_home_bearer, eu_visiting_bearer]
+    auth_mechanism: bearer_eu_auth
+    trust_boundary: cell_residency_match
+    establishment_failure: "401 credential_required"
+
+  - id: us_patient_read
+    method: GET
+    path: /v1/patients/{subject}
+    principals: [us_ssraa_bearer, us_clinician_bearer]
+    auth_mechanism: bearer_ssraa
+    trust_boundary: cell_residency_match
+    establishment_failure: "401 ssraa_required"
+
+deny_cases:
+  - id: anonymous_eu_read
+    cell: eu_patient_read
+    principal: anonymous
+    fixture:
+      subject: patient-eu-001
+      purpose: treatment
+    expect:
+      status: 401
+
+  - id: query_param_auth_bypass
+    cell: eu_patient_read
+    principal: anonymous
+    fixture:
+      subject: patient-eu-001
+      purpose: treatment
+      query_override: requester_jurisdiction=us-clinician
+    expect:
+      status: 401
+
+  - id: us_clinician_eu_treatment_deny
+    cell: eu_patient_read
+    principal: us_clinician_bearer
+    fixture:
+      subject: patient-eu-001
+      purpose: treatment
+    expect:
+      status: 403
+      reason_substring: residency_denied
+
+  - id: eu_visiting_us_home_deny
+    cell: us_patient_read
+    principal: eu_visiting_bearer
+    fixture:
+      subject: patient-us-001
+      purpose: treatment
+    expect:
+      status: 403
+      reason_substring: residency_denied
+
+  - id: ssraa_missing_us_read
+    cell: us_patient_read
+    principal: anonymous
+    fixture:
+      subject: patient-us-001
+      purpose: treatment
+    expect:
+      status: 401
+      reason_substring: ssraa_required
+
+  - id: ssraa_on_eu_patient_deny
+    cell: eu_patient_read
+    principal: us_ssraa_bearer
+    fixture:
+      subject: patient-eu-001
+      purpose: treatment
+    expect:
+      status: 403
+      reason_substring: residency_denied

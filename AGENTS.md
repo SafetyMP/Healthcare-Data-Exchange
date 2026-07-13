@@ -11,7 +11,8 @@ Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HA
 | `./scripts/run-dev.sh` | Start EU + US cells + OPAL (`--down-first` to recycle). OPAL alpine images run native on arm64. |
 | `./scripts/teardown-dev.sh` | Stop compose stack (`--volumes` to drop DB volumes) |
 | `./scripts/setup-portfolio.sh` | Clone sibling repos from `specs/portfolio.yaml` (e.g. healthcare-policy) |
-| `./scripts/demo.sh` | E2E: intra-EU, US TEFCA + SSRAA, cross-bloc, live consent revoke, AI, crypto-shred |
+| `./scripts/demo.sh` | Cooperative E2E: intra-EU, US TEFCA + SSRAA, cross-bloc exception, live consent, AI, crypto-shred |
+| `./scripts/adversarial.sh` | Tier-3 adversarial oracle (auth/residency denies — separate from demo) |
 | `./scripts/generate-opal-dev-secrets.sh` | Create local OPAL secure-mode secrets (first `run-dev.sh`) |
 | `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) (OPAL, ADR 0007) |
 | `./scripts/trigger-opal-policy-webhook.sh` | Simulate GitHub push webhook to OPAL after policy sync |
@@ -40,11 +41,12 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 
 ```bash
 ./scripts/verify.sh
-./scripts/demo.sh            # required when touching gateway/auth/policy/runtime (stack up)
+./scripts/demo.sh            # cooperative tier — stack up
+./scripts/adversarial.sh     # tier-3 denies — after demo or standalone when stack up
 cd web && npm run verify   # optional: clinician console (requires gateway for live API)
 ```
 
-`verify.sh` is hermetic (no Docker) and gates the agent stop hook. Compose E2E is `./scripts/demo.sh` — enforced in CI via `demo-e2e` workflow and `requires.commands.integration` in `.harness/profile.yaml`.
+`verify.sh` is hermetic (no Docker) and gates the agent stop hook. Compose E2E is two scripts: cooperative `./scripts/demo.sh` and adversarial `./scripts/adversarial.sh` — enforced in CI via `demo-e2e` workflow. Threat model: `docs/adr/0000-threat-model.md` + `specs/threat-model.yaml`.
 
 ## Layout
 
