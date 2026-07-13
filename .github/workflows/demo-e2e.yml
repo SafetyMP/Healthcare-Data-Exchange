@@ -43,11 +43,11 @@ jobs:
           chmod +x scripts/bootstrap-opa-policy.sh
           ./scripts/bootstrap-opa-policy.sh
 
-      - name: Run demo.sh
-        run: ./scripts/demo.sh
-
       - name: Run adversarial.sh
         run: ./scripts/adversarial.sh
+
+      - name: Run demo.sh
+        run: ./scripts/demo.sh
 
       - name: Teardown
         if: always()
