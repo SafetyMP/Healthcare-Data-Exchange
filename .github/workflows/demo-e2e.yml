@@ -38,11 +38,11 @@ jobs:
           docker compose -f deploy/docker-compose.yml ps
           exit 1
 
-      - name: Run demo.sh
-        run: ./scripts/demo.sh
-
       - name: Run adversarial.sh
         run: ./scripts/adversarial.sh
+
+      - name: Run demo.sh
+        run: ./scripts/demo.sh
 
       - name: Teardown
         if: always()

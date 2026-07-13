@@ -25,7 +25,51 @@ if ! curl -fsS "$GW/health" >/dev/null 2>&1; then
   exit 1
 fi
 
+# Adversarial tier needs intact patients — reset shred markers from prior demo runs.
+if compgen -G "$ROOT/data/keys/*.shredded" >/dev/null; then
+  rm -f "$ROOT"/data/keys/*.shredded
+  docker compose -f "$ROOT/deploy/docker-compose.yml" restart gateway >/dev/null
+  for _ in $(seq 1 30); do
+    curl -fsS "$GW/health" >/dev/null 2>&1 && break
+    sleep 2
+  done
+fi
+
+wait_fhir() {
+  local base="$1"
+  for _ in $(seq 1 60); do
+    if curl -fsS "${base}/metadata" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "timeout waiting for FHIR server at ${base}" >&2
+  return 1
+}
+
 log() { echo ""; echo "== adversarial: $* =="; }
+
+log "Wait for EU HAPI (localhost:8080)"
+wait_fhir "http://localhost:8080/fhir"
+
+log "Load FHIR samples into EU HAPI"
+for f in "$ROOT"/fhir/samples/eu/*.json; do
+  id=$(basename "$f" .json)
+  curl -fsS -X PUT "http://localhost:8080/fhir/Patient/${id}" \
+    -H "Content-Type: application/fhir+json" \
+    --data-binary @"$f" >/dev/null
+done
+
+log "Wait for US HAPI (localhost:8083)"
+wait_fhir "http://localhost:8083/fhir"
+
+log "Load FHIR samples into US HAPI"
+for f in "$ROOT"/fhir/samples/us/*.json; do
+  id=$(basename "$f" .json)
+  curl -fsS -X PUT "http://localhost:8083/fhir/Patient/${id}" \
+    -H "Content-Type: application/fhir+json" \
+    --data-binary @"$f" >/dev/null
+done
 
 read_code() {
   local subject="$1" purpose="$2" auth="$3"
