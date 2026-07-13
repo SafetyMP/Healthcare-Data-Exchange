@@ -38,11 +38,16 @@ jobs:
           docker compose -f deploy/docker-compose.yml ps
           exit 1
 
-      - name: Run adversarial.sh
-        run: ./scripts/adversarial.sh
+      - name: Bootstrap OPA policy from branch
+        run: |
+          chmod +x scripts/bootstrap-opa-policy.sh
+          ./scripts/bootstrap-opa-policy.sh
 
       - name: Run demo.sh
         run: ./scripts/demo.sh
+
+      - name: Run adversarial.sh
+        run: ./scripts/adversarial.sh
 
       - name: Teardown
         if: always()

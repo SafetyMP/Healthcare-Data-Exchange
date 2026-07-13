@@ -95,7 +95,10 @@ echo "  ${code} (as expected)"
 # deny_case: us_clinician_eu_treatment_deny
 log "us_clinician_eu_treatment_deny (expect 403 residency_denied)"
 code=$(read_code patient-eu-001 treatment "$US_CLINICIAN_AUTH")
-[[ "$code" == "403" ]]
+if [[ "$code" != "403" ]]; then
+  echo "  expected 403 got ${code}: $(cat /tmp/chex-adversarial.json)" >&2
+  exit 1
+fi
 grep -q 'residency_denied' /tmp/chex-adversarial.json
 echo "  ${code} (as expected)"
 
