@@ -7,7 +7,23 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 GW="http://localhost:8081"
+EU_HOME_AUTH="Bearer eu-home-client.demo-eu-home-secret"
+EU_VISITING_AUTH="Bearer eu-visiting-client.demo-eu-visiting-secret"
+US_CLINICIAN_AUTH="Bearer us-clinician-client.demo-us-clinician-secret"
 SSRA_AUTH="Bearer tefca-demo-client.demo-ssraa-secret"
+
+if [[ -f "$ROOT/deploy/opal/dev-secrets.env" ]]; then
+  # shellcheck disable=SC1091
+  set -a
+  # shellcheck source=/dev/null
+  source "$ROOT/deploy/opal/dev-secrets.env"
+  set +a
+fi
+if [[ -z "${CHEX_ADMIN_SECRET:-}" ]]; then
+  echo "CHEX_ADMIN_SECRET missing — run ./scripts/generate-opal-dev-secrets.sh and restart stack" >&2
+  exit 1
+fi
+ADMIN_AUTH="Bearer ${CHEX_ADMIN_SECRET}"
 
 if ! curl -fsS "$GW/health" >/dev/null 2>&1; then
   echo "Gateway not running. Start with: ./scripts/run-dev.sh" >&2
@@ -26,19 +42,20 @@ fi
 
 log() { echo ""; echo "== $* =="; }
 
-# read_code SUBJECT PURPOSE JURISDICTION [extra-query] -> echoes HTTP status, body to /tmp/chex-read.json
+# read_code SUBJECT PURPOSE AUTH_HEADER -> echoes HTTP status, body to /tmp/chex-read.json
 read_code() {
-  local subject="$1" purpose="$2" juris="$3" extra="${4:-}"
+  local subject="$1" purpose="$2" auth="$3"
   curl -s -o /tmp/chex-read.json -w "%{http_code}" \
-    "$GW/v1/patients/${subject}?purpose=${purpose}&requester_jurisdiction=${juris}${extra}"
+    -H "Authorization: ${auth}" \
+    "$GW/v1/patients/${subject}?purpose=${purpose}"
 }
 
-# wait_for_code SUBJECT PURPOSE JURISDICTION EXPECTED -> polls until status matches (OPAL propagation)
+# wait_for_code SUBJECT PURPOSE AUTH EXPECTED -> polls until status matches (OPAL propagation)
 wait_for_code() {
-  local subject="$1" purpose="$2" juris="$3" want="$4"
+  local subject="$1" purpose="$2" auth="$3" want="$4"
   for _ in $(seq 1 20); do
     local code
-    code=$(read_code "$subject" "$purpose" "$juris")
+    code=$(read_code "$subject" "$purpose" "$auth")
     if [[ "$code" == "$want" ]]; then
       return 0
     fi
@@ -48,6 +65,21 @@ wait_for_code() {
   return 1
 }
 
+wait_fhir() {
+  local base="$1"
+  for _ in $(seq 1 60); do
+    if curl -fsS "${base}/metadata" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "timeout waiting for FHIR server at ${base}" >&2
+  return 1
+}
+
+log "Wait for EU HAPI (localhost:8080)"
+wait_fhir "http://localhost:8080/fhir"
+
 log "Load FHIR samples into EU HAPI (localhost:8080)"
 for f in "$ROOT"/fhir/samples/eu/*.json; do
   id=$(basename "$f" .json)
@@ -56,6 +88,9 @@ for f in "$ROOT"/fhir/samples/eu/*.json; do
     --data-binary @"$f" >/dev/null
   echo "  loaded $id (eu)"
 done
+
+log "Wait for US HAPI (localhost:8083)"
+wait_fhir "http://localhost:8083/fhir"
 
 log "Load FHIR samples into US HAPI (localhost:8083)"
 for f in "$ROOT"/fhir/samples/us/*.json; do
@@ -67,15 +102,12 @@ for f in "$ROOT"/fhir/samples/us/*.json; do
 done
 
 log "Ensure OPAL has synced consent data (research read reflects consent)"
-# patient-eu-002 seeds with research consent granted; wait until PDP reflects it.
-if ! curl -fsS -X POST "$GW/v1/admin/consent?subject=patient-eu-002&action=grant&purpose=research" >/dev/null; then
+if ! curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
+  "$GW/v1/admin/consent?subject=patient-eu-002&action=grant&purpose=research" >/dev/null; then
   echo "consent grant call failed" >&2; exit 1
 fi
-wait_for_code patient-eu-002 research eu-home 200
+wait_for_code patient-eu-002 research "$EU_HOME_AUTH" 200
 
-if [[ -f "$ROOT/deploy/opal/dev-secrets.env" ]]; then
-  CHEX_OPAL_SECURE="$(grep '^CHEX_OPAL_SECURE=' "$ROOT/deploy/opal/dev-secrets.env" | cut -d= -f2- | tr -d '"')"
-fi
 if [[ "${CHEX_OPAL_SECURE:-0}" == "1" ]]; then
   log "0. OPAL secure mode — unauthenticated publish denied (expect 401/403)"
   code=$(curl -s -o /tmp/chex-opal-unauth.json -w "%{http_code}" \
@@ -90,23 +122,49 @@ if [[ "${CHEX_OPAL_SECURE:-0}" == "1" ]]; then
 fi
 
 log "1. Intra-EU treatment read (expect 200)"
-curl -fsS "$GW/v1/patients/patient-eu-001?purpose=treatment&requester_jurisdiction=eu-visiting" | tee /tmp/chex-demo-allow.json
+curl -fsS -H "Authorization: ${EU_VISITING_AUTH}" \
+  "$GW/v1/patients/patient-eu-001?purpose=treatment" | tee /tmp/chex-demo-allow.json
 grep -q '"patient"' /tmp/chex-demo-allow.json
 
 log "2. Research without consent — patient-eu-001 (expect 403)"
-code=$(read_code patient-eu-001 research eu-home)
+code=$(read_code patient-eu-001 research "$EU_HOME_AUTH")
 [[ "$code" == "403" ]]
 grep -q 'policy_denied' /tmp/chex-read.json
 echo "  403 consent_required (as expected)"
 
 log "3. Cross-bloc deny — EU requester to US home patient (expect 403 residency_denied)"
-code=$(read_code patient-us-001 treatment eu-visiting)
+code=$(read_code patient-us-001 treatment "$EU_VISITING_AUTH")
 [[ "$code" == "403" ]]
 grep -q 'residency_denied' /tmp/chex-read.json
 echo "  403 residency_denied (as expected)"
 
+log "3b. Cross-bloc deny — US clinician to EU patient treatment (expect 403 residency_denied)"
+code=$(read_code patient-eu-001 treatment "$US_CLINICIAN_AUTH")
+[[ "$code" == "403" ]]
+grep -q 'residency_denied' /tmp/chex-read.json
+echo "  403 residency_denied with us-clinician credential (as expected)"
+
+log "3c. Auth required — no bearer on EU patient read (expect 401)"
+code=$(curl -s -o /tmp/chex-read.json -w "%{http_code}" \
+  "$GW/v1/patients/patient-eu-001?purpose=treatment")
+[[ "$code" == "401" ]]
+echo "  401 without Authorization (as expected)"
+
+log "3d. Query-param jurisdiction must not bypass bearer auth (expect 401)"
+code=$(curl -s -o /tmp/chex-read.json -w "%{http_code}" \
+  "$GW/v1/patients/patient-eu-001?purpose=treatment&requester_jurisdiction=us-clinician")
+[[ "$code" == "401" ]]
+echo "  401 with query override only (as expected)"
+
+log "3e. Cross-bloc deny — EU bearer to US home patient treatment (expect 403)"
+code=$(read_code patient-us-001 treatment "$EU_VISITING_AUTH")
+[[ "$code" == "403" ]]
+grep -q 'residency_denied' /tmp/chex-read.json
+echo "  403 eu-visiting to us-home (as expected)"
+
 log "4. Cross-bloc derivative exception — US clinician to EU patient (expect 200, min fields)"
-curl -fsS "$GW/v1/patients/patient-eu-001?purpose=derivative&requester_jurisdiction=us-clinician&cross_bloc_permitted=true" \
+curl -fsS -H "Authorization: ${US_CLINICIAN_AUTH}" \
+  "$GW/v1/patients/patient-eu-001?purpose=derivative" \
   | tee /tmp/chex-demo-cross-exception.json
 python3 -c "
 import json
@@ -117,16 +175,16 @@ assert fields == {'id', 'resourceType'}, fields
 assert set(patient.keys()) <= {'id', 'resourceType'}, patient.keys()
 "
 
-log "5a. US read without SSRAA association (expect 401)"
+log "5a. Patient read without SSRAA association (expect 401)"
 code=$(curl -s -o /tmp/chex-demo-ssraa-deny.json -w "%{http_code}" \
-  "$GW/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician")
+  "$GW/v1/patients/patient-us-001?purpose=treatment")
 [[ "$code" == "401" ]]
 grep -q 'ssraa_required' /tmp/chex-demo-ssraa-deny.json
 echo "  401 ssraa_required (as expected)"
 
 log "5. US TEFCA secondary — intra-US treatment read with SSRAA (expect 200)"
 curl -fsS -H "Authorization: $SSRA_AUTH" \
-  "$GW/v1/patients/patient-us-001?purpose=treatment&requester_jurisdiction=us-clinician" \
+  "$GW/v1/patients/patient-us-001?purpose=treatment" \
   | tee /tmp/chex-demo-us.json
 grep -q 'us-home' /tmp/chex-demo-us.json
 
@@ -143,23 +201,26 @@ curl -fsS -X POST "http://localhost:8085/v1/identifiers" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"urn:ehds:patient:eu-002","subject":"patient-eu-002","home_jurisdiction":"eu-home"}' \
   >/dev/null
-curl -fsS "$GW/v1/patients/_?identifier=urn:ehds:patient:eu-002&purpose=research&requester_jurisdiction=eu-home" \
+curl -fsS -H "Authorization: ${EU_HOME_AUTH}" \
+  "$GW/v1/patients/_?identifier=urn:ehds:patient:eu-002&purpose=research" \
   | tee /tmp/chex-demo-broker-read.json
 grep -q 'patient-eu-002' /tmp/chex-demo-broker-read.json
 
 log "7. Dynamic consent — patient-eu-002 research allowed now (expect 200)"
-code=$(read_code patient-eu-002 research eu-home)
+code=$(read_code patient-eu-002 research "$EU_HOME_AUTH")
 [[ "$code" == "200" ]]
 echo "  200 (consent active)"
 
 log "7a. REVOKE consent via gateway -> OPAL sync -> research denied (expect 403, no restart)"
-curl -fsS -X POST "$GW/v1/admin/consent?subject=patient-eu-002&action=revoke&purpose=research" | tee /tmp/chex-consent.json
-wait_for_code patient-eu-002 research eu-home 403
+curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
+  "$GW/v1/admin/consent?subject=patient-eu-002&action=revoke&purpose=research" | tee /tmp/chex-consent.json
+wait_for_code patient-eu-002 research "$EU_HOME_AUTH" 403
 echo "  403 consent_required after live revocation"
 
 log "7b. GRANT consent again -> research allowed (expect 200, no restart)"
-curl -fsS -X POST "$GW/v1/admin/consent?subject=patient-eu-002&action=grant&purpose=research" >/dev/null
-wait_for_code patient-eu-002 research eu-home 200
+curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
+  "$GW/v1/admin/consent?subject=patient-eu-002&action=grant&purpose=research" >/dev/null
+wait_for_code patient-eu-002 research "$EU_HOME_AUTH" 200
 echo "  200 after live re-grant"
 
 log "8. AI triage with human oversight"
@@ -172,8 +233,9 @@ decision_id=$(python3 -c "import json,sys; print(json.load(sys.stdin)['decision_
 curl -fsS -X POST "http://localhost:8082/v1/decisions/${decision_id}/approve" | grep -q approved
 
 log "9. Tenant crypto-shred (expect subsequent EU reads 410 Gone)"
-curl -fsS -X POST "$GW/v1/admin/erasure/tenant?tenant=demo-tenant"
-code=$(read_code patient-eu-001 treatment eu-visiting)
+curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
+  "$GW/v1/admin/erasure/tenant?tenant=demo-tenant"
+code=$(read_code patient-eu-001 treatment "$EU_VISITING_AUTH")
 [[ "$code" == "410" ]]
 
 log "demo: ok — intra-EU, US TEFCA, cross-bloc deny/exception, identity broker, DYNAMIC consent revoke/grant, AI, erasure"

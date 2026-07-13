@@ -33,13 +33,20 @@ def require_consent_admin(
 ) -> None:
     secret = _admin_secret()
     if not secret:
-        return
+        raise HTTPException(status_code=503, detail="admin authentication not configured")
     token = credentials.credentials if credentials else ""
     if not hmac.compare_digest(token, secret):
         raise HTTPException(status_code=401, detail="admin authentication required")
 
 
 app = FastAPI(title="Cloud Healthcare Exchange Consent Service", version="0.1.0")
+
+
+@app.on_event("startup")
+def _require_admin_secret_on_startup() -> None:
+    if not _admin_secret():
+        raise RuntimeError("CHEX_ADMIN_SECRET must be set for consent admin endpoints")
+
 
 # Purposes that are consent-gated in policy (chex.authz reads data.consent[...]).
 CONSENT_PURPOSES = ("research",)

@@ -1,4 +1,4 @@
-# SSRAA application associations — US FHIR node auth stub (ADR 0009)
+# SSRAA application associations — US cell only (ADR 0009)
 # Production: UDAP/SSRAA token exchange; PoC uses shared-secret bearer tokens.
 required: true
 
@@ -8,3 +8,9 @@ associations:
     jurisdiction: us-home
     scopes:
       - patient.read
+  us-clinician-client:
+    secret: demo-us-clinician-secret
+    jurisdiction: us-clinician
+    scopes:
+      - patient.read
+    cross_bloc_permitted: true

@@ -28,12 +28,15 @@ func NewClient(baseURL string) *Client {
 
 // Set grants or revokes consent for a subject/purpose and returns the
 // consent-service response body and status code.
-func (c *Client) Set(ctx context.Context, subject, action, purpose string) (map[string]any, int, error) {
+func (c *Client) Set(ctx context.Context, subject, action, purpose, adminAuth string) (map[string]any, int, error) {
 	u := fmt.Sprintf("%s/v1/consent/%s/%s?purpose=%s",
 		c.baseURL, url.PathEscape(subject), url.PathEscape(action), url.QueryEscape(purpose))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, nil)
 	if err != nil {
 		return nil, 0, err
+	}
+	if adminAuth != "" {
+		req.Header.Set("Authorization", adminAuth)
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

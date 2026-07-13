@@ -1,0 +1,47 @@
+name: demo-e2e
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-e2e-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Generate dev secrets
+        run: |
+          chmod +x scripts/*.sh scripts/lib/*.sh
+          ./scripts/generate-opal-dev-secrets.sh
+
+      - name: Start compose stack
+        working-directory: deploy
+        run: docker compose up -d --build
+
+      - name: Wait for gateway
+        run: |
+          for _ in $(seq 1 90); do
+            curl -fsS http://localhost:8081/health >/dev/null 2>&1 && exit 0
+            sleep 5
+          done
+          docker compose -f deploy/docker-compose.yml ps
+          exit 1
+
+      - name: Run demo.sh
+        run: ./scripts/demo.sh
+
+      - name: Teardown
+        if: always()
+        working-directory: deploy
+        run: docker compose down --volumes

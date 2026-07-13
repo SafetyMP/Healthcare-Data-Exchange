@@ -71,6 +71,14 @@ if [[ "$PROFILE" == "fleet" ]]; then
 fi
 python3 -m py_compile "${PY_FILES[@]}"
 
+echo "== harness: stub canary =="
+if [[ -x "$ROOT/scripts/check-stub-canary.sh" ]]; then
+  "$ROOT/scripts/check-stub-canary.sh"
+else
+  echo "MISSING: scripts/check-stub-canary.sh" >&2
+  errors=$((errors + 1))
+fi
+
 if [[ "$errors" -gt 0 ]]; then
   echo "check-harness: FAILED ($errors errors)" >&2
   exit 1

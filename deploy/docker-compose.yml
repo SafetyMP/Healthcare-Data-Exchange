@@ -185,6 +185,8 @@ services:
         condition: service_healthy
       hapi-eu:
         condition: service_started
+    env_file:
+      - opal/dev-secrets.env
     environment:
       CHEX_ROOT: /workspace
       CHEX_ROUTING_CONFIG: /workspace/config/routing.yaml
@@ -197,6 +199,7 @@ services:
       CHEX_CONSENT_URL: http://consent-service:8084
       CHEX_IDENTITY_BROKER_URL: http://identity-broker:8085
       CHEX_SSRAa_CONFIG: /workspace/config/ssraa.yaml
+      CHEX_EU_AUTH_CONFIG: /workspace/config/eu-auth.yaml
       CHEX_GATEWAY_ADDR: ":8081"
     volumes:
       - ..:/workspace

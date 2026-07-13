@@ -1,8 +1,6 @@
 package audit
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"os"
 	"sync"
@@ -26,11 +24,6 @@ type Sink struct {
 
 func NewSink(path string) *Sink {
 	return &Sink{path: path}
-}
-
-func Pseudonym(subjectID, tenant string) string {
-	sum := sha256.Sum256([]byte(tenant + ":" + subjectID))
-	return hex.EncodeToString(sum[:8])
 }
 
 func (s *Sink) Append(ev Event) error {

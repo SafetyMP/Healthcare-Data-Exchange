@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/adminauth"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/aigov"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/audit"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/broker"
@@ -16,7 +17,7 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/handlers"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/identity"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
-	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/principal"
 )
 
 func main() {
@@ -31,16 +32,18 @@ func main() {
 	aiURL := env("CHEX_AI_GOV_URL", "http://localhost:8082")
 	consentURL := env("CHEX_CONSENT_URL", "http://localhost:8084")
 	identityURL := env("CHEX_IDENTITY_BROKER_URL", "http://localhost:8085")
+	euAuthPath := env("CHEX_EU_AUTH_CONFIG", filepath.Join(root, "config/eu-auth.yaml"))
 	ssraaPath := env("CHEX_SSRAa_CONFIG", filepath.Join(root, "config/ssraa.yaml"))
 
 	routing, err := appconfig.LoadRouting(cfgPath)
 	if err != nil {
 		log.Fatalf("load routing: %v", err)
 	}
-	ssraaCfg, err := ssraa.LoadConfig(ssraaPath)
+	principals, err := principal.NewBroker(euAuthPath, ssraaPath)
 	if err != nil {
-		log.Fatalf("load ssraa config: %v", err)
+		log.Fatalf("load principal broker: %v", err)
 	}
+	adminauth.MustConfigure()
 	if err := os.MkdirAll(filepath.Dir(auditPath), 0o750); err != nil {
 		log.Fatalf("audit dir: %v", err)
 	}
@@ -59,7 +62,7 @@ func main() {
 		Keys:           keys,
 		AI:             aigov.NewClient(aiURL),
 		Consent:        consent.NewClient(consentURL),
-		SSRAA:          ssraa.NewValidator(ssraaCfg),
+		Principals:     principals,
 		ClinicianUIURL: env("CHEX_CLINICIAN_UI_URL", "http://localhost:3100"),
 	}
 
@@ -72,7 +75,7 @@ func main() {
 	mux.HandleFunc("/v1/admin/consent", srv.ConsentAdminHandler)
 	mux.HandleFunc("/v1/ai/triage", srv.AITriage)
 
-	log.Printf("gateway listening on %s", addr)
+	log.Printf("gateway listening on %s (%s)", addr, principals)
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 

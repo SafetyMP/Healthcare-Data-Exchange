@@ -14,28 +14,32 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/crypto"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/fhir"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pep"
+	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/principal"
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/requester"
-	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/ssraa"
 )
+
+type PolicyEvaluator interface {
+	Evaluate(ctx context.Context, input pep.PolicyInput) (pep.Decision, error)
+}
 
 type AIGovernance interface {
 	Triage(ctx context.Context, payload map[string]any) (map[string]any, error)
 }
 
 type ConsentAdmin interface {
-	Set(ctx context.Context, subject, action, purpose string) (map[string]any, int, error)
+	Set(ctx context.Context, subject, action, purpose, adminAuth string) (map[string]any, int, error)
 }
 
 type Server struct {
 	Routing        *appconfig.Routing
 	Broker         *broker.Broker
-	PEP            *pep.Client
+	PEP            PolicyEvaluator
 	FHIR           *fhir.Client
 	Audit          *audit.Sink
 	Keys           *crypto.KeyStore
 	AI             AIGovernance
 	Consent        ConsentAdmin
-	SSRAA          *ssraa.Validator
+	Principals     *principal.Broker
 	ClinicianUIURL string
 }
 
@@ -61,27 +65,30 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ssraaClientID string
-	if token.Cell == "us" && strings.HasPrefix(token.HomeJurisdiction, "us-") && s.SSRAA != nil && s.SSRAA.Required() {
-		var ssraaOK bool
-		ssraaClientID, ssraaOK = s.SSRAA.Validate(r.Header.Get("Authorization"))
-		if !ssraaOK {
-			_ = s.Audit.Append(audit.Event{
-				Action:                "patient.read",
-				RequesterJurisdiction: token.HomeJurisdiction,
-				Purpose:               purpose,
-				Outcome:               "deny",
-				Detail:                "ssraa_invalid",
-			})
-			writeJSON(w, http.StatusUnauthorized, map[string]any{
-				"error":  "ssraa_required",
-				"reason": "invalid_or_missing_association",
-			})
+	if s.Principals == nil {
+		http.Error(w, "caller authentication not configured", http.StatusServiceUnavailable)
+		return
+	}
+	caller, ok := s.Principals.Authenticate(r.Header.Get("Authorization"))
+	if !ok {
+		if err := s.auditAppend(audit.Event{
+			Action:                "patient.read",
+			RequesterJurisdiction: "",
+			Purpose:               purpose,
+			Outcome:               "deny",
+			Detail:                "caller_unauthenticated",
+		}); err != nil {
+			http.Error(w, "audit error", http.StatusInternalServerError)
 			return
 		}
+		writeJSON(w, http.StatusUnauthorized, map[string]any{
+			"error":  s.Principals.DenyReason(token.Cell),
+			"reason": "invalid_or_missing_association",
+		})
+		return
 	}
 
-	reqCtx := requester.Resolve(s.Routing, token.HomeJurisdiction, s.SSRAA, ssraaClientID)
+	reqCtx := requester.Resolve(s.Routing, token.HomeJurisdiction, caller)
 	requesterJurisdiction := reqCtx.Jurisdiction
 	crossBloc := reqCtx.CrossBloc
 	crossPermitted := reqCtx.CrossBlocPermitted
@@ -109,16 +116,23 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pseudo := audit.Pseudonym(token.SubjectID, token.Tenant)
+	pseudo, err := s.Keys.Pseudonym(token.Tenant, token.SubjectID)
+	if err != nil {
+		http.Error(w, "key custody error", http.StatusInternalServerError)
+		return
+	}
 	if !decision.Allow {
-		_ = s.Audit.Append(audit.Event{
+		if err := s.auditAppend(audit.Event{
 			Action:                "patient.read",
 			SubjectPseudonym:      pseudo,
 			RequesterJurisdiction: requesterJurisdiction,
 			Purpose:               purpose,
 			Outcome:               "deny",
 			Detail:                decision.DenyReason,
-		})
+		}); err != nil {
+			http.Error(w, "audit error", http.StatusInternalServerError)
+			return
+		}
 		writeJSON(w, http.StatusForbidden, map[string]any{
 			"error":  "policy_denied",
 			"reason": decision.DenyReason,
@@ -133,24 +147,36 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	}
 	filtered := fhir.FilterFields(patient, decision.MinNecessaryFields)
 
-	enc, _ := s.Keys.Encrypt(token.Tenant, token.SubjectID)
-	_ = s.Audit.Append(audit.Event{
+	enc, err := s.Keys.Encrypt(token.Tenant, token.SubjectID)
+	if err != nil {
+		http.Error(w, "key custody error", http.StatusInternalServerError)
+		return
+	}
+	envelopeRef := enc
+	if len(enc) > 16 {
+		envelopeRef = enc[:16]
+	}
+	if err := s.auditAppend(audit.Event{
 		Action:                "patient.read",
 		SubjectPseudonym:      pseudo,
 		RequesterJurisdiction: requesterJurisdiction,
 		Purpose:               purpose,
 		Outcome:               "allow",
-		Detail:                "envelope_ref=" + enc[:16],
-	})
+		Detail:                "envelope_ref=" + envelopeRef,
+	}); err != nil {
+		http.Error(w, "audit error", http.StatusInternalServerError)
+		return
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"patient":              filtered,
-		"subject":              token.SubjectID,
-		"home_jurisdiction":    token.HomeJurisdiction,
-		"home_cell":            token.Cell,
-		"routed_fhir_base":     token.FHIRBase,
-		"cross_bloc":           crossBloc,
-		"min_necessary_fields": decision.MinNecessaryFields,
+		"patient":                filtered,
+		"subject":                token.SubjectID,
+		"home_jurisdiction":      token.HomeJurisdiction,
+		"home_cell":              token.Cell,
+		"routed_fhir_base":       token.FHIRBase,
+		"requester_jurisdiction": requesterJurisdiction,
+		"cross_bloc":             crossBloc,
+		"min_necessary_fields":   decision.MinNecessaryFields,
 	})
 }
 
@@ -182,7 +208,7 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	if adminauth.Required() && !adminauth.Authorize(r.Header.Get("Authorization")) {
+	if !adminauth.Authorize(r.Header.Get("Authorization")) {
 		adminauth.Deny(w)
 		return
 	}
@@ -195,11 +221,14 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "shred failed", http.StatusInternalServerError)
 		return
 	}
-	_ = s.Audit.Append(audit.Event{
+	if err := s.auditAppend(audit.Event{
 		Action:  "tenant.crypto_shred",
 		Outcome: "ok",
 		Detail:  tenant,
-	})
+	}); err != nil {
+		http.Error(w, "audit error", http.StatusInternalServerError)
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "shredded", "tenant": tenant})
 }
 
@@ -214,7 +243,8 @@ func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	if adminauth.Required() && !adminauth.Authorize(r.Header.Get("Authorization")) {
+	adminAuth := r.Header.Get("Authorization")
+	if !adminauth.Authorize(adminAuth) {
 		adminauth.Deny(w)
 		return
 	}
@@ -228,16 +258,19 @@ func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "subject and action required", http.StatusBadRequest)
 		return
 	}
-	out, status, err := s.Consent.Set(r.Context(), subject, action, purpose)
+	out, status, err := s.Consent.Set(r.Context(), subject, action, purpose, adminAuth)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	_ = s.Audit.Append(audit.Event{
+	if err := s.auditAppend(audit.Event{
 		Action:  "consent." + action,
 		Outcome: "ok",
 		Detail:  subject + ":" + purpose,
-	})
+	}); err != nil {
+		http.Error(w, "audit error", http.StatusInternalServerError)
+		return
+	}
 	writeJSON(w, status, out)
 }
 
@@ -259,6 +292,13 @@ func (s *Server) AITriage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) auditAppend(ev audit.Event) error {
+	if s.Audit == nil {
+		return nil
+	}
+	return s.Audit.Append(ev)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

@@ -13,6 +13,7 @@ import { postConsent } from "@/lib/api";
 export default function ConsentPage() {
   const [patientId, setPatientId] = useState("patient-eu-001");
   const [purpose, setPurpose] = useState("research");
+  const [adminToken, setAdminToken] = useState("");
   const [granted, setGranted] = useState(true);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export default function ConsentPage() {
       patient_id: patientId,
       purpose,
       granted,
-      requester_jurisdiction: "eu-home",
+      admin_token: adminToken,
     });
     setLoading(false);
     if (!res.ok) {
@@ -42,7 +43,7 @@ export default function ConsentPage() {
       <PageHeader
         eyebrow="Admin"
         title="Consent management"
-        description="Grant or revoke consent via the gateway admin API. OPAL propagates revocation to the PDP."
+        description="Grant or revoke consent via the gateway admin API (requires CHEX_ADMIN_SECRET bearer). OPAL propagates revocation to the PDP."
       />
 
       <Card>
@@ -59,6 +60,18 @@ export default function ConsentPage() {
               <div className="space-y-2">
                 <Label htmlFor="consent-purpose">Purpose</Label>
                 <Input id="consent-purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} required />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="admin-token">Admin bearer token</Label>
+                <Input
+                  id="admin-token"
+                  type="password"
+                  autoComplete="off"
+                  value={adminToken}
+                  onChange={(e) => setAdminToken(e.target.value)}
+                  placeholder="CHEX_ADMIN_SECRET value"
+                  required
+                />
               </div>
             </div>
             <fieldset className="space-y-2">

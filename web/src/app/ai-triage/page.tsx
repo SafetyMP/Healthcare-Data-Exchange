@@ -24,7 +24,6 @@ export default function AiTriagePage() {
     const res = await postAiTriage({
       patient_id: patientId,
       symptoms: symptoms.split(",").map((s) => s.trim()).filter(Boolean),
-      requester_jurisdiction: "eu-visiting",
     });
     setLoading(false);
     if (!res.ok) {

@@ -15,6 +15,10 @@ echo "== verify: opal hardening =="
 ./scripts/check-opal-hardening.sh
 ./scripts/check-policy-bundle.sh
 
+echo "== verify: opal policy =="
+./scripts/ensure-opa.sh
+"$ROOT/.tools/bin/opa" test policy/
+
 echo "== verify: go (gateway) =="
 (
   cd services/gateway
@@ -62,9 +66,5 @@ echo "== verify: python (identity-broker) =="
   "$VENV/bin/ruff" check chex_identity tests
   "$VENV/bin/pytest" -q
 )
-
-echo "== verify: opa policy =="
-./scripts/ensure-opa.sh
-"$ROOT/.tools/bin/opa" test policy/
 
 echo "verify: ok"

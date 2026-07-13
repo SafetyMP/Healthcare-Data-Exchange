@@ -40,10 +40,11 @@ After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before 
 
 ```bash
 ./scripts/verify.sh
+./scripts/demo.sh            # required when touching gateway/auth/policy/runtime (stack up)
 cd web && npm run verify   # optional: clinician console (requires gateway for live API)
 ```
 
-`verify.sh` does **not** require Docker. Compose E2E is `demo.sh` only.
+`verify.sh` is hermetic (no Docker) and gates the agent stop hook. Compose E2E is `./scripts/demo.sh` — enforced in CI via `demo-e2e` workflow and `requires.commands.integration` in `.harness/profile.yaml`.
 
 ## Layout
 
@@ -61,7 +62,8 @@ cd web && npm run verify   # optional: clinician console (requires gateway for l
 | `config/routing.yaml` | Jurisdiction routing + subject registry (identifier fallback) |
 | `config/identity-registry.yaml` | Preferred identifiers for identity-broker (ADR 0010) |
 | `config/opal-hardening.yaml` | OPAL secure mode + webhook + bundle integrity profile (ADR 0011) |
-| `config/ssraa.yaml` | SSRAA application association stub (ADR 0009) |
+| `config/eu-auth.yaml` | EU cell caller credential stub |
+| `config/ssraa.yaml` | US SSRAA application association stub (ADR 0009) |
 | `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
 | `docs/` | Product mandate, architecture, ADRs (incl. 0007–0011), roadmap |
 

@@ -53,13 +53,13 @@ func renderLandingHTML(clinicianUIURL string) string {
   <ul>
     <li>
       <span class="method">GET</span>
-      <a href="/v1/patients/patient-eu-001?purpose=treatment&amp;requester_jurisdiction=eu-visiting">/v1/patients/patient-eu-001</a>
-      — intra-EU treatment read (primary demo)
+      <code>/v1/patients/patient-eu-001?purpose=treatment</code>
+      — intra-EU treatment read (requires EU bearer via <code>config/eu-auth.yaml</code>)
     </li>
     <li>
       <span class="method">GET</span>
-      <code>/v1/patients/patient-eu-001?purpose=research&amp;requester_jurisdiction=eu-home</code>
-      — consent denied (expect 403; use curl)
+      <code>/v1/patients/patient-eu-001?purpose=research</code>
+      — consent denied with EU-home credential (expect 403; use curl)
     </li>
     <li>
       <span class="method">POST</span>
