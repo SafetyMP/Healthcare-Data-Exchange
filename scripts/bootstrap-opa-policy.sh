@@ -23,6 +23,7 @@ if [[ ! -f "$policy_file" ]]; then
   exit 1
 fi
 curl -fsS -X PUT "${OPA_URL}/v1/policies/chex/authz" \
+  -H "Content-Type: text/plain" \
   --data-binary @"${policy_file}"
 
 echo "== bootstrap-opa-policy: probe deny case via gateway =="
