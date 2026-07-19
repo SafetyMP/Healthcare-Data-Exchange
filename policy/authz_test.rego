@@ -72,6 +72,54 @@ test_intra_us_treatment_allowed {
 		"home_jurisdiction": "us-home",
 		"requester_jurisdiction": "us-clinician",
 		"purpose": "treatment",
+		"tefca_xp": "T-TREAT",
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_us_treatment_allowed_with_empty_xp {
+	authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_unknown_tefca_xp_denied {
+	not authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "T-BOGUS",
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_unknown_tefca_xp_deny_reason {
+	authz.deny_reason == "xp_denied" with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "T-BOGUS",
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_tefca_ias_xp_allowed {
+	authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "T-IAS",
 		"cross_bloc": false,
 	}
 		with data.consent as consent_data

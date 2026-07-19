@@ -78,6 +78,14 @@ read_code() {
     "$GW/v1/patients/${subject}?purpose=${purpose}"
 }
 
+read_code_xp() {
+  local subject="$1" purpose="$2" auth="$3" xp="$4"
+  curl -s -o /tmp/chex-adversarial.json -w "%{http_code}" \
+    -H "Authorization: ${auth}" \
+    -H "X-TEFCA-XP: ${xp}" \
+    "$GW/v1/patients/${subject}?purpose=${purpose}"
+}
+
 # deny_case: anonymous_eu_read
 log "anonymous_eu_read (expect 401)"
 code=$(curl -s -o /tmp/chex-adversarial.json -w "%{http_code}" \
@@ -152,6 +160,13 @@ if [[ "$code" != "403" ]] || ! grep -q 'consent_required' /tmp/chex-adversarial.
   echo "  expected 403 consent_required got ${code}: $(cat /tmp/chex-adversarial.json)" >&2
   exit 1
 fi
+echo "  ${code} (as expected)"
+
+# deny_case: unknown_tefca_xp_deny
+log "unknown_tefca_xp_deny (expect 403 xp_denied)"
+code=$(read_code_xp patient-us-001 treatment "$SSRA_AUTH" "T-BOGUS")
+[[ "$code" == "403" ]]
+grep -q 'xp_denied' /tmp/chex-adversarial.json
 echo "  ${code} (as expected)"
 
 echo ""

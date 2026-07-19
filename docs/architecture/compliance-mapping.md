@@ -92,10 +92,15 @@ Scope discipline: the **exchange platform** is not classified as an AI system; o
 
 | Element | Mapping |
 |---------|---------|
-| **QHIN** must be US entity | US cell operated by US tenant |
-| **Facilitated FHIR** | US Core + USCDI profiles (ADR 0004) |
-| **SSRAA** (2027-01-01 new nodes) | Authentication target (Phase) |
+| **QHIN** must be US entity | US cell operated by US tenant — **not** a QHIN/Participant |
+| **Facilitated FHIR SOP 2.0** | FHIR R4 + **US Core 6.1.0** floor (ADR 0004) |
+| **USCDI** | **v3** PoC floor (HTI-1); track v6/v7 — subset samples only |
+| **Exchange Purpose (XP)** | PoC `X-TEFCA-XP` allowlist (`T-TREAT`, `T-IAS`, `T-HCO`); unknown → deny |
+| **SSRAA** | Shared-secret stub now; UDAP path Jul/Nov 2026 → hard gate **2027-01-01** |
+| **HTI-2 Manner Exception** | Docs framing only (45 CFR Part 172) |
+| **CMS-0057-F payer APIs** | **N/A** — out of PoC scope |
 | **US residency** | SA-9(5) aligned US cell |
+| **CapabilityStatement** | Limited honesty document via gateway `/v1/fhir/metadata` |
 
 ---
 

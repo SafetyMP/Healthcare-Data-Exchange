@@ -29,6 +29,7 @@ type PolicyInput struct {
 	HomeJurisdiction      string `json:"home_jurisdiction"`
 	RequesterJurisdiction string `json:"requester_jurisdiction"`
 	Purpose               string `json:"purpose"`
+	TEFCAXP               string `json:"tefca_xp"`
 	ConsentResearch       bool   `json:"consent_research"`
 	CrossBloc             bool   `json:"cross_bloc"`
 	CrossBlocPermitted    bool   `json:"cross_bloc_permitted"`

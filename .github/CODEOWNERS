@@ -1,6 +1,7 @@
-# Default owners for review on sensitive paths.
-# Org team @SafetyMP until named individual CODEOWNERS are assigned.
-# Enable "Require review from Code Owners" on main (see docs/maintainer-github-settings.md).
+# Path ownership for review routing and future dual-maintainer mode.
+# Solo-maintainer exception: Code Owner reviews are NOT required on main
+# (see docs/maintainer-github-settings.md#solo-maintainer-exception).
+# Restore require_code_owner_reviews when a second write-access maintainer exists.
 * @SafetyMP
 
 /policy/ @SafetyMP

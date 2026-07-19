@@ -176,6 +176,56 @@ func TestGetPatientUSRouted(t *testing.T) {
 	if body["home_cell"] != "us" {
 		t.Fatalf("home_cell=%v", body["home_cell"])
 	}
+	if body["tefca_xp"] != "T-TREAT" {
+		t.Fatalf("tefca_xp=%v", body["tefca_xp"])
+	}
+}
+
+func TestGetPatientUnknownTEFCAXPDenied(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-us-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", ssraaAuth())
+	req.Header.Set("X-TEFCA-XP", "T-BOGUS")
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 got %d body %s", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["reason"] != "xp_denied" {
+		t.Fatalf("reason=%v", body["reason"])
+	}
+}
+
+func TestFHIRMetadata(t *testing.T) {
+	root := findRoot(t)
+	srv := &handlers.Server{
+		USCapabilityPath: filepath.Join(root, "fhir/capability/us-cell.json"),
+	}
+	req := httptest.NewRequest(http.MethodGet, "/v1/fhir/metadata", nil)
+	rec := httptest.NewRecorder()
+	srv.FHIRMetadata(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rec.Code)
+	}
+	if !strings.Contains(rec.Header().Get("Content-Type"), "fhir+json") {
+		t.Fatalf("content-type=%s", rec.Header().Get("Content-Type"))
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["resourceType"] != "CapabilityStatement" {
+		t.Fatalf("resourceType=%v", body["resourceType"])
+	}
+	if body["fhirVersion"] != "4.0.1" {
+		t.Fatalf("fhirVersion=%v", body["fhirVersion"])
+	}
 }
 
 func TestGetPatientCrossBlocEUToUSDenied(t *testing.T) {

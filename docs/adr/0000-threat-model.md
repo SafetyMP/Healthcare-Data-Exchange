@@ -28,6 +28,7 @@ Machine-readable cells: `specs/threat-model.yaml`. Tier-3 negative tests: `scrip
 | Boundary | Routes | Enforcement | Failure |
 |----------|--------|-------------|---------|
 | **Authentication** | `GET /v1/patients/{id}` | `principal.Broker` before OPA | `401 credential_required` or `401 ssraa_required` |
+| **TEFCA XP** | patient reads (`X-TEFCA-XP`) | OPA allowlist (`T-TREAT`, `T-IAS`, `T-HCO`) | `403 xp_denied` |
 | **Cell residency** | patient reads | OPA after principal resolution | `403 residency_denied` |
 | **Purpose / consent** | patient reads (`purpose=research`) | OPA `data.consent` | `403 consent_required` (no consent or after revoke) |
 | **Query param override** | patient reads | ignored for identity | must not bypass authentication (`401`) |

@@ -99,3 +99,15 @@ deny_cases:
     expect:
       status: 403
       reason_substring: consent_required
+
+  - id: unknown_tefca_xp_deny
+    cell: us_patient_read
+    principal: us_ssraa_bearer
+    fixture:
+      subject: patient-us-001
+      purpose: treatment
+      headers:
+        X-TEFCA-XP: T-BOGUS
+    expect:
+      status: 403
+      reason_substring: xp_denied

@@ -98,7 +98,7 @@ flowchart TB
 ### FHIR data plane (HAPI + Postgres)
 
 - One database per jurisdiction cell (separate-DB isolation).
-- US Core profiles for US cell; EU profiles for EU cell in target state.
+- US Core **6.1.0** + USCDI **v3** floor for US cell (PoC subset); EU profiles for EU cell in target state. TEFCA Facilitated FHIR pattern only (not QHIN).
 - Search indexes (`HFJ_SPIDX_*`) constrain erasure granularity (see ADR 0003).
 
 ### Key custody

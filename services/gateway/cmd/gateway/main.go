@@ -54,21 +54,23 @@ func main() {
 	}
 
 	srv := &handlers.Server{
-		Routing:        routing,
-		Broker:         broker.New(routing, identity.NewClient(identityURL)),
-		PEP:            pep.NewClient(opaURL),
-		FHIR:           fhir.NewClient(fhirBase, sampleDir),
-		Audit:          audit.NewSink(auditPath),
-		Keys:           keys,
-		AI:             aigov.NewClient(aiURL),
-		Consent:        consent.NewClient(consentURL),
-		Principals:     principals,
-		ClinicianUIURL: env("CHEX_CLINICIAN_UI_URL", "http://localhost:3100"),
+		Routing:          routing,
+		Broker:           broker.New(routing, identity.NewClient(identityURL)),
+		PEP:              pep.NewClient(opaURL),
+		FHIR:             fhir.NewClient(fhirBase, sampleDir),
+		Audit:            audit.NewSink(auditPath),
+		Keys:             keys,
+		AI:               aigov.NewClient(aiURL),
+		Consent:          consent.NewClient(consentURL),
+		Principals:       principals,
+		ClinicianUIURL:   env("CHEX_CLINICIAN_UI_URL", "http://localhost:3100"),
+		USCapabilityPath: env("CHEX_US_CAPABILITY", filepath.Join(root, "fhir/capability/us-cell.json")),
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", srv.Landing)
 	mux.HandleFunc("/health", srv.Health)
+	mux.HandleFunc("/v1/fhir/metadata", srv.FHIRMetadata)
 	mux.HandleFunc("/v1/identity/resolve", srv.ResolveIdentity)
 	mux.HandleFunc("/v1/patients/", srv.GetPatient)
 	mux.HandleFunc("/v1/admin/erasure/tenant", srv.ShredTenant)
