@@ -22,7 +22,7 @@ gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/topics \
 ## Security
 
 1. **Private vulnerability reporting** — Settings → Code security and analysis → Enable
-2. **Dependabot security updates** — Settings → Code security → Enable (`.github/dependabot.yml` handles version updates)
+2. **Dependabot security updates** — Settings → Code security → Enable (`.github/dependabot.yml` handles version updates, including npm under `/web`)
 
 ## Social preview
 
@@ -49,12 +49,61 @@ Upload to **Settings → Social preview** (no public API — uses Playwright UI 
 
 Manual alternative: **Settings → General → Social preview → Edit** → upload `docs/assets/social-preview.png`.
 
-## Branch protection (recommended)
+## Branch protection (required)
 
-Protect `main`:
+Protect `main` (enforce for admins):
 
-- Require PR before merge
-- Require status checks: `canonical` (portfolio-verify), CodeQL, Scorecard (after first run)
+- Require a pull request before merging
+- Require at least **1** approving review
+- Require review from Code Owners (`.github/CODEOWNERS` → `@SafetyMP` until named owners are assigned)
+- Do not allow force pushes or deletions
+- Require status checks to pass before merging (strict: branches up to date):
+
+| Check name (Actions job) | Workflow |
+|--------------------------|----------|
+| `canonical` | portfolio-verify |
+| `demo` | demo-e2e |
+| `Analyze (go)` | CodeQL |
+| `Analyze (python)` | CodeQL |
+| `Analyze (javascript-typescript)` | CodeQL |
+| `Scorecard analysis` | OpenSSF Scorecard |
+| `verify` | web-ui (when that workflow runs) |
+
+Apply / refresh via API (after checks have appeared at least once on `main`):
+
+```bash
+gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/branches/main/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "canonical",
+      "demo",
+      "Analyze (go)",
+      "Analyze (python)",
+      "Analyze (javascript-typescript)",
+      "Scorecard analysis"
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 1,
+    "require_code_owner_reviews": true,
+    "dismiss_stale_reviews": true
+  },
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+Notes:
+
+- Job `verify` (web-ui) is path-filtered (`web/**`, `services/gateway/**`); require it when consolidating branch rules that support optional checks, or keep it as a soft gate.
+- Definition of Done remains `./scripts/verify.sh`, `./scripts/demo.sh`, and `./scripts/adversarial.sh` (the latter two run inside `demo-e2e`).
 
 ## First release
 

@@ -1,6 +1,6 @@
 schema: threat-model/v1
 product: Cloud Healthcare Exchange
-updated: "2026-07-13"
+updated: "2026-07-18"
 
 cells:
   - id: eu_patient_read
@@ -78,3 +78,24 @@ deny_cases:
     expect:
       status: 403
       reason_substring: residency_denied
+
+  - id: research_without_consent
+    cell: eu_patient_read
+    principal: eu_home_bearer
+    fixture:
+      subject: patient-eu-001
+      purpose: research
+    expect:
+      status: 403
+      reason_substring: consent_required
+
+  - id: research_revoked_deny
+    cell: eu_patient_read
+    principal: eu_home_bearer
+    fixture:
+      subject: patient-eu-002
+      purpose: research
+      precondition: consent_research_false
+    expect:
+      status: 403
+      reason_substring: consent_required

@@ -124,5 +124,35 @@ code=$(read_code patient-eu-001 treatment "$SSRA_AUTH")
 grep -q 'residency_denied' /tmp/chex-adversarial.json
 echo "  ${code} (as expected)"
 
+# deny_case: research_without_consent
+log "research_without_consent (expect 403 consent_required)"
+code=$(read_code patient-eu-001 research "$EU_HOME_AUTH")
+[[ "$code" == "403" ]]
+grep -q 'consent_required' /tmp/chex-adversarial.json
+echo "  ${code} (as expected)"
+
+# deny_case: research_revoked_deny — ensure research consent is false, then deny
+log "research_revoked_deny (expect 403 consent_required after revoke)"
+if [[ -z "${CHEX_ADMIN_SECRET:-}" ]]; then
+  echo "CHEX_ADMIN_SECRET missing — run ./scripts/generate-opal-dev-secrets.sh and restart stack" >&2
+  exit 1
+fi
+ADMIN_AUTH="Bearer ${CHEX_ADMIN_SECRET}"
+curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
+  "$GW/v1/admin/consent?subject=patient-eu-002&action=revoke&purpose=research" >/dev/null
+code=""
+for _ in $(seq 1 20); do
+  code=$(read_code patient-eu-002 research "$EU_HOME_AUTH")
+  if [[ "$code" == "403" ]] && grep -q 'consent_required' /tmp/chex-adversarial.json; then
+    break
+  fi
+  sleep 1
+done
+if [[ "$code" != "403" ]] || ! grep -q 'consent_required' /tmp/chex-adversarial.json; then
+  echo "  expected 403 consent_required got ${code}: $(cat /tmp/chex-adversarial.json)" >&2
+  exit 1
+fi
+echo "  ${code} (as expected)"
+
 echo ""
 echo "adversarial: ok — tier-3 deny cases passed"

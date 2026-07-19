@@ -54,6 +54,16 @@ updates:
       - dependencies
       - docker
 
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

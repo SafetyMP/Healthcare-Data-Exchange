@@ -29,7 +29,7 @@ Machine-readable cells: `specs/threat-model.yaml`. Tier-3 negative tests: `scrip
 |----------|--------|-------------|---------|
 | **Authentication** | `GET /v1/patients/{id}` | `principal.Broker` before OPA | `401 credential_required` or `401 ssraa_required` |
 | **Cell residency** | patient reads | OPA after principal resolution | `403 residency_denied` |
-| **Purpose / consent** | patient reads | OPA | `403 policy_denied` |
+| **Purpose / consent** | patient reads (`purpose=research`) | OPA `data.consent` | `403 consent_required` (no consent or after revoke) |
 | **Query param override** | patient reads | ignored for identity | must not bypass authentication (`401`) |
 
 ### Authentication mechanisms
