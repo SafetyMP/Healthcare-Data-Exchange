@@ -66,8 +66,9 @@ Protect `main` (enforce for admins):
 | `Analyze (go)` | CodeQL |
 | `Analyze (python)` | CodeQL |
 | `Analyze (javascript-typescript)` | CodeQL |
-| `Scorecard analysis` | OpenSSF Scorecard |
-| `verify` | web-ui (when that workflow runs) |
+| `verify` | web-ui (path-filtered; soft gate) |
+
+**Not a PR-required check:** `Scorecard analysis` runs on `push` to `main`, schedule, and `branch_protection_rule` — not on `pull_request`. Keep it enabled for supply-chain visibility; do not list it as a required PR status check.
 
 Apply / refresh via API (after checks have appeared at least once on `main`):
 
@@ -82,8 +83,7 @@ gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/branches/main/protection \
       "demo",
       "Analyze (go)",
       "Analyze (python)",
-      "Analyze (javascript-typescript)",
-      "Scorecard analysis"
+      "Analyze (javascript-typescript)"
     ]
   },
   "enforce_admins": true,
@@ -102,8 +102,9 @@ EOF
 
 Notes:
 
-- Job `verify` (web-ui) is path-filtered (`web/**`, `services/gateway/**`); require it when consolidating branch rules that support optional checks, or keep it as a soft gate.
+- Job `verify` (web-ui) is path-filtered (`web/**`, `services/gateway/**`); soft gate unless your rules support optional checks.
 - Definition of Done remains `./scripts/verify.sh`, `./scripts/demo.sh`, and `./scripts/adversarial.sh` (the latter two run inside `demo-e2e`).
+- Merging your own PR still needs a second reviewer (CODEOWNERS / write access); do not disable reviews permanently.
 
 ## First release
 
