@@ -54,8 +54,6 @@ Manual alternative: **Settings → General → Social preview → Edit** → upl
 Protect `main` (enforce for admins):
 
 - Require a pull request before merging
-- Require at least **1** approving review
-- Require review from Code Owners (`.github/CODEOWNERS` → `@SafetyMP` until named owners are assigned)
 - Do not allow force pushes or deletions
 - Require status checks to pass before merging (strict: branches up to date):
 
@@ -70,7 +68,53 @@ Protect `main` (enforce for admins):
 
 **Not a PR-required check:** `Scorecard analysis` runs on `push` to `main`, schedule, and `branch_protection_rule` — not on `pull_request`. Keep it enabled for supply-chain visibility; do not list it as a required PR status check.
 
+### Solo-maintainer exception
+
+While `@SafetyMP` is the only write-access maintainer, GitHub cannot satisfy
+“approve your own PR” + Code Owner review. Under that condition:
+
+| Setting | Solo exception | Dual-maintainer restore |
+|---------|----------------|-------------------------|
+| Approving reviews required | **0** | **1** |
+| Require Code Owner reviews | **false** | **true** |
+| `.github/CODEOWNERS` | Kept (routing / ownership signal) | Same; enable enforcement |
+
+Do **not** disable pull-request-before-merge, status checks, linear history, or
+`enforce_admins` as part of this exception. When a second write-access maintainer
+is added, restore the dual-maintainer column immediately.
+
 Apply / refresh via API (after checks have appeared at least once on `main`):
+
+```bash
+# Solo-maintainer exception (current)
+gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/branches/main/protection \
+  --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "canonical",
+      "demo",
+      "Analyze (go)",
+      "Analyze (python)",
+      "Analyze (javascript-typescript)"
+    ]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 0,
+    "require_code_owner_reviews": false,
+    "dismiss_stale_reviews": true
+  },
+  "restrictions": null,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+EOF
+```
+
+Dual-maintainer restore (when a second reviewer exists):
 
 ```bash
 gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/branches/main/protection \
@@ -104,7 +148,7 @@ Notes:
 
 - Job `verify` (web-ui) is path-filtered (`web/**`, `services/gateway/**`); soft gate unless your rules support optional checks.
 - Definition of Done remains `./scripts/verify.sh`, `./scripts/demo.sh`, and `./scripts/adversarial.sh` (the latter two run inside `demo-e2e`).
-- Merging your own PR still needs a second reviewer (CODEOWNERS / write access); do not disable reviews permanently.
+- Solo exception unblocks self-authored PRs; it does not replace CI or the PR requirement.
 
 ## Releases
 
