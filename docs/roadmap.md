@@ -116,8 +116,8 @@ runtime — **met**.
 | DPF collapse / Schrems III | No cross-border PHI default; SCC+TIA |
 | HAPI erasure vs search | ADR 0003 honest granularity |
 | AI Act scope creep | ADR 0005 classification gate |
-| Compose instability in cloud VM | Walking skeleton; demo not in verify.sh |
-| FedRAMP wording overclaim | ATO framing in mandate |
+| Compose E2E cost / flake in CI | Hermetic `verify.sh` for stop-hook/CI unit; `demo-e2e` runs `adversarial.sh` then `demo.sh` (45m timeout, concurrency cancel) |
+| FedRAMP wording overclaim | ATO framing in mandate; SECURITY.md non-production framing |
 
 ---
 

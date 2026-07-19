@@ -1,4 +1,6 @@
-# Default owners for review on sensitive paths
+# Default owners for review on sensitive paths.
+# Org team @SafetyMP until named individual CODEOWNERS are assigned.
+# Enable "Require review from Code Owners" on main (see docs/maintainer-github-settings.md).
 * @SafetyMP
 
 /policy/ @SafetyMP
@@ -6,3 +8,4 @@
 /.github/ @SafetyMP
 /services/gateway/ @SafetyMP
 /specs/ @SafetyMP
+/.corp-harness/ @SafetyMP

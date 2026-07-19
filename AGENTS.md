@@ -61,7 +61,8 @@ cd web && npm run verify   # optional: clinician console (requires gateway for l
 
 | Path | Purpose |
 |------|---------|
-| `.corp-harness/site.json` | Corp-site binding (unbound until a program) |
+| `.corp-harness/site.json` | Corp-site binding (`binding_status: unbound` until a handoff digest is bound) |
+| `.corp-harness/component-contracts.json` | Site role authorities (validated by `check-harness.sh`) |
 | `.harness/` | Multi-repo harness (solo profile + policy-sync-stamp) — keep live |
 | `specs/MANDATE.md` | Multi-agent fleet contract (HALTED — phase 3 archive) |
 | `specs/portfolio.yaml` | Multi-repo contract (canonical + healthcare-policy) |

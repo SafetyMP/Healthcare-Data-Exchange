@@ -24,6 +24,7 @@ require_file "scripts/verify.sh"
 require_file ".cursor/hooks.json"
 require_file "specs/portfolio.yaml"
 require_file ".corp-harness/site.json"
+require_file ".corp-harness/component-contracts.json"
 require_file ".cursor/rules/site-contract.mdc"
 require_file ".cursor/skills/site-delivery/SKILL.md"
 
@@ -35,7 +36,37 @@ assert p.get('schema') == 'corporate-site-site/v1', p.get('schema')
 assert p.get('site_id') == 'healthcare-exchange', p.get('site_id')
 assert p.get('verify_argv') == ['./scripts/verify.sh'], p.get('verify_argv')
 assert p.get('adversarial_argv') == ['./scripts/adversarial.sh'], p.get('adversarial_argv')
+# Unbound until a corporate handoff is bound; keep fields consistent.
+prog, handoff = p.get('corporate_program'), p.get('corporate_handoff_sha256')
+if prog is None:
+    assert handoff is None, 'unbound site must have null corporate_handoff_sha256'
+    assert p.get('binding_status', 'unbound') == 'unbound', p.get('binding_status')
+else:
+    assert isinstance(handoff, str) and len(handoff) == 64, 'bound site needs handoff sha256'
+    assert p.get('binding_status') == 'bound', p.get('binding_status')
 print('corp-site site.json: ok')
+
+c = json.load(open('.corp-harness/component-contracts.json'))
+assert c.get('schema') == 'corporate-site-component-contracts/v1', c.get('schema')
+shared = c.get('shared_components') or {}
+for role in ('operations-excellence', 'site-delivery', 'site-manager', 'site-specialist'):
+    assert role in shared, f'missing shared_components.{role}'
+ops = shared['operations-excellence']
+assert ops.get('authority') == 'review-only'
+assert ops.get('may_approve') is False
+assert ops.get('readonly') is True
+mgr = shared['site-manager']
+assert mgr.get('authority') == 'decompose-only'
+assert mgr.get('may_approve') is False
+assert mgr.get('readonly') is True
+spec = shared['site-specialist']
+assert spec.get('authority') == 'adr-bounded-write'
+assert spec.get('may_approve') is False
+assert spec.get('may_delegate') is False
+delivery = shared['site-delivery']
+assert delivery.get('dispatch_owner') == 'root-orchestrator'
+assert delivery.get('workers_may_delegate') is False
+print('corp-site component-contracts: ok')
 " || errors=$((errors + 1))
 
 if [[ "$PROFILE" == "fleet" ]]; then
