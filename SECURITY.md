@@ -12,7 +12,7 @@ This is a reference implementation under active development. Only the latest `ma
 
 **Please do not open public GitHub issues for security vulnerabilities.**
 
-Use [GitHub private vulnerability reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new) for this repository, or contact the maintainers through GitHub if that option is unavailable.
+Use [GitHub private vulnerability reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new) for this repository (enabled on `SafetyMP/Healthcare-Data-Exchange`), or contact the maintainers through GitHub if that option is unavailable.
 
 Include:
 

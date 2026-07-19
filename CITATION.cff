@@ -8,7 +8,7 @@ authors:
 repository-code: https://github.com/SafetyMP/Healthcare-Data-Exchange
 url: https://github.com/SafetyMP/Healthcare-Data-Exchange
 license: Apache-2.0
-version: 0.4.0
+version: 0.5.0
 date-released: 2026-07-08
 keywords:
   - healthcare

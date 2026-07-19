@@ -13,6 +13,7 @@
   <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml"><img src="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg" alt="portfolio-verify"/></a>
   <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml"><img src="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/SafetyMP/Healthcare-Data-Exchange"><img src="https://api.scorecard.dev/projects/github.com/SafetyMP/Healthcare-Data-Exchange/badge" alt="OpenSSF Scorecard"/></a>
+  <a href="https://www.bestpractices.dev/en?q=Healthcare-Data-Exchange"><img src="https://img.shields.io/badge/OpenSSF%20Best%20Practices-pending-yellow" alt="OpenSSF Best Practices (pending registration)"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache-2.0"/></a>
   <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/releases"><img src="https://img.shields.io/github/v/release/SafetyMP/Healthcare-Data-Exchange?include_prereleases&label=release" alt="release"/></a>
 </p>

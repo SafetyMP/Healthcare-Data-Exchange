@@ -21,8 +21,8 @@ gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/topics \
 
 ## Security
 
-1. **Private vulnerability reporting** — Settings → Code security and analysis → Enable
-2. **Dependabot security updates** — Settings → Code security → Enable (`.github/dependabot.yml` handles version updates, including npm under `/web`)
+1. **Private vulnerability reporting** — **Enabled** on this repository (confirm: Settings → Code security → Private vulnerability reporting). Entry point: [Security advisories](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new).
+2. **Dependabot security updates** — **Enabled** (`.github/dependabot.yml` handles version updates, including npm under `/web`)
 
 ## Social preview
 
@@ -106,14 +106,21 @@ Notes:
 - Definition of Done remains `./scripts/verify.sh`, `./scripts/demo.sh`, and `./scripts/adversarial.sh` (the latter two run inside `demo-e2e`).
 - Merging your own PR still needs a second reviewer (CODEOWNERS / write access); do not disable reviews permanently.
 
-## First release
+## Releases
 
 ```bash
-git tag -a v0.4.0 -m "Phase 4b: OPAL hardening, identity broker, SSRAA stub"
-git push origin v0.4.0
-gh release create v0.4.0 --title "v0.4.0" --notes-file CHANGELOG.md
+# After CHANGELOG [0.5.0] (or next) is on main:
+git tag -a v0.5.0 -m "v0.5.0: corp-site harness, adversarial oracle, supply-chain hardening"
+git push origin v0.5.0
+gh release create v0.5.0 --title "v0.5.0" --notes-file CHANGELOG.md --latest
 ```
 
 ## OpenSSF Best Practices Badge
 
-Apply at https://www.bestpractices.dev/ after community files and CI are on `main`.
+1. Sign in at https://www.bestpractices.dev/ and **Add project** with  
+   `https://github.com/SafetyMP/Healthcare-Data-Exchange`
+2. Complete the questionnaire (many answers are already covered by `SECURITY.md`, CI, and community files).
+3. Replace the pending badge in `README.md` with the project-specific badge URL  
+   `https://www.bestpractices.dev/projects/<ID>/badge`.
+
+README currently shows a **pending** badge until a project ID exists.

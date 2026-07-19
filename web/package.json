@@ -43,5 +43,8 @@
     "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
