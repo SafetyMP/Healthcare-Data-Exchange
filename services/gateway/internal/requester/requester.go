@@ -35,3 +35,24 @@ func NormalizePurpose(purpose string) string {
 	}
 	return purpose
 }
+
+// ResolveTEFCAXP returns the TEFCA Exchange Purpose code for OPA.
+// Explicit X-TEFCA-XP wins; for US-home subjects, purpose maps to a Level-1 XP
+// when the header is absent (treatment→T-TREAT, derivative→T-HCO).
+func ResolveTEFCAXP(header, purpose, homeJurisdiction string) string {
+	xp := strings.TrimSpace(header)
+	if xp != "" {
+		return xp
+	}
+	if !strings.HasPrefix(homeJurisdiction, "us-") {
+		return ""
+	}
+	switch purpose {
+	case "treatment":
+		return "T-TREAT"
+	case "derivative":
+		return "T-HCO"
+	default:
+		return ""
+	}
+}

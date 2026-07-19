@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -31,20 +32,42 @@ type ConsentAdmin interface {
 }
 
 type Server struct {
-	Routing        *appconfig.Routing
-	Broker         *broker.Broker
-	PEP            PolicyEvaluator
-	FHIR           *fhir.Client
-	Audit          *audit.Sink
-	Keys           *crypto.KeyStore
-	AI             AIGovernance
-	Consent        ConsentAdmin
-	Principals     *principal.Broker
-	ClinicianUIURL string
+	Routing          *appconfig.Routing
+	Broker           *broker.Broker
+	PEP              PolicyEvaluator
+	FHIR             *fhir.Client
+	Audit            *audit.Sink
+	Keys             *crypto.KeyStore
+	AI               AIGovernance
+	Consent          ConsentAdmin
+	Principals       *principal.Broker
+	ClinicianUIURL   string
+	USCapabilityPath string
 }
 
 func (s *Server) Health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "gateway"})
+}
+
+// FHIRMetadata serves the US-cell honesty CapabilityStatement (ADR 0004).
+func (s *Server) FHIRMetadata(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	path := s.USCapabilityPath
+	if path == "" {
+		http.Error(w, "capability statement not configured", http.StatusServiceUnavailable)
+		return
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		http.Error(w, "capability statement unavailable", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/fhir+json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(raw)
 }
 
 func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +115,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	requesterJurisdiction := reqCtx.Jurisdiction
 	crossBloc := reqCtx.CrossBloc
 	crossPermitted := reqCtx.CrossBlocPermitted
+	tefcaXP := requester.ResolveTEFCAXP(r.Header.Get("X-TEFCA-XP"), purpose, token.HomeJurisdiction)
 
 	if err := s.Keys.EnsureTenant(token.Tenant); err != nil {
 		if s.Keys.IsShredded(token.Tenant) {
@@ -107,6 +131,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		HomeJurisdiction:      token.HomeJurisdiction,
 		RequesterJurisdiction: requesterJurisdiction,
 		Purpose:               purpose,
+		TEFCAXP:               tefcaXP,
 		ConsentResearch:       token.ConsentResearch,
 		CrossBloc:             crossBloc,
 		CrossBlocPermitted:    crossPermitted,
@@ -176,6 +201,7 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		"routed_fhir_base":       token.FHIRBase,
 		"requester_jurisdiction": requesterJurisdiction,
 		"cross_bloc":             crossBloc,
+		"tefca_xp":               tefcaXP,
 		"min_necessary_fields":   decision.MinNecessaryFields,
 	})
 }

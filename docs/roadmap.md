@@ -1,7 +1,7 @@
 # Roadmap — Cloud Healthcare Exchange
 
 **Product:** Cloud Healthcare Exchange  
-**Last updated:** 2026-07-12
+**Last updated:** 2026-07-18
 
 Aligns delivery phases with **regulatory deadlines** and the [implementation plan](plan.md).
 
@@ -11,16 +11,31 @@ Aligns delivery phases with **regulatory deadlines** and the [implementation pla
 
 | Date | Milestone | Product impact |
 |------|-----------|----------------|
+| **2026-01-01** | **USCDI v3** floor for ONC certification (HTI-1) | Pin US PoC data classes to USCDI v3; not seeking certification |
+| **2026-03-08** | TEFCA **Facilitated FHIR SOP 2.0** effective | FHIR R4 + US Core ≥ 6.1.0; XP codes; SSRAA path (not QHIN) |
+| **2026-07** | **USCDI v7** final targeted (ONC SB26-1) | Track only — adopt after final + US Core mapping |
+| **2026-07-01** | TEFCA SSRAA **testing systems** milestone | Stub readiness narrative; not full UDAP |
 | **2026-08-02** | EU AI Act **Art. 50** transparency in force | AI governance layer must label AI outputs |
+| **2026-11-01** | QHINs support SSRAA onboarding (SOP) | Phase path toward real UDAP/SSRAA |
 | **2026-12-02** | Art. 50 watermarking grace ends | Watermarking for applicable AI systems (Phase) |
 | **2027-01-01** | **SSRAA** required for new US FHIR nodes | US cell auth must support SSRAA/UDAP |
-| **2027-03-26** | **EHDS** implementing acts / primary-use base | MyHealth@EU profile alignment review |
+| **2027-03-26** | **EHDS** application / implementing acts deadline | MyHealth@EU profile alignment review |
 | **2027-12-02** | AI Act **Annex III** standalone high-risk | Full high-risk controls for AI triage features |
 | **2028-08-02** | **Annex I** embedded medical-device AI | Only if scope includes device software |
-| **2029** | EHDS primary-use expansion | Broader member-state connectivity |
-| **2031** | EHDS secondary-use expansion | HealthData@EU / secure processing |
+| **2029** | EHDS primary-use Category 1 operational | Broader member-state connectivity |
+| **2031** | EHDS primary expansion / secondary remaining categories | HealthData@EU / secure processing |
 
-**AI Act status:** Adopted (Council 2026-06-29; Parliament 2026-06-16); awaiting Official Journal publication — dates above are not provisional.
+**AI Act status:** Project calendar cites Council 2026-06-29 / Parliament 2026-06-16 (Digital Omnibus package); confirm against Official Journal before treating Art. 50 dates as final law.
+
+**HTI-2:** Final rule codifies TEFCA definitions and the TEFCA Manner Exception (45 CFR Part 172) — compliance framing only; CHEX is not an information-blocking actor certification target.
+
+### Explicit non-goals (PoC)
+
+- ONC Health IT Certification / HTI test procedures
+- QHIN / Participant / Subparticipant onboarding or RCE Directory
+- SMART App Launch (Facilitated FHIR SOP 2.0 removed mandatory SMART)
+- CMS-0057-F Prior Auth / Patient Access / Payer-to-Payer APIs (payer scope; full set **2027-01-01**)
+- Full US Core profile suite / Bulk FHIR `$export`
 
 ---
 
@@ -90,11 +105,14 @@ runtime — **met**.
 | Item | Deliverable | Status |
 |------|-------------|--------|
 | SSRAA auth stub | US-cell gateway gate + demo 401/200 (ADR 0009) | **Done** |
+| TEFCA XP purpose-of-use | `X-TEFCA-XP` + OPA allowlist (pattern-only) | **Done** |
+| US CapabilityStatement honesty | `/v1/fhir/metadata` limited resource set | **Done** |
 | Identity broker service | ITI-78 resolve + dynamic register; gateway HTTP client (ADR 0010) | **Done** |
 | Kubernetes + mesh + `ext_authz` | ADR 0002 target | Planned |
 | Identity broker | NCP federation / live PDQm | Planned |
 | HSM KMS | Replace software stand-in | Planned |
 | OPAL hardening | Auth/JWT, webhooks, bundle hash verify (ADR 0011) | **Done** |
+| SSRAA → UDAP | Replace shared-secret stub (milestones Jul/Nov 2026 → Jan 2027) | Planned |
 | FedRAMP ATO path | Agency sponsorship (Proc) | Planned |
 | EHDS secondary use | HealthData@EU | Planned |
 
@@ -117,7 +135,7 @@ runtime — **met**.
 | HAPI erasure vs search | ADR 0003 honest granularity |
 | AI Act scope creep | ADR 0005 classification gate |
 | Compose E2E cost / flake in CI | Hermetic `verify.sh` for stop-hook/CI unit; `demo-e2e` runs `adversarial.sh` then `demo.sh` (45m timeout, concurrency cancel) |
-| FedRAMP wording overclaim | ATO framing in mandate; SECURITY.md non-production framing |
+| FedRAMP / TEFCA wording overclaim | ATO framing in mandate; SECURITY.md non-production; pattern-only TEFCA |
 
 ---
 

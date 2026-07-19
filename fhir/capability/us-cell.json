@@ -1,0 +1,74 @@
+{
+  "resourceType": "CapabilityStatement",
+  "id": "chex-us-cell",
+  "url": "https://chex.example/fhir/CapabilityStatement/us-cell",
+  "version": "0.1.0",
+  "name": "CHEXUSCellCapability",
+  "title": "Cloud Healthcare Exchange — US cell (PoC)",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-07-18",
+  "publisher": "SafetyMP / Cloud Healthcare Exchange",
+  "description": "Honesty CapabilityStatement for the CHEX US jurisdiction cell. Declares FHIR R4 + US Core 6.1.0 intent and the limited PoC resource set. Not ONC-certified health IT, not a TEFCA QHIN Participant, and not a claim of full USCDI v3 or US Core coverage.",
+  "kind": "instance",
+  "instantiates": [
+    "http://hl7.org/fhir/us/core/CapabilityStatement/us-core-server"
+  ],
+  "software": {
+    "name": "Cloud Healthcare Exchange gateway + HAPI US",
+    "version": "poc"
+  },
+  "implementation": {
+    "description": "US jurisdiction cell — Facilitated FHIR pattern (SOP 2.0 floor). Gateway metadata at /v1/fhir/metadata; clinical data via HAPI.",
+    "url": "http://localhost:8081/v1/fhir/metadata"
+  },
+  "fhirVersion": "4.0.1",
+  "format": ["application/fhir+json", "json"],
+  "rest": [
+    {
+      "mode": "server",
+      "documentation": "PoC subset only. USCDI v3 floor; samples implement Patient (US Core Patient). Consent/Observation/Provenance are phased or partial.",
+      "security": {
+        "cors": false,
+        "service": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/restful-security-service",
+                "code": "OAuth",
+                "display": "OAuth"
+              }
+            ],
+            "text": "SSRAA/UDAP stub (shared-secret bearer) — not production SSRAA"
+          }
+        ],
+        "description": "US-home reads require Authorization: Bearer <client>.<secret> per ADR 0009. TEFCA XP via X-TEFCA-XP (T-TREAT, T-IAS, T-HCO)."
+      },
+      "resource": [
+        {
+          "type": "Patient",
+          "profile": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+          "documentation": "USCDI v3 demographics subset for PoC samples only.",
+          "interaction": [
+            { "code": "read" },
+            { "code": "search-type" }
+          ]
+        },
+        {
+          "type": "Consent",
+          "documentation": "Consent state primarily via consent-service + OPAL; FHIR Consent resource support is partial/phased.",
+          "interaction": [
+            { "code": "read" }
+          ]
+        },
+        {
+          "type": "Observation",
+          "documentation": "Optional PoC; not fully populated in samples.",
+          "interaction": [
+            { "code": "read" }
+          ]
+        }
+      ]
+    }
+  ]
+}
