@@ -23,6 +23,20 @@ require_file "AGENTS.md"
 require_file "scripts/verify.sh"
 require_file ".cursor/hooks.json"
 require_file "specs/portfolio.yaml"
+require_file ".corp-harness/site.json"
+require_file ".cursor/rules/site-contract.mdc"
+require_file ".cursor/skills/site-delivery/SKILL.md"
+
+echo "== harness: corp-site overlay =="
+python3 -c "
+import json, sys
+p = json.load(open('.corp-harness/site.json'))
+assert p.get('schema') == 'corporate-site-site/v1', p.get('schema')
+assert p.get('site_id') == 'healthcare-exchange', p.get('site_id')
+assert p.get('verify_argv') == ['./scripts/verify.sh'], p.get('verify_argv')
+assert p.get('adversarial_argv') == ['./scripts/adversarial.sh'], p.get('adversarial_argv')
+print('corp-site site.json: ok')
+" || errors=$((errors + 1))
 
 if [[ "$PROFILE" == "fleet" ]]; then
   require_file "specs/MANDATE.md"

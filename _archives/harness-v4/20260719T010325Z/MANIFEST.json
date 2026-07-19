@@ -1,0 +1,14 @@
+{
+  "schema": "harness-v4-archive/v1",
+  "site_id": "healthcare-exchange",
+  "local_path": "/Users/sagehart/Downloads/Cloud Healthcare Exchange",
+  "utc": "20260719T010325Z",
+  "mode": "overlay-only",
+  "note": "multi-repo .harness/ kept live; AGENTS snapshot only",
+  "archived": [
+    {
+      "path": "AGENTS.md.pre-corp-site",
+      "sha256": "909491d20009ae168ab0153229c9bac1334a6965f86e8fe0b96be42163f8ea6f"
+    }
+  ]
+}

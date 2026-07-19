@@ -1,0 +1,82 @@
+# AGENTS.md — Cloud Healthcare Exchange
+
+Harness profile: **solo** — phase 3 + phase 4a complete; `specs/MANDATE.md` HALTED. See [README.md](README.md), [docs/plan.md](docs/plan.md), and [docs/roadmap.md](docs/roadmap.md).
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `./scripts/check-harness.sh` | Validate harness files and hook syntax |
+| `./scripts/verify.sh` | Definition of Done (hermetic: harness + go + python×3 + opa) |
+| `./scripts/run-dev.sh` | Start EU + US cells + OPAL (`--down-first` to recycle). OPAL alpine images run native on arm64. |
+| `./scripts/teardown-dev.sh` | Stop compose stack (`--volumes` to drop DB volumes) |
+| `./scripts/setup-portfolio.sh` | Clone sibling repos from `specs/portfolio.yaml` (e.g. healthcare-policy) |
+| `./scripts/demo.sh` | Cooperative E2E: intra-EU, US TEFCA + SSRAA, cross-bloc exception, live consent, AI, crypto-shred |
+| `./scripts/adversarial.sh` | Tier-3 adversarial oracle (auth/residency denies — separate from demo) |
+| `./scripts/generate-opal-dev-secrets.sh` | Create local OPAL secure-mode secrets (first `run-dev.sh`) |
+| `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) (OPAL, ADR 0007) |
+| `./scripts/trigger-opal-policy-webhook.sh` | Simulate GitHub push webhook to OPAL after policy sync |
+| `./scripts/check-portfolio.sh` | Portfolio contract + policy sync drift |
+| `./scripts/check-portfolio-cross-repo.sh` | Cross-repo stamp vs mirror pointer (CI / local with `CHEX_PORTFOLIO_MIRROR_PATH`) |
+| `./scripts/render-assets.sh` | Render all `docs/assets/*.svg` to PNG |
+| `./scripts/render-social-preview.sh` | Alias for `render-assets.sh` (social preview PNG) |
+| `./scripts/upload-social-preview.sh` | Upload social preview to GitHub settings (Playwright; run `--login` once) |
+| `./scripts/setup-phase3-worktrees.sh` | Create worktrees for parallel tracks (historical) |
+| `./scripts/teardown-phase3-worktrees.sh` | Remove merged phase 3 worktrees and agent branches |
+| `cd web && npm run dev` | Clinician console (port 3100; requires `./scripts/run-dev.sh`) |
+| `cd web && npm run verify` | Web UI: typecheck + build + @smoke Playwright + axe-core |
+
+## Portfolio (multi-repo)
+
+This repo is the **canonical** agent root. See `specs/portfolio.yaml` and [ADR 0007](docs/adr/0007-opal-policy-mirror.md) (policy mirror; ADR 0008 covers consent sync).
+
+| Repo | Role | Agent edits |
+|------|------|-------------|
+| Healthcare-Data-Exchange (this repo) | canonical | Yes |
+| [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) | policy-mirror | No — run `./scripts/sync-policy-repo.sh` |
+
+After changes under `policy/*.rego`, run `./scripts/sync-policy-repo.sh` before `./scripts/demo.sh` or claiming OPAL policy is current.
+
+## Definition of Done
+
+```bash
+./scripts/verify.sh
+./scripts/demo.sh            # cooperative tier — stack up
+./scripts/adversarial.sh     # tier-3 denies — after demo or standalone when stack up
+cd web && npm run verify   # optional: clinician console (requires gateway for live API)
+```
+
+`verify.sh` is hermetic (no Docker) and gates the agent stop hook. Compose E2E is two scripts: cooperative `./scripts/demo.sh` and adversarial `./scripts/adversarial.sh` — enforced in CI via `demo-e2e` workflow. Threat model: `docs/adr/0000-threat-model.md` + `specs/threat-model.yaml`.
+
+## Layout
+
+| Path | Purpose |
+|------|---------|
+| `specs/MANDATE.md` | Multi-agent contract (HALTED — phase 3 archive) |
+| `specs/portfolio.yaml` | Multi-repo contract (canonical + healthcare-policy) |
+| `services/gateway/` | Go jurisdiction router + OPA PEP + identity broker + consent proxy |
+| `services/ai-governance/` | Python FastAPI AI governance stub |
+| `services/consent-service/` | Python FastAPI consent state + OPAL data source (ADR 0008) |
+| `services/identity-broker/` | Python FastAPI ITI-78 identifier resolve (ADR 0010) |
+| `web/` | Next.js clinician console (BFF → gateway :8081) |
+| `policy/` | OPA Rego policies + tests (canonical; consent from `data.consent`) |
+| `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
+| `config/routing.yaml` | Jurisdiction routing + subject registry (identifier fallback) |
+| `config/identity-registry.yaml` | Preferred identifiers for identity-broker (ADR 0010) |
+| `config/opal-hardening.yaml` | OPAL secure mode + webhook + bundle integrity profile (ADR 0011) |
+| `config/eu-auth.yaml` | EU cell caller credential stub |
+| `config/ssraa.yaml` | US SSRAA application association stub (ADR 0009) |
+| `fhir/samples/` | Synthetic Patient resources (eu/, us/) |
+| `docs/` | Product mandate, architecture, ADRs (incl. 0007–0011), roadmap |
+
+## Coding rules
+
+- Smallest correct diff; match existing conventions.
+- Never read or print `.env` contents.
+- Reopen parallel work via `proceed` + refreshed `specs/MANDATE.md` before fleet tracks.
+
+## Cursor Cloud specific instructions
+
+- **Hermetic verify:** `./scripts/verify.sh` installs a Python `.venv` under `services/ai-governance/` and downloads OPA to `.tools/bin/` on first run.
+- **Docker demo:** `./scripts/run-dev.sh` then `./scripts/demo.sh` — HAPI JVM boot can take 2+ minutes per cell.
+- Hooks: `python3 .cursor/hooks/<hook>.py < payload.json` — avoid blocked patterns on the shell command line when testing guards.
