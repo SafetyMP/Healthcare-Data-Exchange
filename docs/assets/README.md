@@ -21,6 +21,16 @@ cd web && npm ci && npm run build && npm run start
 cd web && npm run screenshots # or npm run screenshots:rebuild-gif from existing PNGs
 ```
 
+## README status badges
+
+Local SVGs used when third-party badge hosts are flaky. CI status still comes from GitHub Actions.
+
+| File | Purpose |
+|------|---------|
+| [`badges/scorecard.svg`](badges/scorecard.svg) | OpenSSF Scorecard score (update when score changes) |
+| [`badges/release.svg`](badges/release.svg) | Latest release tag |
+| [`badges/license.svg`](badges/license.svg) | License label |
+
 ## Architecture diagrams
 
 Sources are SVG; PNGs are generated for crisp rendering on GitHub and social platforms.

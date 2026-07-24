@@ -159,12 +159,30 @@ git push origin v0.5.0
 gh release create v0.5.0 --title "v0.5.0" --notes-file CHANGELOG.md --latest
 ```
 
+## README status badges
+
+CI badges (`portfolio-verify`, `demo-e2e`, `CodeQL`) use GitHub Actions `badge.svg` URLs.
+
+Scorecard / license / release badges are local SVGs under `docs/assets/badges/` so the
+README does not depend on shields.io or `api.scorecard.dev` badge redirects (those have
+been intermittently returning Cloudflare 520s). Refresh them when the published facts change:
+
+| Badge | Update when |
+|-------|-------------|
+| `docs/assets/badges/scorecard.svg` | OpenSSF Scorecard score changes (see https://scorecard.dev/viewer/?uri=github.com/SafetyMP/Healthcare-Data-Exchange) |
+| `docs/assets/badges/release.svg` | Cutting a new GitHub release / tag |
+| `docs/assets/badges/license.svg` | License change (rare) |
+
+Do **not** reintroduce a yellow “Best Practices — pending” shields badge. Add an OpenSSF
+Best Practices badge only after a real project ID exists.
+
 ## OpenSSF Best Practices Badge
 
 1. Sign in at https://www.bestpractices.dev/ and **Add project** with  
    `https://github.com/SafetyMP/Healthcare-Data-Exchange`
 2. Complete the questionnaire (many answers are already covered by `SECURITY.md`, CI, and community files).
-3. Replace the pending badge in `README.md` with the project-specific badge URL  
+3. Add the project-specific badge to `README.md`:  
    `https://www.bestpractices.dev/projects/<ID>/badge`.
 
-README currently shows a **pending** badge until a project ID exists.
+No Best Practices badge is shown until registration completes (Scorecard `CII-Best-Practices`
+stays at 0 until then).
