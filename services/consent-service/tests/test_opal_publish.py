@@ -1,7 +1,7 @@
 import os
 from unittest.mock import MagicMock
 
-import chex_consent.opal_publish as opal_publish
+from chex_consent import opal_publish
 
 os.environ["CHEX_OPAL_PUBLISH"] = "0"
 

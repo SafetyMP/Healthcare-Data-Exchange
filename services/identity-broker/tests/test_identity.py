@@ -5,9 +5,9 @@ os.environ["CHEX_IDENTITY_REGISTRY"] = str(
     Path(__file__).resolve().parents[3] / "config" / "identity-registry.yaml"
 )
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from chex_identity.main import app, startup  # noqa: E402
+from chex_identity.main import app, startup
 
 startup()
 client = TestClient(app)

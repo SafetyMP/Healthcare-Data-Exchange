@@ -4,9 +4,9 @@ import os
 os.environ["CHEX_OPAL_PUBLISH"] = "0"
 os.environ["CHEX_ADMIN_SECRET"] = "test-admin-secret"
 
-from fastapi.testclient import TestClient  # noqa: E402
+from fastapi.testclient import TestClient
 
-from chex_consent.main import app  # noqa: E402
+from chex_consent.main import app
 
 client = TestClient(app)
 ADMIN_HEADERS = {"Authorization": "Bearer test-admin-secret"}

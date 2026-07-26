@@ -8,10 +8,13 @@ corp-site delivery is `.corp-harness/` + site agents/skills/rules.
 
 ## Gates
 
+
 | Command | Purpose |
 |---|---|
 | `./scripts/verify.sh` | Functional and static acceptance |
 | `./scripts/adversarial.sh` | Tier-3 adversarial oracle (auth/residency denies) |
+
+Record `verification_scripts` as site-relative `scripts/harness` (exactly `verify.sh` and `adversarial.sh`). Optional wrappers may remain at `scripts/verify.sh` / `scripts/adversarial.sh` for humans; they are outside the digest boundary.
 
 The corporate handoff fixes scope for corp-site delivery. The site manager assigns ADRs;
 site specialists write; operations excellence reviews immutable root-produced evidence.
