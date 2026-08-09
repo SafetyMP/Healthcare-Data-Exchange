@@ -332,7 +332,7 @@ Run these steps **on `main`**, in order, **the same day** you spawn the first pa
 ### Step 1 — Upgrade harness profile
 
 ```bash
-cd "/Users/sagehart/Downloads/Cloud Healthcare Exchange"
+cd "/Users/<redacted>/Downloads/Cloud Healthcare Exchange"
 harness init fleet --yes
 ```
 
