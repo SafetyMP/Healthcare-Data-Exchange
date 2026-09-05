@@ -339,7 +339,9 @@ func (s *stubConsent) Set(_ context.Context, subject, action, purpose, adminAuth
 }
 
 func TestConsentAdminProxies(t *testing.T) {
+	auditPath := filepath.Join(t.TempDir(), "audit.jsonl")
 	srv := newTestServer(t)
+	srv.Audit = audit.NewSink(auditPath)
 	stub := &stubConsent{}
 	srv.Consent = stub
 
@@ -357,6 +359,22 @@ func TestConsentAdminProxies(t *testing.T) {
 	if stub.gotAuth != adminAuth() {
 		t.Fatalf("admin auth not forwarded: %q", stub.gotAuth)
 	}
+	assertAuditOmitsRawSubject(t, auditPath, "patient-eu-002")
+}
+
+func TestGetPatientAuditOmitsRawSubject(t *testing.T) {
+	auditPath := filepath.Join(t.TempDir(), "audit.jsonl")
+	srv := newTestServer(t)
+	srv.Audit = audit.NewSink(auditPath)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	assertAuditOmitsRawSubject(t, auditPath, "patient-eu-001")
 }
 
 func TestConsentAdminRequiresAuth(t *testing.T) {
@@ -404,6 +422,27 @@ func euVisitingAuth() string  { return "Bearer eu-visiting-client.demo-eu-visiti
 func usClinicianAuth() string { return "Bearer us-clinician-client.demo-us-clinician-secret" }
 func ssraaAuth() string       { return "Bearer tefca-demo-client.demo-ssraa-secret" }
 func adminAuth() string       { return "Bearer " + testAdminSecret }
+
+func assertAuditOmitsRawSubject(t *testing.T, path, subject string) {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(raw) == 0 {
+		t.Fatal("expected audit row")
+	}
+	if strings.Contains(string(raw), subject) {
+		t.Fatalf("raw subject %q found in audit log: %s", subject, raw)
+	}
+	var ev audit.Event
+	if err := json.Unmarshal(raw[:len(raw)-1], &ev); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(ev.SubjectPseudonym, "v2:") {
+		t.Fatalf("expected v2 HMAC pseudonym, got %q", ev.SubjectPseudonym)
+	}
+}
 
 func newTestServer(t *testing.T) *handlers.Server {
 	t.Helper()
