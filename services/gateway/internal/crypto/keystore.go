@@ -106,7 +106,13 @@ func (k *KeyStore) Encrypt(tenant, plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(out), nil
 }
 
-// Pseudonym returns an HMAC-SHA256 pseudonym for audit records (tenant-scoped key).
+// auditPseudonymInfo domain-separates the MAC key from the AES tenant key.
+const auditPseudonymInfo = "chex.audit.pseudonym.v2"
+
+// Pseudonym returns a tenant-scoped HMAC-SHA256 audit identifier.
+// The AES tenant key is not reused directly: a domain-separated MAC key is
+// derived first, then the full 32-byte digest is hex-encoded (64 chars) with a
+// "v2:" prefix. Without the tenant key the mapping is not reversible.
 func (k *KeyStore) Pseudonym(tenant, subjectID string) (string, error) {
 	k.mu.RLock()
 	key, ok := k.keys[tenant]
@@ -114,10 +120,16 @@ func (k *KeyStore) Pseudonym(tenant, subjectID string) (string, error) {
 	if !ok {
 		return "", errors.New("tenant key missing")
 	}
-	mac := hmac.New(sha256.New, key)
+	if subjectID == "" {
+		return "", errors.New("subject id required")
+	}
+	derive := hmac.New(sha256.New, key)
+	_, _ = derive.Write([]byte(auditPseudonymInfo))
+	macKey := derive.Sum(nil)
+
+	mac := hmac.New(sha256.New, macKey)
 	_, _ = mac.Write([]byte(subjectID))
-	sum := mac.Sum(nil)
-	return hex.EncodeToString(sum[:16]), nil
+	return "v2:" + hex.EncodeToString(mac.Sum(nil)), nil
 }
 
 func (k *KeyStore) ShredTenant(tenant string) error {

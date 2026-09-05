@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Audit pseudonym is now a domain-separated HMAC-SHA256 (`v2:` + full digest); consent admin audit no longer writes raw subject ids ([#16](https://github.com/SafetyMP/Healthcare-Data-Exchange/issues/16))
+
+### Changed
+
+- GitHub Actions: CodeQL `v4.37.9` and OpenSSF Scorecard `v2.4.4`, pinned to full commit SHAs (checkout comments corrected to `v7.0.1`)
+- Clinician console: Next.js / `eslint-config-next` 16.3.0, React 19.2.8, `@types/node` 26.1.2; force `postcss >= 8.5.28`
+
 ## [0.5.0] - 2026-07-19
 
 ### Added

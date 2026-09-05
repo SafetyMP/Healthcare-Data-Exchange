@@ -284,16 +284,31 @@ func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "subject and action required", http.StatusBadRequest)
 		return
 	}
+	ev := audit.Event{
+		Action:  "consent." + action,
+		Outcome: "ok",
+		Detail:  "purpose=" + purpose,
+	}
+	if s.Broker != nil && s.Keys != nil {
+		if token, ok := s.Broker.Resolve(r.Context(), subject, ""); ok {
+			if err := s.Keys.EnsureTenant(token.Tenant); err != nil {
+				http.Error(w, "key custody error", http.StatusInternalServerError)
+				return
+			}
+			pseudo, err := s.Keys.Pseudonym(token.Tenant, token.SubjectID)
+			if err != nil {
+				http.Error(w, "key custody error", http.StatusInternalServerError)
+				return
+			}
+			ev.SubjectPseudonym = pseudo
+		}
+	}
 	out, status, err := s.Consent.Set(r.Context(), subject, action, purpose, adminAuth)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
 		return
 	}
-	if err := s.auditAppend(audit.Event{
-		Action:  "consent." + action,
-		Outcome: "ok",
-		Detail:  subject + ":" + purpose,
-	}); err != nil {
+	if err := s.auditAppend(ev); err != nil {
 		http.Error(w, "audit error", http.StatusInternalServerError)
 		return
 	}

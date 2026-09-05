@@ -34,6 +34,19 @@ Crypto-shred demonstrates **key destruction erasure** for a defined scope — no
 
 Sectoral health exchange may require **ATNA-style audit** with patient identifiers retained ~10 years. Erasure requests apply to **clinical data plane** per legal analysis; audit rows may persist under separate legal basis. Pseudonymize audit where permitted — do not claim zero identifiers globally.
 
+### Audit pseudonym (v2)
+
+Gateway audit rows use `subject_pseudonym`, not the raw subject id.
+
+| Version | Algorithm | Form | Notes |
+|---------|-----------|------|-------|
+| **v1** (pre-#16) | HMAC-SHA256(tenant AES key, subject) truncated to 16 bytes | 32 hex chars | Tenant AES key reused as MAC key; truncation reduced collision margin |
+| **v2** | HMAC-SHA256(HKDF-style domain-separated MAC key, subject) | `v2:` + 64 hex chars | AES key is not reused directly; full digest; irreversible without the tenant key |
+
+**Migration:** Existing JSONL rows keep their v1 32-hex values as historical records. They cannot be joined to v2 values. New events use `v2:`. After tenant crypto-shred, both v1 and v2 become unlinkable. Operators grepping sinks should treat length-32 hex as v1 and `v2:`-prefixed values as current.
+
+Consent admin audit previously wrote `subject:purpose` in `detail`; that field is now `purpose=<purpose>` plus `subject_pseudonym`.
+
 ## Consequences
 
 **Positive**
