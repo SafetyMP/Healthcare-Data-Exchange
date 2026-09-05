@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Audit pseudonym is now a domain-separated HMAC-SHA256 (`v2:` + full digest); consent admin audit no longer writes raw subject ids ([#16](https://github.com/SafetyMP/Healthcare-Data-Exchange/issues/16))
+- Force `browserslist >= 4.28.9` via npm `overrides` (GHSA-73wf-gq98-2v4g / CVE-2026-73088)
+- CodeQL: keep top-level `contents: read`; grant `security-events: write` and `actions: read` on the analyze job only
+- Pin service Docker base images to registry digests; hash-pin CI and image `pip` installs
 
 ### Changed
 

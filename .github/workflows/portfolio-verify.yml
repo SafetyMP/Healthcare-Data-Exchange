@@ -30,7 +30,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install verify dependencies
-        run: pip install pyyaml
+        run: pip install --require-hashes -r scripts/ci-pyyaml-requirements.txt
 
       - name: Portfolio verify (canonical + mirror cross-check)
         env:
