@@ -40,7 +40,7 @@
 > HAPI cells here are the synthetic FHIR R4 data plane only; the control plane is residency and live OPAL consent.
 > Use Medplum or HAPI for a clinical store; use this sketch for EU/US jurisdiction cells and a PEP that honors OPAL consent.
 
-> **In the SafetyMP thesis:** OPA/OPAL authorizes **credentialed callers**, not an agent workforce. AI triage is an oversight stub. This does not show agents doing HIE work. See the [portfolio README](https://github.com/SafetyMP/SafetyMP).
+> **Permit rule:** Jurisdiction comes from verified caller credentials, not query params. This is a labelled sketch, not an ATO. AI triage is a stub. Same instinct: [SafetyMP](https://github.com/SafetyMP/SafetyMP).
 
 ## Demo
 
