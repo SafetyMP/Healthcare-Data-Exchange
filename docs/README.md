@@ -46,3 +46,4 @@ Policy mirror (two-repo split): [ADR 0007](adr/0007-opal-policy-mirror.md), [spe
 - [GOVERNANCE.md](../GOVERNANCE.md) — maintainers and decision process
 - [assets/](assets/) — [architecture diagrams](assets/README.md) (cells, components, OPAL flow) and social preview
 - [maintainer-github-settings.md](maintainer-github-settings.md) — GitHub UI settings checklist
+- [factory-overlay.md](factory-overlay.md) — corporate/site overlay (not the community contract; start at [AGENTS.md](../AGENTS.md))

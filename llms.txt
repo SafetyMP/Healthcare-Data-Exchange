@@ -1,0 +1,14 @@
+# Cloud Healthcare Exchange
+
+> Architecture sketch of a federated HIE with EU/US jurisdiction cells, OPAL consent, and FHIR R4. Not a production exchange and not a Medplum/HAPI replacement.
+
+## Docs
+
+- [README](README.md): Positioning, honesty check, why this vs a FHIR server, quick start
+- [AGENTS.md](AGENTS.md): Community contract — commands, layout, never-do (no real PHI, no query-param jurisdiction)
+- [docs/README.md](docs/README.md): Documentation index (architecture, ADRs, compliance mapping)
+- [SECURITY.md](SECURITY.md): Vulnerability reporting (no public issues for security)
+
+## Policy
+
+- [policy/](policy/): Canonical OPA Rego (`authz.rego`) and tests (`authz_test.rego`); consent from OPAL `data.consent`

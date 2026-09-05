@@ -5,8 +5,8 @@
 <h1 align="center">Cloud Healthcare Exchange</h1>
 
 <p align="center">
-  <strong>Federated health information exchange reference implementation</strong><br/>
-  EU + US jurisdiction cells · OPA policy-as-code · OPAL live consent · FHIR R4
+  <strong>Architecture sketch of a federated HIE</strong><br/>
+  EU/US jurisdiction cells · OPAL consent · OPA policy-as-code · FHIR R4
 </p>
 
 <p align="center">
@@ -33,6 +33,14 @@
 > **Scope:** Design authority + walking skeleton. Demonstrates patterns toward FedRAMP High, GDPR/EHDS, and EU AI Act alignment — **not** certification, an ATO, or production deployment guidance.
 
 > **Honesty check (read this first):** This repo is a **labelled architecture sketch** with runnable stubs — not a deployed exchange. **`./scripts/verify.sh`** (hermetic: Go/Python/OPA unit tests + threat-model gate) is the day-to-day definition of done. **`./scripts/demo.sh`** (cooperative Compose E2E) plus **`./scripts/adversarial.sh`** (tier-3 auth/residency denies) are the runtime proof that paths match the README; until both are green in CI, scenario rows are *design intent*, not verified behaviour. Patient-read authorization must derive requester jurisdiction from **verified per-cell caller credentials** (EU auth + US SSRAA stub via a principal abstraction) — not query params and not implicit subject-home defaults. Do not treat compliance mapping, ADRs, or supply-chain badges as evidence that cross-bloc enforcement works in the running stack.
+
+> **Why this vs a FHIR server**
+> Medplum and HAPI store and serve FHIR resources. This repo does not replace them.
+> The wedge is jurisdiction + consent policy for a federated HIE, not another FHIR server.
+> HAPI cells here are the synthetic FHIR R4 data plane only; the control plane is residency and live OPAL consent.
+> Use Medplum or HAPI for a clinical store; use this sketch for EU/US jurisdiction cells and a PEP that honors OPAL consent.
+
+> **Permit rule:** Jurisdiction comes from verified caller credentials, not query params. This is a labelled sketch, not an ATO. AI triage is a stub. Same instinct: [SafetyMP](https://github.com/SafetyMP/SafetyMP).
 
 ## Demo
 
