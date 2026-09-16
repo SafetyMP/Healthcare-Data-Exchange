@@ -18,3 +18,7 @@ OPA policy-as-code, FHIR R4. Not a Medplum/HAPI replacement. Not a production ex
 
 Read [AGENTS.md](../AGENTS.md) before editing. Factory overlay: [docs/factory-overlay.md](../docs/factory-overlay.md).
 Security: [SECURITY.md](../SECURITY.md) and https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new
+
+## Coding standards
+
+Follow path-specific files in [`.github/instructions/`](instructions/). Copilot code review loads [`.github/skills/code-review/`](skills/code-review/).
