@@ -51,6 +51,7 @@ func TestGetPatientAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
 	req.Header.Set("Authorization", euVisitingAuth())
 	rec := httptest.NewRecorder()
+	withReachableFHIR(t, srv)
 	srv.GetPatient(rec, req)
 
 	if rec.Code != http.StatusOK {
@@ -110,6 +111,7 @@ func TestGetPatientCrossBlocDerivativeException(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=derivative", nil)
 	req.Header.Set("Authorization", usClinicianAuth())
 	rec := httptest.NewRecorder()
+	withReachableFHIR(t, srv)
 	srv.GetPatient(rec, req)
 
 	if rec.Code != http.StatusOK {
@@ -370,11 +372,102 @@ func TestGetPatientAuditOmitsRawSubject(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
 	req.Header.Set("Authorization", euVisitingAuth())
 	rec := httptest.NewRecorder()
+	withReachableFHIR(t, srv)
 	srv.GetPatient(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
 	}
 	assertAuditOmitsRawSubject(t, auditPath, "patient-eu-001")
+}
+
+func TestFailedHAPIReadDoesNotReturnSample(t *testing.T) {
+	srv := newTestServer(t)
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(fhirSrv.Close)
+	pointFHIR(t, srv, fhirSrv.URL+"/fhir")
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), "Mueller") || strings.Contains(rec.Body.String(), "EU-001-TEST") {
+		t.Fatalf("sample fixture returned on failed HAPI read: %s", rec.Body.String())
+	}
+}
+
+func TestUnreachableHAPIReturns502(t *testing.T) {
+	srv := newTestServer(t)
+	pointFHIR(t, srv, "http://127.0.0.1:1")
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), "Mueller") {
+		t.Fatalf("sample fixture returned on unreachable HAPI: %s", rec.Body.String())
+	}
+}
+
+func TestTreatmentPurposeDoesNotSkipConsent(t *testing.T) {
+	srv := newTestServer(t)
+	withReachableFHIR(t, srv)
+	srv.PEP.(*pep.RegoEvaluator).SetPurposeConsent("patient-eu-001", "treatment", false)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["reason"] != "consent_required" {
+		t.Fatalf("reason=%v", body["reason"])
+	}
+}
+
+func TestRevokedResearchConsentNextRead403(t *testing.T) {
+	srv := newTestServer(t)
+	withReachableFHIR(t, srv)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-002?purpose=research", nil)
+	req.Header.Set("Authorization", euHomeAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("before revoke: status %d body %s", rec.Code, rec.Body.String())
+	}
+
+	srv.PEP.(*pep.RegoEvaluator).SetPurposeConsent("patient-eu-002", "research", false)
+
+	req = httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-002?purpose=research", nil)
+	req.Header.Set("Authorization", euHomeAuth())
+	rec = httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("after revoke: status %d body %s", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["reason"] != "consent_required" {
+		t.Fatalf("reason=%v", body["reason"])
+	}
 }
 
 func TestConsentAdminRequiresAuth(t *testing.T) {
@@ -458,10 +551,10 @@ func newTestServer(t *testing.T) *handlers.Server {
 	sampleDir := filepath.Join(root, "fhir/samples")
 	opaBin := findOPABin(t, root)
 	consent := map[string]map[string]bool{
-		"patient-eu-001": {"research": false},
-		"patient-eu-002": {"research": true},
-		"patient-us-001": {"research": false},
-		"patient-us-002": {"research": true},
+		"patient-eu-001": {"research": false, "treatment": true, "derivative": true},
+		"patient-eu-002": {"research": true, "treatment": true, "derivative": true},
+		"patient-us-001": {"research": false, "treatment": true, "derivative": true},
+		"patient-us-002": {"research": true, "treatment": true, "derivative": true},
 	}
 
 	return &handlers.Server{
@@ -494,6 +587,29 @@ func findOPABin(t *testing.T, root string) string {
 	}
 	t.Fatal("opa binary not found; run ./scripts/verify.sh once to install .tools/bin/opa")
 	return ""
+}
+
+func withReachableFHIR(t *testing.T, srv *handlers.Server) {
+	t.Helper()
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/fhir/Patient/")
+		w.Header().Set("Content-Type", "application/fhir+json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"resourceType": "Patient",
+			"id":           id,
+		})
+	}))
+	t.Cleanup(fhirSrv.Close)
+	pointFHIR(t, srv, fhirSrv.URL+"/fhir")
+}
+
+func pointFHIR(t *testing.T, srv *handlers.Server, base string) {
+	t.Helper()
+	for k, j := range srv.Routing.Jurisdictions {
+		j.FHIRBase = base
+		srv.Routing.Jurisdictions[k] = j
+	}
+	srv.Broker = broker.New(srv.Routing, nil)
 }
 
 func findRoot(t *testing.T) string {

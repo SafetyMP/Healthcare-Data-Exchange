@@ -48,15 +48,16 @@ def _require_admin_secret_on_startup() -> None:
         raise RuntimeError("CHEX_ADMIN_SECRET must be set for consent admin endpoints")
 
 
-# Purposes that are consent-gated in policy (chex.authz reads data.consent[...]).
-CONSENT_PURPOSES = ("research",)
+# Purposes that are consent-gated in policy (chex.authz reads data.consent[subject][purpose]).
+CONSENT_PURPOSES = ("research", "treatment", "derivative")
 
-# Seed matches config/routing.yaml so the walking skeleton is internally consistent.
+# Seed matches the demo subjects. Research starts revoked for *-001 so that
+# read is 403; treatment and derivative start granted so those reads can pass OPA.
 _SEED: dict[str, dict[str, bool]] = {
-    "patient-eu-001": {"research": False},
-    "patient-eu-002": {"research": True},
-    "patient-us-001": {"research": False},
-    "patient-us-002": {"research": True},
+    "patient-eu-001": {"research": False, "treatment": True, "derivative": True},
+    "patient-eu-002": {"research": True, "treatment": True, "derivative": True},
+    "patient-us-001": {"research": False, "treatment": True, "derivative": True},
+    "patient-us-002": {"research": True, "treatment": True, "derivative": True},
 }
 
 _consent: dict[str, dict[str, bool]] = {s: dict(flags) for s, flags in _SEED.items()}

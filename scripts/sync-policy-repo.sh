@@ -13,13 +13,23 @@ CANONICAL_SHORT="$(git -C "$ROOT" rev-parse --short HEAD)"
 
 rego_bundle_hash() {
   find "$ROOT/policy" -maxdepth 1 -name '*.rego' ! -name '*_test.rego' -print0 \
-    | sort -z \
+    | LC_ALL=C sort -z \
     | xargs -0 cat 2>/dev/null \
     | shasum -a 256 \
     | awk '{print $1}'
 }
 
 BUNDLE_HASH="$(rego_bundle_hash)"
+
+# shellcheck source=lib/portfolio.sh
+source "$ROOT/scripts/lib/portfolio.sh"
+COMMIT_HASH="$(portfolio_commit_rego_bundle_hash "$ROOT" "$CANONICAL_COMMIT")"
+if [[ "$COMMIT_HASH" != "$BUNDLE_HASH" ]]; then
+  echo "sync-policy-repo: HEAD ${CANONICAL_COMMIT} does not contain the policy bundle being published" >&2
+  echo "  commit: $COMMIT_HASH" >&2
+  echo "  bundle: $BUNDLE_HASH" >&2
+  exit 1
+fi
 
 echo "Cloning $POLICY_REPO_URL ..."
 git clone -q "$POLICY_REPO_URL" "$WORK/repo"
@@ -58,7 +68,10 @@ fi
 mkdir -p "$ROOT/.harness"
 cat > "$ROOT/.harness/policy-sync-stamp" <<EOF
 # Updated by sync-policy-repo.sh — used by check-policy-sync.sh
-canonical_commit: ${CANONICAL_COMMIT}
+# published_* is the commit that contains the bundle just pushed.
+# rego_bundle_hash is the working tree, which matches that commit after sync.
+published_commit: ${CANONICAL_COMMIT}
+published_bundle_hash: ${BUNDLE_HASH}
 rego_bundle_hash: ${BUNDLE_HASH}
 synced_at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 mirror_url: ${POLICY_REPO_URL}

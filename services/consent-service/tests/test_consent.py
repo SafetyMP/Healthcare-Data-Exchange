@@ -60,6 +60,25 @@ def test_unknown_action_rejected() -> None:
     assert resp.status_code == 400
 
 
+def test_treatment_revoke_flips_state() -> None:
+    revoke = client.post(
+        "/v1/consent/patient-eu-001/revoke",
+        params={"purpose": "treatment"},
+        headers=ADMIN_HEADERS,
+    )
+    assert revoke.status_code == 200
+    assert revoke.json()["consent"]["treatment"] is False
+    assert client.get("/policy-data").json()["patient-eu-001"]["treatment"] is False
+
+    grant = client.post(
+        "/v1/consent/patient-eu-001/grant",
+        params={"purpose": "treatment"},
+        headers=ADMIN_HEADERS,
+    )
+    assert grant.status_code == 200
+    assert client.get("/policy-data").json()["patient-eu-001"]["treatment"] is True
+
+
 def test_unsupported_purpose_rejected() -> None:
     resp = client.post(
         "/v1/consent/patient-eu-001/revoke",

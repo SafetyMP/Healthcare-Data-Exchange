@@ -39,8 +39,16 @@ for _ in $(seq 1 30); do
     -H "Authorization: ${US_CLINICIAN_AUTH}" \
     "${GW}/v1/patients/patient-eu-001?purpose=treatment" || true)
   if [[ "$code" == "403" ]] && grep -q 'residency_denied' /tmp/chex-bootstrap-probe.json; then
-    echo "bootstrap-opa-policy: ok (403 residency_denied)"
-    exit 0
+    bill=$(curl -s -o /tmp/chex-bootstrap-bill.json -w "%{http_code}" \
+      -H "Authorization: ${US_CLINICIAN_AUTH}" \
+      "${GW}/v1/patients/patient-eu-001?purpose=billing" || true)
+    if [[ "$bill" == "403" ]] && grep -q 'consent_required' /tmp/chex-bootstrap-bill.json; then
+      echo "bootstrap-opa-policy: ok (403 residency_denied; purpose does not skip consent)"
+      exit 0
+    fi
+    echo "bootstrap-opa-policy: purpose string skipped consent (billing code=${bill:-none})" >&2
+    cat /tmp/chex-bootstrap-bill.json 2>/dev/null || true
+    exit 1
   fi
   sleep 2
 done

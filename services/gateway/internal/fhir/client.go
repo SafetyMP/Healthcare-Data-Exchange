@@ -12,6 +12,16 @@ import (
 	"github.com/SafetyMP/Healthcare-Data-Exchange/services/gateway/internal/pathsafe"
 )
 
+// StatusError is a non-success response from the cell FHIR server.
+// Callers return StatusCode instead of substituting a sample Patient.
+type StatusError struct {
+	StatusCode int
+}
+
+func (e *StatusError) Error() string {
+	return fmt.Sprintf("fhir status %d", e.StatusCode)
+}
+
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
@@ -32,17 +42,16 @@ func (c *Client) GetPatient(ctx context.Context, id string) (map[string]any, err
 	return c.GetPatientForCell(ctx, id, "eu", "")
 }
 
-// GetPatientForCell reads from the home cell FHIR endpoint or regional sample dir.
+// GetPatientForCell reads the Patient from the home-cell FHIR base.
+// A failed upstream read is returned as-is. Sample files are used only when
+// no cell base is configured; they are not a substitute for a failed HAPI read.
 func (c *Client) GetPatientForCell(ctx context.Context, id, cell, fhirBase string) (map[string]any, error) {
 	base := fhirBase
 	if base == "" {
 		base = c.baseURL
 	}
 	if base != "" {
-		patient, err := c.fetchRemoteAt(ctx, base, id)
-		if err == nil {
-			return patient, nil
-		}
+		return c.fetchRemoteAt(ctx, base, id)
 	}
 	return c.loadSample(id, cell)
 }
@@ -64,8 +73,8 @@ func (c *Client) fetchRemoteAt(ctx context.Context, baseURL, id string) (map[str
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("fhir status %d: %s", resp.StatusCode, string(body))
+		_, _ = io.Copy(io.Discard, resp.Body)
+		return nil, &StatusError{StatusCode: resp.StatusCode}
 	}
 	var patient map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&patient); err != nil {
