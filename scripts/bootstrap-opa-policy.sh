@@ -22,8 +22,11 @@ if [[ ! -f "$policy_file" ]]; then
   echo "MISSING: $policy_file" >&2
   exit 1
 fi
+# OPAL already loaded the mirror as policy id authz.rego. A second id in the
+# same package makes OPA reject the upload as duplicate default rules.
+curl -sS -o /dev/null -X DELETE "${OPA_URL}/v1/policies/authz" || true
 upload_code=$(curl -sS -o /tmp/chex-opa-upload.txt -w "%{http_code}" -X PUT \
-  "${OPA_URL}/v1/policies/authz" \
+  "${OPA_URL}/v1/policies/authz.rego" \
   -H "Content-Type: text/plain" \
   --data-binary @"${policy_file}")
 if [[ "$upload_code" != "200" ]]; then
