@@ -22,11 +22,21 @@ portfolio_rego_bundle_hash() {
 # Hash the same bytes as portfolio_rego_bundle_hash: top-level policy/*.rego
 # only, excluding *_test.rego, LC_ALL=C path order, raw blob bytes. Nested
 # paths are not included. No git-show metadata.
+portfolio_ensure_commit() {
+  local root="$1"
+  local commit="$2"
+  if git -C "$root" cat-file -e "${commit}^{commit}" 2>/dev/null; then
+    return 0
+  fi
+  git -C "$root" fetch --depth=1 origin "$commit"
+}
+
 portfolio_commit_rego_bundle_hash() {
   local root="$1"
   local commit="$2"
   local tmp names name
   tmp="$(mktemp)"
+  portfolio_ensure_commit "$root" "$commit"
   if ! git -C "$root" cat-file -e "${commit}:policy" 2>/dev/null; then
     rm -f "$tmp"
     echo "portfolio: no policy tree at ${commit}" >&2
