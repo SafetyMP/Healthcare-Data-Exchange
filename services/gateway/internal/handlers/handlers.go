@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -167,7 +168,12 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 
 	patient, err := s.FHIR.GetPatientForCell(ctx, token.SubjectID, token.Cell, token.FHIRBase)
 	if err != nil {
-		http.Error(w, "fhir error", http.StatusBadGateway)
+		status := http.StatusBadGateway
+		var upstream *fhir.StatusError
+		if errors.As(err, &upstream) && upstream.StatusCode >= 400 && upstream.StatusCode <= 599 {
+			status = upstream.StatusCode
+		}
+		http.Error(w, "fhir error", status)
 		return
 	}
 	filtered := fhir.FilterFields(patient, decision.MinNecessaryFields)

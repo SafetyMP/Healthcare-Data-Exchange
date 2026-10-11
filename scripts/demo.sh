@@ -108,6 +108,9 @@ if ! curl -fsS -X POST -H "Authorization: ${ADMIN_AUTH}" \
 fi
 wait_for_code patient-eu-002 research "$EU_HOME_AUTH" 200
 
+log "Load this repo's policy into OPA"
+"$ROOT/scripts/bootstrap-opa-policy.sh"
+
 if [[ "${CHEX_OPAL_SECURE:-0}" == "1" ]]; then
   log "0. OPAL secure mode — unauthenticated publish denied (expect 401/403)"
   code=$(curl -s -o /tmp/chex-opal-unauth.json -w "%{http_code}" \

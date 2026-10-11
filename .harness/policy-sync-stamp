@@ -1,5 +1,8 @@
 # Updated by sync-policy-repo.sh — used by check-policy-sync.sh
-canonical_commit: 1808fa172c9b503982b85842669ecf9d9d311bbb
-rego_bundle_hash: 69ef166ed5ccb51a19df0518a41695b1ed077ee23ca7a141a0104d1108766309
+# published_* is the last bundle that matches a commit and the mirror.
+# rego_bundle_hash is the working-tree policy bundle.
+published_commit: e46ea1106276cd36ae73bc229ca4778b8e5b2c4d
+published_bundle_hash: 69ef166ed5ccb51a19df0518a41695b1ed077ee23ca7a141a0104d1108766309
+rego_bundle_hash: 94be0d042e91e06c2c02e392851babf74bdf0b3522fae007ccd9b8c3f71fc241
 synced_at: 2026-07-19T03:50:07Z
 mirror_url: https://github.com/SafetyMP/healthcare-policy

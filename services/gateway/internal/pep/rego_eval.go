@@ -25,6 +25,17 @@ func NewRegoEvaluator(opaBin, policyDir string, consent map[string]map[string]bo
 	return &RegoEvaluator{opaBin: opaBin, policyDir: policyDir, consent: consent}
 }
 
+// SetPurposeConsent updates the consent document the next Evaluate call sends
+// to OPA. Tests use it to revoke a purpose and read again.
+func (e *RegoEvaluator) SetPurposeConsent(subject, purpose string, allowed bool) {
+	flags := e.consent[subject]
+	if flags == nil {
+		flags = map[string]bool{}
+		e.consent[subject] = flags
+	}
+	flags[purpose] = allowed
+}
+
 func (e *RegoEvaluator) Evaluate(_ context.Context, input PolicyInput) (Decision, error) {
 	inputPath, err := writeTempJSON(input)
 	if err != nil {

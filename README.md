@@ -1,12 +1,7 @@
-<p align="center">
-  <img src="docs/assets/architecture.svg" alt="Cloud Healthcare Exchange — EU and US jurisdiction cells with a PHI-free global control plane" width="720"/>
-</p>
-
-<h1 align="center">Cloud Healthcare Exchange</h1>
+<h1 align="center">Synthetic FHIR cell demo</h1>
 
 <p align="center">
-  <strong>Architecture sketch of a federated HIE</strong><br/>
-  EU/US jurisdiction cells · OPAL consent · OPA policy-as-code · FHIR R4
+  One Compose stack. A synthetic FHIR R4 Patient is read from an EU or US HAPI cell only after a per-cell bearer passes OPA. Revoking research consent makes the next research read return 403.
 </p>
 
 <p align="center">
@@ -30,17 +25,9 @@
 
 ---
 
-> **Scope:** Design authority + walking skeleton. Demonstrates patterns toward FedRAMP High, GDPR/EHDS, and EU AI Act alignment — **not** certification, an ATO, or production deployment guidance.
+This demo runs [HAPI FHIR](https://github.com/hapifhir/hapi-fhir) as the EU and US cell stores and [OPAL](https://github.com/permitio/opal) to push consent into OPA. It does not replace either project, and it is not a health-information exchange or a clinical record system.
 
-> **Honesty check (read this first):** This repo is a **labelled architecture sketch** with runnable stubs — not a deployed exchange. **`./scripts/verify.sh`** (hermetic: Go/Python/OPA unit tests + threat-model gate) is the day-to-day definition of done. **`./scripts/demo.sh`** (cooperative Compose E2E) plus **`./scripts/adversarial.sh`** (tier-3 auth/residency denies) are the runtime proof that paths match the README; until both are green in CI, scenario rows are *design intent*, not verified behaviour. Patient-read authorization must derive requester jurisdiction from **verified per-cell caller credentials** (EU auth + US SSRAA stub via a principal abstraction) — not query params and not implicit subject-home defaults. Do not treat compliance mapping, ADRs, or supply-chain badges as evidence that cross-bloc enforcement works in the running stack.
-
-> **Why this vs a FHIR server**
-> Medplum and HAPI store and serve FHIR resources. This repo does not replace them.
-> The wedge is jurisdiction + consent policy for a federated HIE, not another FHIR server.
-> HAPI cells here are the synthetic FHIR R4 data plane only; the control plane is residency and live OPAL consent.
-> Use Medplum or HAPI for a clinical store; use this sketch for EU/US jurisdiction cells and a PEP that honors OPAL consent.
-
-> **Permit rule:** Jurisdiction comes from verified caller credentials, not query params. This is a labelled sketch, not an ATO. AI triage is a stub. Same instinct: [SafetyMP](https://github.com/SafetyMP/SafetyMP).
+Synthetic records only. Jurisdiction comes from the per-cell bearer, not from a query parameter. `./scripts/verify.sh` runs the hermetic tests. `./scripts/demo.sh` runs the Compose path, including the research consent revoke.
 
 ## Demo
 
@@ -62,19 +49,9 @@ The **clinician console** in [`web/`](web/) proxies gateway APIs for local demos
 
 _Synthetic FHIR only — no real PHI._
 
-## Why this exists
+## What the running stack does
 
-Centralizing health data in one global database fails sovereignty, erasure, and cross-border transfer rules. Cloud Healthcare Exchange models:
-
-| Principle | What it means in this repo |
-|-----------|----------------------------|
-| **Sovereignty by cell** | PHI, keys, and primary audit stay in-region (EU / US HAPI cells) |
-| **Global plane is config-only** | Routing, tenants, policy bundles, consent metadata — no PHI |
-| **Policy-as-code** | OPA Rego at the gateway PEP; Rego + handler tests in CI (`verify.sh`) |
-| **Federated identity** | ITI-78-style broker stub — no fictional EU-wide MPI |
-| **Live consent** | OPAL propagates revocation to the PDP without restart |
-
-See [architecture overview](docs/architecture/overview.md) and [product mandate](docs/product-mandate.md).
+HAPI serves the synthetic Patient. The gateway asks OPA before it returns that Patient. OPAL delivers a consent revoke, and the next research read is 403. Treatment is consent-gated the same way: a purpose string does not skip the check.
 
 ## Architecture overview
 

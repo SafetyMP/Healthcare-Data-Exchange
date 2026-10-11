@@ -39,15 +39,11 @@ exception_label := "cross_bloc_derivative" if {
 	cross_bloc_derivative_exception
 }
 
-# Research requires an active consent record synced via OPAL (data.consent).
-# All other purposes (treatment, derivative) are consent-gated elsewhere.
+# Every purpose is consent-gated. The purpose string selects
+# data.consent[subject][purpose] from OPAL; it does not skip the check.
+# A revoked research flag therefore denies the next research read.
 consent_ok if {
-	input.purpose != "research"
-}
-
-consent_ok if {
-	input.purpose == "research"
-	data.consent[input.subject_id].research == true
+	data.consent[input.subject_id][input.purpose] == true
 }
 
 # Empty / missing XP is allowed (EU flows; US research without TEFCA mapping).

@@ -4,10 +4,10 @@ import data.chex.authz
 
 # Consent data as OPAL would sync it into OPA at data.consent.
 consent_data := {
-	"patient-eu-001": {"research": false},
-	"patient-eu-002": {"research": true},
-	"patient-us-001": {"research": false},
-	"patient-us-002": {"research": true},
+	"patient-eu-001": {"research": false, "treatment": true, "derivative": true},
+	"patient-eu-002": {"research": true, "treatment": true, "derivative": true},
+	"patient-us-001": {"research": false, "treatment": true, "derivative": true},
+	"patient-us-002": {"research": true, "treatment": true, "derivative": true},
 }
 
 test_intra_eu_treatment_allowed {
@@ -16,6 +16,41 @@ test_intra_eu_treatment_allowed {
 		"home_jurisdiction": "eu-home",
 		"requester_jurisdiction": "eu-visiting",
 		"purpose": "treatment",
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+# Treatment is consent-gated. A research grant does not skip that check.
+test_treatment_denied_without_treatment_consent {
+	not authz.allow with input as {
+		"subject_id": "patient-eu-002",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "eu-home",
+		"purpose": "treatment",
+		"cross_bloc": false,
+	}
+		with data.consent as {"patient-eu-002": {"research": true, "treatment": false}}
+}
+
+test_treatment_deny_reason_is_consent_required {
+	authz.deny_reason == "consent_required" with input as {
+		"subject_id": "patient-eu-002",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "eu-home",
+		"purpose": "treatment",
+		"cross_bloc": false,
+	}
+		with data.consent as {"patient-eu-002": {"research": true, "treatment": false}}
+}
+
+# A purpose string other than "research" must not skip consent.
+test_purpose_string_does_not_skip_consent {
+	not authz.allow with input as {
+		"subject_id": "patient-eu-002",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "eu-home",
+		"purpose": "billing",
 		"cross_bloc": false,
 	}
 		with data.consent as consent_data
