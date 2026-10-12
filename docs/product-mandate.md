@@ -1,5 +1,7 @@
 # Product Mandate — Cloud Healthcare Exchange
 
+The repository that runs is the synthetic FHIR cell demo in the root README. It is not a health-information exchange. This mandate is the original vision.
+
 **Product name:** Cloud Healthcare Exchange  
 **Status:** Draft mandate (reference implementation + design authority)  
 **Last updated:** 2026-07-08

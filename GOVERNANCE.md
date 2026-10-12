@@ -1,9 +1,9 @@
 # Governance
 
-Cloud Healthcare Exchange (CHEX) is an open-source **reference implementation**
-maintained by [SafetyMP](https://github.com/SafetyMP). It demonstrates
-architecture patterns; it does not claim certification, an ATO, or production
-readiness.
+This repository is a synthetic FHIR cell demo maintained by
+[SafetyMP](https://github.com/SafetyMP). It demonstrates architecture
+patterns. It does not claim certification, an ATO, or production readiness,
+and it is not a health-information exchange.
 
 ## Maintainers
 

@@ -1,9 +1,9 @@
-# AGENTS.md — Cloud Healthcare Exchange
+# AGENTS.md — Synthetic FHIR cell demo
 
-Community contract for humans and coding agents. This repo is a labelled
-architecture sketch of a **federated HIE**: EU/US **jurisdiction cells**,
-**OPAL consent**, OPA policy-as-code, and FHIR R4. It is not a production
-exchange and not a Medplum/HAPI replacement.
+Community contract for humans and coding agents. This repo runs HAPI FHIR as
+the EU and US cell stores and OPAL to push consent into OPA. It is not a
+health-information exchange, not a clinical record system, and not a Medplum
+or HAPI replacement.
 
 Factory/corporate site overlay (handoffs, digest boundary, never self-approve)
 lives in [docs/factory-overlay.md](docs/factory-overlay.md). Start here.
