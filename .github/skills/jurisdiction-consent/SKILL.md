@@ -5,7 +5,7 @@ description: "Change EU/US jurisdiction routing, OPAL consent, or OPA policy in 
 
 # Jurisdiction and consent
 
-Federated HIE sketch: EU/US cells, OPAL consent, OPA, FHIR R4.
+Synthetic FHIR cell demo: EU/US HAPI cells, OPAL consent, OPA. Not a health-information exchange.
 
 ## Do
 
