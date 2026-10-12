@@ -8,4 +8,8 @@ type Principal struct {
 	Cell               string
 	CrossBlocPermitted bool
 	AuthKind           string // e.g. "eu-bearer", "us-ssraa"
+	// AllowedTEFCAXP is the Exchange Purpose set this bearer may assert.
+	AllowedTEFCAXP []string
+	// RequiresTEFCAXP means an empty Exchange Purpose must not satisfy xp_ok.
+	RequiresTEFCAXP bool
 }

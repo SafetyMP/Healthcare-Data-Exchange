@@ -7,9 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { postAiTriage } from "@/lib/api";
+import { DEMO_CREDENTIALS, type CredentialProfile, postAiTriage } from "@/lib/api";
+
+const CREDENTIAL_OPTIONS: { value: CredentialProfile; label: string }[] = [
+  { value: "eu-home", label: "EU home jurisdiction" },
+  { value: "eu-visiting", label: "EU visiting clinician" },
+  { value: "us-home", label: "US home (TEFCA demo)" },
+  { value: "us-clinician", label: "US clinician" },
+];
 
 export default function AiTriagePage() {
+  const [credential, setCredential] = useState<CredentialProfile>("eu-home");
   const [patientId, setPatientId] = useState("patient-eu-001");
   const [symptoms, setSymptoms] = useState("chest pain, dyspnea");
   const [result, setResult] = useState<string | null>(null);
@@ -21,10 +29,13 @@ export default function AiTriagePage() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const res = await postAiTriage({
-      patient_id: patientId,
-      symptoms: symptoms.split(",").map((s) => s.trim()).filter(Boolean),
-    });
+    const res = await postAiTriage(
+      {
+        patient_id: patientId,
+        symptoms: symptoms.split(",").map((s) => s.trim()).filter(Boolean),
+      },
+      DEMO_CREDENTIALS[credential],
+    );
     setLoading(false);
     if (!res.ok) {
       setError(`${res.status}: ${res.error}`);
@@ -38,7 +49,7 @@ export default function AiTriagePage() {
       <PageHeader
         eyebrow="AI governance"
         title="AI triage stub"
-        description="Demonstrates triage output with Art. 50 transparency flags and human-oversight workflow hooks."
+        description="Triage output with Art. 50 transparency flags. A configured caller is required before the stub runs."
       />
 
       <Card>
@@ -47,6 +58,21 @@ export default function AiTriagePage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="triage-credential">Caller credential</Label>
+              <select
+                id="triage-credential"
+                className="flex h-11 w-full rounded-md border-2 border-border bg-background px-3 text-sm"
+                value={credential}
+                onChange={(e) => setCredential(e.target.value as CredentialProfile)}
+              >
+                {CREDENTIAL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="triage-patient">Patient ID</Label>
               <Input id="triage-patient" value={patientId} onChange={(e) => setPatientId(e.target.value)} required />

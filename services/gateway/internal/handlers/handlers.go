@@ -116,7 +116,11 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 	requesterJurisdiction := reqCtx.Jurisdiction
 	crossBloc := reqCtx.CrossBloc
 	crossPermitted := reqCtx.CrossBlocPermitted
-	tefcaXP := requester.ResolveTEFCAXP(r.Header.Get("X-TEFCA-XP"), purpose, token.HomeJurisdiction)
+	allowedXP := caller.AllowedTEFCAXP
+	if allowedXP == nil {
+		allowedXP = []string{}
+	}
+	tefcaXP := requester.SelectTEFCAXP(r.Header.Get("X-TEFCA-XP"), purpose, token.HomeJurisdiction, allowedXP)
 
 	if err := s.Keys.EnsureTenant(token.Tenant); err != nil {
 		if s.Keys.IsShredded(token.Tenant) {
@@ -133,6 +137,8 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 		RequesterJurisdiction: requesterJurisdiction,
 		Purpose:               purpose,
 		TEFCAXP:               tefcaXP,
+		AllowedTEFCAXP:        allowedXP,
+		RequiresTEFCAXP:       caller.RequiresTEFCAXP,
 		ConsentResearch:       token.ConsentResearch,
 		CrossBloc:             crossBloc,
 		CrossBlocPermitted:    crossPermitted,
@@ -214,6 +220,17 @@ func (s *Server) GetPatient(w http.ResponseWriter, r *http.Request) {
 
 // ResolveIdentity exposes identity broker resolution (routing token only, no PHI).
 func (s *Server) ResolveIdentity(w http.ResponseWriter, r *http.Request) {
+	if s.Principals == nil {
+		http.Error(w, "caller authentication not configured", http.StatusServiceUnavailable)
+		return
+	}
+	if _, ok := s.Principals.Authenticate(r.Header.Get("Authorization")); !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]any{
+			"error":  "caller authentication required",
+			"reason": "invalid_or_missing_association",
+		})
+		return
+	}
 	subjectID := r.URL.Query().Get("subject")
 	identifier := r.URL.Query().Get("identifier")
 	if subjectID == "" && identifier == "" {
@@ -248,6 +265,14 @@ func (s *Server) ShredTenant(w http.ResponseWriter, r *http.Request) {
 	if tenant == "" {
 		http.Error(w, "tenant required", http.StatusBadRequest)
 		return
+	}
+	if s.FHIR != nil && s.Routing != nil {
+		for _, token := range s.Routing.SubjectsForTenant(tenant) {
+			if err := s.FHIR.DeletePatient(r.Context(), token.SubjectID, token.FHIRBase); err != nil {
+				http.Error(w, "fhir erasure failed", http.StatusBadGateway)
+				return
+			}
+		}
 	}
 	if err := s.Keys.ShredTenant(tenant); err != nil {
 		http.Error(w, "shred failed", http.StatusInternalServerError)
@@ -322,6 +347,17 @@ func (s *Server) ConsentAdminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) AITriage(w http.ResponseWriter, r *http.Request) {
+	if s.Principals == nil {
+		http.Error(w, "caller authentication not configured", http.StatusServiceUnavailable)
+		return
+	}
+	if _, ok := s.Principals.Authenticate(r.Header.Get("Authorization")); !ok {
+		writeJSON(w, http.StatusUnauthorized, map[string]any{
+			"error":  "caller authentication required",
+			"reason": "invalid_or_missing_association",
+		})
+		return
+	}
 	if s.AI == nil {
 		http.Error(w, "ai governance unavailable", http.StatusServiceUnavailable)
 		return
