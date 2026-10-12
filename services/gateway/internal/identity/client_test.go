@@ -11,7 +11,12 @@ import (
 )
 
 func TestResolveIdentifier(t *testing.T) {
+	t.Setenv("CHEX_ADMIN_SECRET", "broker-secret")
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer broker-secret" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
 		if r.URL.Query().Get("identifier") != "urn:tefca:patient:us-001" {
 			http.NotFound(w, r)
 			return

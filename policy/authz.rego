@@ -46,15 +46,23 @@ consent_ok if {
 	data.consent[input.subject_id][input.purpose] == true
 }
 
-# Empty / missing XP is allowed (EU flows; US research without TEFCA mapping).
-# Non-empty XP must be an allowlisted Level-1 code.
+# Empty / missing XP is allowed for principals that do not require a TEFCA
+# purpose (EU flows; US research without TEFCA mapping).
+# A principal with requires_tefca_xp must present an XP; empty does not satisfy xp_ok.
+# A non-empty XP must be an allowlisted Level-1 code and one this principal may
+# assert (input.allowed_tefca_xp). Callers cannot claim a purpose the bearer
+# was not granted.
 # Note: JSON often sends tefca_xp:"" — empty string is truthy under `not` in Rego.
 xp_ok if {
 	object.get(input, "tefca_xp", "") == ""
+	not input.requires_tefca_xp
 }
 
 xp_ok if {
-	input.tefca_xp in allowed_tefca_xp
+	xp := object.get(input, "tefca_xp", "")
+	xp != ""
+	xp in allowed_tefca_xp
+	xp in object.get(input, "allowed_tefca_xp", [])
 }
 
 residency_ok if {

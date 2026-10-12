@@ -1,6 +1,8 @@
 services:
+  # Pins are multi-arch manifest digests from registry-1.docker.io on 2026-10-11.
+  # hapiproject/hapi:latest was v8.12.0-2. OPAL latest-alpine was 0.9.9-alpine.
   postgres-eu:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
     environment:
       POSTGRES_DB: hapi
       POSTGRES_USER: admin
@@ -14,7 +16,7 @@ services:
       retries: 10
 
   hapi-eu:
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:v8.12.0-2@sha256:0ff86aac4c7bd13a1ee226444a70263bb46ed1c28ef543c30a44f865b80ca04e
     depends_on:
       postgres-eu:
         condition: service_healthy
@@ -35,7 +37,7 @@ services:
       start_period: 120s
 
   postgres-us:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
     environment:
       POSTGRES_DB: hapi
       POSTGRES_USER: admin
@@ -49,7 +51,7 @@ services:
       retries: 10
 
   hapi-us:
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:v8.12.0-2@sha256:0ff86aac4c7bd13a1ee226444a70263bb46ed1c28ef543c30a44f865b80ca04e
     depends_on:
       postgres-us:
         condition: service_healthy
@@ -71,7 +73,7 @@ services:
 
   # --- OPAL: dynamic policy + consent data sync (ADR 0007) ---
   broadcast_channel:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -104,6 +106,8 @@ services:
   identity-broker:
     build:
       context: ../services/identity-broker
+    env_file:
+      - opal/dev-secrets.env
     environment:
       CHEX_IDENTITY_REGISTRY: /workspace/config/identity-registry.yaml
     volumes:
@@ -117,7 +121,7 @@ services:
       retries: 10
 
   opal-server:
-    image: permitio/opal-server:latest-alpine
+    image: permitio/opal-server:0.9.9-alpine@sha256:ccd5ab83b089d3442263e3438dddcd36e3568406dd6dc9a59bd32e4219189601
     depends_on:
       broadcast_channel:
         condition: service_healthy
@@ -135,7 +139,7 @@ services:
       - "7002:7002"
 
   opal-client:
-    image: permitio/opal-client:latest-alpine
+    image: permitio/opal-client:0.9.9-alpine@sha256:6799a0f66cf6a347a95b226fcc9ec304dd872220ec37e7c4ff498f6383b1784b
     depends_on:
       opal-server:
         condition: service_started

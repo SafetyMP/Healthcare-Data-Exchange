@@ -18,6 +18,8 @@ type CellAssociation struct {
 	Scopes             []string `yaml:"scopes"`
 	Jurisdiction       string   `yaml:"jurisdiction"`
 	CrossBlocPermitted bool     `yaml:"cross_bloc_permitted"`
+	AllowedTEFCAXP     []string `yaml:"allowed_tefca_xp"`
+	RequiresTEFCAXP    bool     `yaml:"requires_tefca_xp"`
 }
 
 func LoadCellFile(path string) (*CellFile, error) {
@@ -42,10 +44,16 @@ func bearerAuthFromFile(cell, kind, path string) (*BearerAuth, error) {
 	}
 	assocs := make(map[string]association, len(cfg.Associations))
 	for id, a := range cfg.Associations {
+		allowed := []string{}
+		if len(a.AllowedTEFCAXP) > 0 {
+			allowed = append([]string(nil), a.AllowedTEFCAXP...)
+		}
 		assocs[id] = association{
 			secret:             a.Secret,
 			jurisdiction:       a.Jurisdiction,
 			crossBlocPermitted: a.CrossBlocPermitted,
+			allowedTEFCAXP:     allowed,
+			requiresTEFCAXP:    a.RequiresTEFCAXP,
 		}
 	}
 	return NewBearerAuth(cell, kind, cfg.Required, assocs), nil

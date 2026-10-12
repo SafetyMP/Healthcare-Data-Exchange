@@ -204,6 +204,76 @@ func TestGetPatientUnknownTEFCAXPDenied(t *testing.T) {
 	}
 }
 
+func TestGetPatientTEFCAXPOutsidePrincipalDenied(t *testing.T) {
+	srv := newTestServer(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-us-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", ssraaAuth())
+	req.Header.Set("X-TEFCA-XP", "T-IAS")
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 got %d body %s", rec.Code, rec.Body.String())
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["reason"] != "xp_denied" {
+		t.Fatalf("reason=%v", body["reason"])
+	}
+}
+
+func TestGetPatientFHIRUpstreamError(t *testing.T) {
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "unavailable", http.StatusServiceUnavailable)
+	}))
+	defer fhirSrv.Close()
+
+	srv := newTestServer(t)
+	srv.Routing.Jurisdictions["eu-home"] = appconfig.Jurisdiction{
+		Cell:     "eu",
+		FHIRBase: fhirSrv.URL + "/fhir",
+	}
+	srv.Broker = broker.New(srv.Routing, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected 503 got %d body %s", rec.Code, rec.Body.String())
+	}
+	if strings.Contains(rec.Body.String(), "resourceType") {
+		t.Fatalf("patient body returned on fhir failure: %s", rec.Body.String())
+	}
+}
+
+func TestGetPatientFHIRNotFound(t *testing.T) {
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	defer fhirSrv.Close()
+
+	srv := newTestServer(t)
+	srv.Routing.Jurisdictions["eu-home"] = appconfig.Jurisdiction{
+		Cell:     "eu",
+		FHIRBase: fhirSrv.URL + "/fhir",
+	}
+	srv.Broker = broker.New(srv.Routing, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/patients/patient-eu-001?purpose=treatment", nil)
+	req.Header.Set("Authorization", euVisitingAuth())
+	rec := httptest.NewRecorder()
+	srv.GetPatient(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 got %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
 func TestFHIRMetadata(t *testing.T) {
 	root := findRoot(t)
 	srv := &handlers.Server{
@@ -273,6 +343,7 @@ func TestResolveIdentity(t *testing.T) {
 	srv := newTestServer(t)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/identity/resolve?identifier=urn:ehds:patient:eu-001", nil)
+	req.Header.Set("Authorization", euHomeAuth())
 	rec := httptest.NewRecorder()
 	srv.ResolveIdentity(rec, req)
 
@@ -288,6 +359,128 @@ func TestResolveIdentity(t *testing.T) {
 	}
 	if body["cell"] != "eu" {
 		t.Fatalf("cell=%v", body["cell"])
+	}
+}
+
+type stubAI struct{}
+
+func (stubAI) Triage(context.Context, map[string]any) (map[string]any, error) {
+	return map[string]any{"decision_id": "d1", "status": "pending_human_oversight"}, nil
+}
+
+func TestAITriageRequiresCaller(t *testing.T) {
+	srv := newTestServer(t)
+	srv.AI = stubAI{}
+	req := httptest.NewRequest(http.MethodPost, "/v1/ai/triage", strings.NewReader(`{"subject_pseudonym":"demo"}`))
+	rec := httptest.NewRecorder()
+	srv.AITriage(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAITriageAllowsConfiguredCaller(t *testing.T) {
+	srv := newTestServer(t)
+	srv.AI = stubAI{}
+	req := httptest.NewRequest(http.MethodPost, "/v1/ai/triage", strings.NewReader(`{"subject_pseudonym":"demo"}`))
+	req.Header.Set("Authorization", euHomeAuth())
+	rec := httptest.NewRecorder()
+	srv.AITriage(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestResolveIdentityRequiresCaller(t *testing.T) {
+	srv := newTestServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/v1/identity/resolve?identifier=urn:ehds:patient:eu-001", nil)
+	rec := httptest.NewRecorder()
+	srv.ResolveIdentity(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestShredTenantDeletesHomeCellPatient(t *testing.T) {
+	var deleted []string
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.NotFound(w, r)
+			return
+		}
+		deleted = append(deleted, r.URL.Path)
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(fhirSrv.Close)
+
+	keys, err := crypto.NewKeyStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := keys.EnsureTenant("demo-tenant"); err != nil {
+		t.Fatal(err)
+	}
+	srv := &handlers.Server{
+		Keys: keys,
+		FHIR: fhir.NewClient(fhirSrv.URL, ""),
+		Routing: &appconfig.Routing{
+			Jurisdictions: map[string]appconfig.Jurisdiction{
+				"eu-home": {Cell: "eu", FHIRBase: fhirSrv.URL},
+			},
+			Subjects: map[string]appconfig.Subject{
+				"patient-eu-001": {Tenant: "demo-tenant", HomeJurisdiction: "eu-home"},
+				"patient-us-001": {Tenant: "other-tenant", HomeJurisdiction: "eu-home"},
+			},
+		},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/v1/admin/erasure/tenant?tenant=demo-tenant", nil)
+	req.Header.Set("Authorization", adminAuth())
+	rec := httptest.NewRecorder()
+	srv.ShredTenant(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d body %s", rec.Code, rec.Body.String())
+	}
+	if len(deleted) != 1 || deleted[0] != "/Patient/patient-eu-001" {
+		t.Fatalf("deleted %v", deleted)
+	}
+	if !keys.IsShredded("demo-tenant") {
+		t.Fatal("expected key shredded after the patient delete")
+	}
+}
+
+func TestShredTenantKeepsKeyWhenFHIRDeleteFails(t *testing.T) {
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "nope", http.StatusInternalServerError)
+	}))
+	t.Cleanup(fhirSrv.Close)
+	keys, err := crypto.NewKeyStore(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := keys.EnsureTenant("demo-tenant"); err != nil {
+		t.Fatal(err)
+	}
+	srv := &handlers.Server{
+		Keys: keys,
+		FHIR: fhir.NewClient(fhirSrv.URL, ""),
+		Routing: &appconfig.Routing{
+			Jurisdictions: map[string]appconfig.Jurisdiction{
+				"eu-home": {Cell: "eu", FHIRBase: fhirSrv.URL},
+			},
+			Subjects: map[string]appconfig.Subject{
+				"patient-eu-001": {Tenant: "demo-tenant", HomeJurisdiction: "eu-home"},
+			},
+		},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/v1/admin/erasure/tenant?tenant=demo-tenant", nil)
+	req.Header.Set("Authorization", adminAuth())
+	rec := httptest.NewRecorder()
+	srv.ShredTenant(rec, req)
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("status %d", rec.Code)
+	}
+	if keys.IsShredded("demo-tenant") {
+		t.Fatal("key was shredded even though the patient delete failed")
 	}
 }
 
@@ -548,7 +741,6 @@ func newTestServer(t *testing.T) *handlers.Server {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sampleDir := filepath.Join(root, "fhir/samples")
 	opaBin := findOPABin(t, root)
 	consent := map[string]map[string]bool{
 		"patient-eu-001": {"research": false, "treatment": true, "derivative": true},
@@ -556,12 +748,25 @@ func newTestServer(t *testing.T) *handlers.Server {
 		"patient-us-001": {"research": false, "treatment": true, "derivative": true},
 		"patient-us-002": {"research": true, "treatment": true, "derivative": true},
 	}
+	fhirSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/fhir/Patient/")
+		w.Header().Set("Content-Type", "application/fhir+json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"resourceType": "Patient",
+			"id":           id,
+		})
+	}))
+	t.Cleanup(fhirSrv.Close)
+	for key, j := range routing.Jurisdictions {
+		j.FHIRBase = fhirSrv.URL + "/fhir"
+		routing.Jurisdictions[key] = j
+	}
 
 	return &handlers.Server{
 		Routing:    routing,
 		Broker:     broker.New(routing, nil),
 		PEP:        pep.NewRegoEvaluator(opaBin, filepath.Join(root, "policy"), consent),
-		FHIR:       fhir.NewClient("", sampleDir),
+		FHIR:       fhir.NewClient(fhirSrv.URL+"/fhir", ""),
 		Audit:      audit.NewSink(filepath.Join(t.TempDir(), "audit.jsonl")),
 		Keys:       keys,
 		Principals: testPrincipals(t),

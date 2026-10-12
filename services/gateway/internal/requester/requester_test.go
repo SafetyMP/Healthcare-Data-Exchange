@@ -2,6 +2,30 @@ package requester
 
 import "testing"
 
+func TestSelectTEFCAXP(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name, header, purpose, home string
+		allowed                     []string
+		want                        string
+	}{
+		{"header_forwarded_even_if_not_granted", "T-IAS", "treatment", "us-home", []string{"T-TREAT"}, "T-IAS"},
+		{"derived_when_granted", "", "treatment", "us-home", []string{"T-TREAT"}, "T-TREAT"},
+		{"derived_dropped_when_not_granted", "", "treatment", "us-home", nil, ""},
+		{"eu_stays_empty", "", "treatment", "eu-home", []string{"T-TREAT"}, ""},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := SelectTEFCAXP(tc.header, tc.purpose, tc.home, tc.allowed)
+			if got != tc.want {
+				t.Fatalf("SelectTEFCAXP=%q want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestResolveTEFCAXP(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

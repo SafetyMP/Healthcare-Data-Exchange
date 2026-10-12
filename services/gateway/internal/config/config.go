@@ -120,6 +120,25 @@ func (r *Routing) tokenForSubject(subjectID, overrideHome string) (RoutingToken,
 	}, true
 }
 
+// SubjectsForTenant returns routing tokens for every subject in the tenant.
+func (r *Routing) SubjectsForTenant(tenant string) []RoutingToken {
+	if r == nil || tenant == "" {
+		return nil
+	}
+	out := make([]RoutingToken, 0)
+	for id, sub := range r.Subjects {
+		if sub.Tenant != tenant {
+			continue
+		}
+		token, ok := r.tokenForSubject(id, "")
+		if !ok {
+			continue
+		}
+		out = append(out, token)
+	}
+	return out
+}
+
 // JurisdictionCell returns the sovereignty cell for a jurisdiction key.
 func (r *Routing) JurisdictionCell(jurisdiction string) (string, bool) {
 	j, ok := r.Jurisdictions[jurisdiction]

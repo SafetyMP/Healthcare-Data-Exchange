@@ -46,7 +46,7 @@ federation contract without embedding identifier maps in routing config.
 
 - Two config sources for identifiers (registry YAML + routing fallback) until NCP
   federation replaces both in Phase 2.
-- No authentication on `POST /v1/identifiers` (PoC only).
+- `GET /v1/resolve` and `POST /v1/identifiers` require the `CHEX_ADMIN_SECRET` bearer. The gateway proxy requires a configured principal.
 
 ## PoC simplification
 

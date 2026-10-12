@@ -7,16 +7,35 @@ falls back to config when this service is unreachable.
 
 from __future__ import annotations
 
+import hmac
 import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="Cloud Healthcare Exchange Identity Broker", version="0.1.0")
+_bearer = HTTPBearer(auto_error=False)
+
+
+def _admin_secret() -> str:
+    return os.environ.get("CHEX_ADMIN_SECRET", "").strip()
+
+
+def require_identity_auth(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> None:
+    """ITI-78 lookups and identifier registration are authenticated (IHE PDQm)."""
+    secret = _admin_secret()
+    if not secret:
+        raise HTTPException(status_code=503, detail="admin authentication not configured")
+    token = credentials.credentials if credentials else ""
+    if not hmac.compare_digest(token, secret):
+        raise HTTPException(status_code=401, detail="admin authentication required")
 
 _identifiers: dict[str, dict[str, str]] = {}
 _subjects: dict[str, dict[str, str]] = {}
@@ -31,6 +50,8 @@ def _load_registry(path: Path) -> None:
 
 @app.on_event("startup")
 def startup() -> None:
+    if not _admin_secret():
+        raise RuntimeError("CHEX_ADMIN_SECRET must be set for the identity broker")
     registry = os.getenv("CHEX_IDENTITY_REGISTRY", "/workspace/config/identity-registry.yaml")
     _load_registry(Path(registry))
 
@@ -47,7 +68,11 @@ def health() -> dict[str, str]:
 
 
 @app.get("/v1/resolve")
-def resolve(identifier: str = "", subject: str = "") -> dict[str, Any]:
+def resolve(
+    identifier: str = "",
+    subject: str = "",
+    _: None = Depends(require_identity_auth),
+) -> dict[str, Any]:
     """ITI-78-style resolve: preferred identifier or subject → routing token."""
     if identifier:
         ref = _identifiers.get(identifier)
@@ -76,7 +101,10 @@ def resolve(identifier: str = "", subject: str = "") -> dict[str, Any]:
 
 
 @app.post("/v1/identifiers")
-def register_identifier(body: RegisterIdentifier) -> dict[str, Any]:
+def register_identifier(
+    body: RegisterIdentifier,
+    _: None = Depends(require_identity_auth),
+) -> dict[str, Any]:
     """Register a preferred identifier (demo/admin — production would use NCP federation)."""
     _identifiers[body.identifier] = {
         "subject": body.subject,

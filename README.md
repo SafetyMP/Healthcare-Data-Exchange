@@ -69,7 +69,13 @@ _Diagrams show jurisdiction cells and policy distribution — not clinical UI._
 git clone https://github.com/SafetyMP/Healthcare-Data-Exchange.git
 cd Healthcare-Data-Exchange
 
+# One job, no Compose: a TEFCA purpose the bearer was not granted is forwarded
+# for policy to reject, and a missing Patient is an error, not a sample file.
+# Treatment does not require research consent (HIPAA payment/treatment/operations).
+cd services/gateway && CGO_ENABLED=0 go run ./cmd/xpcheck
+
 # Hermetic definition of done (no Docker; first run may download OPA + Python venvs)
+cd ../..
 ./scripts/verify.sh
 
 # Full stack: EU + US HAPI, OPAL, gateway, services (~2 min JVM boot)

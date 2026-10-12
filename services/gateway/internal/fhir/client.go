@@ -108,6 +108,37 @@ func (c *Client) loadSample(id, cell string) (map[string]any, error) {
 	return patient, nil
 }
 
+// DeletePatient removes Patient/{id} from the home cell. A 404 means the record
+// is already gone. Crypto-shred is not erasure while the FHIR server still
+// holds the Patient (the key file is not the record).
+func (c *Client) DeletePatient(ctx context.Context, id, fhirBase string) error {
+	if c == nil {
+		return fmt.Errorf("fhir client missing")
+	}
+	base := fhirBase
+	if base == "" {
+		base = c.baseURL
+	}
+	if base == "" || id == "" {
+		return fmt.Errorf("fhir delete target missing")
+	}
+	url := fmt.Sprintf("%s/Patient/%s", base, id)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusNotFound {
+		return nil
+	}
+	body, _ := io.ReadAll(resp.Body)
+	return fmt.Errorf("fhir delete status %d: %s", resp.StatusCode, string(body))
+}
+
 func FilterFields(patient map[string]any, fields []string) map[string]any {
 	if len(fields) == 0 {
 		return patient
