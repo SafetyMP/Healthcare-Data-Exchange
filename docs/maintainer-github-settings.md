@@ -4,18 +4,19 @@ These GitHub settings are not stored in git. Apply after pushing OSS files.
 
 ## Metadata
 
-**Description:** Federated health information exchange reference: EU/US jurisdiction cells, OPA policy-as-code, OPAL live consent, FHIR R4
+**Description:** One Compose stack. A synthetic FHIR R4 Patient is read from an EU or US HAPI cell only after a per-cell bearer passes OPA. Not a health-information exchange or a clinical record system.
 
-**Topics:** `healthcare`, `fhir`, `open-policy-agent`, `opa`, `opal`, `gdpr`, `health-information-exchange`, `reference-architecture`, `go`, `python`, `docker-compose`
+**Topics:** `healthcare`, `fhir`, `fhir-r4`, `open-policy-agent`, `opa`, `opal`, `policy-as-code`, `consent`, `gdpr`, `reference-architecture`, `reference-implementation`, `go`, `python`, `docker-compose`
 
 ```bash
 gh api -X PATCH repos/SafetyMP/Healthcare-Data-Exchange \
-  -f description='Federated health information exchange reference: EU/US jurisdiction cells, OPA policy-as-code, OPAL live consent, FHIR R4'
+  -f description='One Compose stack. A synthetic FHIR R4 Patient is read from an EU or US HAPI cell only after a per-cell bearer passes OPA. Not a health-information exchange or a clinical record system.'
 
 gh api -X PUT repos/SafetyMP/Healthcare-Data-Exchange/topics \
-  -f 'names[]=healthcare' -f 'names[]=fhir' -f 'names[]=open-policy-agent' \
-  -f 'names[]=opa' -f 'names[]=opal' -f 'names[]=gdpr' \
-  -f 'names[]=health-information-exchange' -f 'names[]=reference-architecture' \
+  -f 'names[]=healthcare' -f 'names[]=fhir' -f 'names[]=fhir-r4' \
+  -f 'names[]=open-policy-agent' -f 'names[]=opa' -f 'names[]=opal' \
+  -f 'names[]=policy-as-code' -f 'names[]=consent' -f 'names[]=gdpr' \
+  -f 'names[]=reference-architecture' -f 'names[]=reference-implementation' \
   -f 'names[]=go' -f 'names[]=python' -f 'names[]=docker-compose'
 ```
 
