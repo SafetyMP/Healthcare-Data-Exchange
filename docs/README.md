@@ -47,3 +47,8 @@ Policy mirror (two-repo split): [ADR 0007](adr/0007-opal-policy-mirror.md), [spe
 - [assets/](assets/) — [architecture diagrams](assets/README.md) (cells, components, OPAL flow) and social preview
 - [maintainer-github-settings.md](maintainer-github-settings.md) — GitHub UI settings checklist
 - [factory-overlay.md](factory-overlay.md) — corporate/site overlay (not the community contract; start at [AGENTS.md](../AGENTS.md))
+
+
+## Canonical community files
+
+`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `SECURITY.md` are at the repository root. This repository does not keep a second copy under `.github/`, because GitHub would show that copy instead of the root file.
