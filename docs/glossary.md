@@ -1,5 +1,7 @@
 # Glossary — Cloud Healthcare Exchange
 
+> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+
 Terms used across architecture, ADRs, and compliance documents.
 
 | Term | Definition |
@@ -9,7 +11,7 @@ Terms used across architecture, ADRs, and compliance documents.
 | **ATO** | Authority to Operate — US federal authorization for a system to run in production under FedRAMP. |
 | **ATNA** | IHE Audit Trail and Node Authentication; audit patterns requiring identifiable patient references in health exchange. |
 | **Cell (jurisdiction cell)** | Isolated regional deployment: in-region FHIR data plane, database, keys, and audit sink. US and EU cells are separate. |
-| **Cloud Healthcare Exchange** | This product — a federated multi-tenant health information exchange. |
+| **Cloud Healthcare Exchange** | Original product name in the design pages. The repository that runs is the synthetic FHIR cell demo in the root README, not a health-information exchange. |
 | **ConMon** | Continuous monitoring — FedRAMP ongoing assessment requirement. |
 | **Crypto-shred** | Erasure by destroying encryption keys for a scope (region/tenant in PoC); data blobs become unreadable without wiping every copy. |
 | **Control plane** | Global layer: routing, tenant registry, policy distribution, AI governance registry — **no PHI**. |

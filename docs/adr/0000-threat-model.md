@@ -1,5 +1,7 @@
 # ADR 0000: Threat Model — Caller, Trust Boundary, Authentication
 
+> **What runs.** The [root README](../../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+
 **Status:** Accepted  
 **Date:** 2026-07-13  
 **Product:** Cloud Healthcare Exchange

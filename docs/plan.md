@@ -1,5 +1,7 @@
 # Healthcare Exchange — Implementation Plan (corrected)
 
+> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+
 **Status:** Active plan (portfolio doc audit refresh, 2026-07-12)  
 **Harness profile:** `solo` — phase 4a complete; fleet mandate HALTED. See [Fleet playbook](#fleet-initialization-playbook) for future parallel work.  
 **Deliverable default:** Design-document set + minimal runnable **walking skeleton** (one jurisdiction cell first), wired into `scripts/verify.sh` (hermetic) and `scripts/demo.sh` (compose E2E).
