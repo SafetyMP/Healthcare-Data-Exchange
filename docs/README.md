@@ -1,6 +1,6 @@
-# Documentation — Cloud Healthcare Exchange
+# Documentation
 
-Design authority for the **Cloud Healthcare Exchange** reference implementation.
+The root README describes what runs: a synthetic FHIR cell demo. It is not a health-information exchange. Older pages and ADRs still use the title Cloud Healthcare Exchange. That title is not the running description.
 
 New here? Start with the [repository README](../README.md) for quick start and demo overview.
 

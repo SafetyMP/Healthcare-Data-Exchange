@@ -32,7 +32,7 @@ Synthetic records only. Jurisdiction comes from the per-cell bearer, not from a 
 ## Demo
 
 <p align="center">
-  <img src="docs/assets/demo.gif" alt="Cloud Healthcare Exchange clinician console — overview, patient lookup, consent, and AI triage (synthetic demo data)" width="900" />
+  <img src="docs/assets/demo.gif" alt="Synthetic FHIR cell demo — overview, patient lookup, consent, and AI triage" width="900" />
 </p>
 
 ### Screenshots
