@@ -1,10 +1,10 @@
-# Contributing to Cloud Healthcare Exchange
+# Contributing
 
-Thank you for your interest in this project. CHEX is a **reference implementation** and design authority — contributions should preserve honest scope (no certification claims) and keep verification paths green.
+Thank you for your interest in this project. This is a synthetic FHIR cell demo. Contributions should keep that scope: no certification claims, and do not describe the repository as a health-information exchange. Keep the verification paths green.
 
 ## Before you start
 
-1. Read [product-mandate.md](docs/product-mandate.md) for scope and non-goals.
+1. Read the root README for what runs. [product-mandate.md](docs/product-mandate.md) is the original vision, not the current scope.
 2. Skim [AGENTS.md](AGENTS.md) for repo commands and layout.
 3. For policy changes, understand the [portfolio contract](specs/portfolio.yaml) (canonical repo + `healthcare-policy` mirror).
 

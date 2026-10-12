@@ -1,7 +1,8 @@
-# Copilot instructions — Cloud Healthcare Exchange
+# Copilot instructions
 
-Architecture sketch of a federated HIE: EU/US jurisdiction cells, OPAL consent,
-OPA policy-as-code, FHIR R4. Not a Medplum/HAPI replacement. Not a production exchange.
+Synthetic FHIR cell demo. EU and US HAPI cells, OPAL consent, OPA, FHIR R4.
+Not a health-information exchange. Not a Medplum or HAPI replacement. Not a
+production exchange.
 
 ## Verify
 
