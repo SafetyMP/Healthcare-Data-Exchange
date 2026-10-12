@@ -1,5 +1,7 @@
 # ADR 0004: FHIR R4 and US Core Interoperability Baseline
 
+> **What runs.** The [root README](../../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+
 **Status:** Accepted  
 **Date:** 2026-07-08  
 **Updated:** 2026-07-18  

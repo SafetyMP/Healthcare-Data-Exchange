@@ -1,5 +1,7 @@
 # Architecture Overview — Cloud Healthcare Exchange
 
+> **What runs.** The [root README](../../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+
 **Product:** Cloud Healthcare Exchange  
 **Version:** 0.1 (design authority)  
 **See also:** [compliance-mapping.md](compliance-mapping.md), [data-flows.md](data-flows.md)
