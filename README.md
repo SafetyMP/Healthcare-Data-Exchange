@@ -1,4 +1,6 @@
-<h1 align="center">Synthetic FHIR cell demo</h1>
+<h1 align="center">Healthcare Data Exchange: Synthetic FHIR Consent and OPA Demo</h1>
+
+A healthcare data authorization reference using Fast Healthcare Interoperability Resources (FHIR R4), HAPI FHIR cell stores, Open Policy Agent (OPA) and OPAL consent distribution. This is a synthetic-data demonstration, not a production health-information exchange.
 
 <p align="center">
   One Compose stack. A synthetic FHIR R4 Patient is read from an EU or US HAPI cell only after a per-cell bearer passes OPA. Revoking research consent makes the next research read return 403.
