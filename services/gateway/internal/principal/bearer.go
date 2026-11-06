@@ -17,6 +17,8 @@ type association struct {
 	secret             string
 	jurisdiction       string
 	crossBlocPermitted bool
+	allowedTEFCAXP     []string
+	requiresTEFCAXP    bool
 }
 
 // BearerAuth validates `Authorization: Bearer <client_id>.<secret>` for a cell.
@@ -61,12 +63,18 @@ func (b *BearerAuth) Authenticate(authHeader string) (Principal, bool) {
 	if strings.TrimSpace(assoc.jurisdiction) == "" {
 		return Principal{}, false
 	}
+	allowed := assoc.allowedTEFCAXP
+	if allowed == nil {
+		allowed = []string{}
+	}
 	return Principal{
 		ClientID:           clientID,
 		Jurisdiction:       assoc.jurisdiction,
 		Cell:               b.cell,
 		CrossBlocPermitted: assoc.crossBlocPermitted,
 		AuthKind:           b.kind,
+		AllowedTEFCAXP:     allowed,
+		RequiresTEFCAXP:    assoc.requiresTEFCAXP,
 	}, true
 }
 

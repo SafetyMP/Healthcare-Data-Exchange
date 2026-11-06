@@ -7,9 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { resolveIdentity } from "@/lib/api";
+import { DEMO_CREDENTIALS, type CredentialProfile, resolveIdentity } from "@/lib/api";
+
+const CREDENTIAL_OPTIONS: { value: CredentialProfile; label: string }[] = [
+  { value: "eu-home", label: "EU home jurisdiction" },
+  { value: "eu-visiting", label: "EU visiting clinician" },
+  { value: "us-home", label: "US home (TEFCA demo)" },
+  { value: "us-clinician", label: "US clinician" },
+];
 
 export default function IdentityPage() {
+  const [credential, setCredential] = useState<CredentialProfile>("eu-home");
   const [system, setSystem] = useState("urn:oid:2.16.840.1.113883.4.1");
   const [value, setValue] = useState("");
   const [result, setResult] = useState<string | null>(null);
@@ -21,7 +29,7 @@ export default function IdentityPage() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const res = await resolveIdentity({ system, value });
+    const res = await resolveIdentity({ system, value }, DEMO_CREDENTIALS[credential]);
     setLoading(false);
     if (!res.ok) {
       setError(`${res.status}: ${res.error}`);
@@ -44,6 +52,21 @@ export default function IdentityPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="id-credential">Caller credential</Label>
+              <select
+                id="id-credential"
+                className="flex h-11 w-full rounded-md border-2 border-border bg-background px-3 text-sm"
+                value={credential}
+                onChange={(e) => setCredential(e.target.value as CredentialProfile)}
+              >
+                {CREDENTIAL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="id-system">Identifier system</Label>
               <Input id="id-system" value={system} onChange={(e) => setSystem(e.target.value)} required />

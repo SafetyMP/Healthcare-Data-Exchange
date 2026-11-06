@@ -25,14 +25,16 @@ func NewClient(baseURL string) *Client {
 }
 
 type PolicyInput struct {
-	SubjectID             string `json:"subject_id"`
-	HomeJurisdiction      string `json:"home_jurisdiction"`
-	RequesterJurisdiction string `json:"requester_jurisdiction"`
-	Purpose               string `json:"purpose"`
-	TEFCAXP               string `json:"tefca_xp"`
-	ConsentResearch       bool   `json:"consent_research"`
-	CrossBloc             bool   `json:"cross_bloc"`
-	CrossBlocPermitted    bool   `json:"cross_bloc_permitted"`
+	SubjectID             string   `json:"subject_id"`
+	HomeJurisdiction      string   `json:"home_jurisdiction"`
+	RequesterJurisdiction string   `json:"requester_jurisdiction"`
+	Purpose               string   `json:"purpose"`
+	TEFCAXP               string   `json:"tefca_xp"`
+	AllowedTEFCAXP        []string `json:"allowed_tefca_xp"`
+	RequiresTEFCAXP       bool     `json:"requires_tefca_xp"`
+	ConsentResearch       bool     `json:"consent_research"`
+	CrossBloc             bool     `json:"cross_bloc"`
+	CrossBlocPermitted    bool     `json:"cross_bloc_permitted"`
 }
 
 type Decision struct {

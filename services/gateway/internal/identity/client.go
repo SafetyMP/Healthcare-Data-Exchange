@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -45,6 +47,9 @@ func (c *Client) Resolve(ctx context.Context, subjectID, identifier string) (sub
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	if err != nil {
 		return "", "", false
+	}
+	if secret := strings.TrimSpace(os.Getenv("CHEX_ADMIN_SECRET")); secret != "" {
+		req.Header.Set("Authorization", "Bearer "+secret)
 	}
 
 	resp, err := c.httpClient.Do(req)

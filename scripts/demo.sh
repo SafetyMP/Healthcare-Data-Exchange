@@ -155,15 +155,18 @@ curl -fsS -H "Authorization: $SSRA_AUTH" \
 grep -q 'us-home' /tmp/chex-demo-us.json
 
 log "6a. Identity broker service — direct ITI-78 resolve (expect 200)"
-curl -fsS "http://localhost:8085/v1/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker-svc.json
+curl -fsS -H "Authorization: $ADMIN_AUTH" \
+  "http://localhost:8085/v1/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker-svc.json
 grep -q 'patient-us-001' /tmp/chex-demo-broker-svc.json
 
 log "6. Identity broker via gateway (expect 200)"
-curl -fsS "$GW/v1/identity/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker.json
+curl -fsS -H "Authorization: $SSRA_AUTH" \
+  "$GW/v1/identity/resolve?identifier=urn:tefca:patient:us-001" | tee /tmp/chex-demo-broker.json
 grep -q 'patient-us-001' /tmp/chex-demo-broker.json
 
 log "6b. Register EU-002 identifier on broker; gateway patient read by identifier only (expect 200)"
 curl -fsS -X POST "http://localhost:8085/v1/identifiers" \
+  -H "Authorization: $ADMIN_AUTH" \
   -H "Content-Type: application/json" \
   -d '{"identifier":"urn:ehds:patient:eu-002","subject":"patient-eu-002","home_jurisdiction":"eu-home"}' \
   >/dev/null
@@ -191,6 +194,7 @@ echo "  200 after live re-grant"
 
 log "8. AI triage with human oversight"
 triage=$(curl -fsS -X POST "$GW/v1/ai/triage" \
+  -H "Authorization: ${EU_HOME_AUTH}" \
   -H "Content-Type: application/json" \
   -d '{"subject_pseudonym":"demo","features":{"age":55}}')
 echo "$triage" | tee /tmp/chex-demo-ai.json

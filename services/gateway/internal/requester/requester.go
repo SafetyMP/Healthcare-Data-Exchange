@@ -56,3 +56,28 @@ func ResolveTEFCAXP(header, purpose, homeJurisdiction string) string {
 		return ""
 	}
 }
+
+// SelectTEFCAXP chooses the Exchange Purpose sent to OPA.
+// An explicit X-TEFCA-XP is forwarded unchanged so policy can reject a purpose
+// the principal is not allowed to use. When the header is empty, a US-home
+// default is used only if that code is in allowed; otherwise the XP stays empty
+// so a caller is not handed a TEFCA purpose they cannot assert.
+func SelectTEFCAXP(header, purpose, homeJurisdiction string, allowed []string) string {
+	if strings.TrimSpace(header) != "" {
+		return ResolveTEFCAXP(header, purpose, homeJurisdiction)
+	}
+	derived := ResolveTEFCAXP("", purpose, homeJurisdiction)
+	if derived == "" || !containsXP(allowed, derived) {
+		return ""
+	}
+	return derived
+}
+
+func containsXP(allowed []string, xp string) bool {
+	for _, code := range allowed {
+		if code == xp {
+			return true
+		}
+	}
+	return false
+}

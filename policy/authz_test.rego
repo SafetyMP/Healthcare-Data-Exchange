@@ -108,6 +108,7 @@ test_intra_us_treatment_allowed {
 		"requester_jurisdiction": "us-clinician",
 		"purpose": "treatment",
 		"tefca_xp": "T-TREAT",
+		"allowed_tefca_xp": ["T-TREAT"],
 		"cross_bloc": false,
 	}
 		with data.consent as consent_data
@@ -155,6 +156,78 @@ test_tefca_ias_xp_allowed {
 		"requester_jurisdiction": "us-clinician",
 		"purpose": "treatment",
 		"tefca_xp": "T-IAS",
+		"allowed_tefca_xp": ["T-IAS"],
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+# Globally valid T-IAS is denied when this principal was not granted it.
+test_xp_denied_when_outside_principal_allowed_set {
+	not authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "T-IAS",
+		"allowed_tefca_xp": ["T-TREAT"],
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_xp_outside_principal_set_deny_reason {
+	authz.deny_reason == "xp_denied" with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "T-IAS",
+		"allowed_tefca_xp": ["T-TREAT"],
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+# Treatment does not require research consent. Empty XP is denied only when
+# the principal requires a TEFCA purpose.
+test_empty_xp_denied_when_principal_requires_tefca_xp {
+	not authz.allow with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "",
+		"requires_tefca_xp": true,
+		"allowed_tefca_xp": ["T-TREAT"],
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_empty_xp_deny_reason_when_principal_requires_tefca_xp {
+	authz.deny_reason == "xp_denied" with input as {
+		"subject_id": "patient-us-001",
+		"home_jurisdiction": "us-home",
+		"requester_jurisdiction": "us-clinician",
+		"purpose": "treatment",
+		"tefca_xp": "",
+		"requires_tefca_xp": true,
+		"allowed_tefca_xp": ["T-TREAT"],
+		"cross_bloc": false,
+	}
+		with data.consent as consent_data
+}
+
+test_treatment_allowed_without_research_consent {
+	authz.allow with input as {
+		"subject_id": "patient-eu-001",
+		"home_jurisdiction": "eu-home",
+		"requester_jurisdiction": "eu-home",
+		"purpose": "treatment",
+		"tefca_xp": "",
+		"requires_tefca_xp": false,
+		"allowed_tefca_xp": [],
 		"cross_bloc": false,
 	}
 		with data.consent as consent_data

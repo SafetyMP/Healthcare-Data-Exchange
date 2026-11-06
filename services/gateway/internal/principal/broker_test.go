@@ -22,10 +22,21 @@ func TestBrokerFromConfigFiles(t *testing.T) {
 	if !ok || p.Jurisdiction != "eu-visiting" || p.Cell != "eu" || p.AuthKind != "eu-bearer" {
 		t.Fatalf("eu principal=%+v ok=%v", p, ok)
 	}
+	if p.RequiresTEFCAXP || len(p.AllowedTEFCAXP) != 0 {
+		t.Fatalf("eu principal purposes=%+v", p)
+	}
 
 	p, ok = b.Authenticate("Bearer us-clinician-client.demo-us-clinician-secret")
 	if !ok || p.Jurisdiction != "us-clinician" || p.Cell != "us" || !p.CrossBlocPermitted {
 		t.Fatalf("us principal=%+v ok=%v", p, ok)
+	}
+	if p.RequiresTEFCAXP || !hasXP(p.AllowedTEFCAXP, "T-TREAT") || !hasXP(p.AllowedTEFCAXP, "T-HCO") || hasXP(p.AllowedTEFCAXP, "T-IAS") {
+		t.Fatalf("us clinician purposes=%+v", p)
+	}
+
+	p, ok = b.Authenticate("Bearer tefca-demo-client.demo-ssraa-secret")
+	if !ok || p.RequiresTEFCAXP || !hasXP(p.AllowedTEFCAXP, "T-TREAT") || hasXP(p.AllowedTEFCAXP, "T-IAS") {
+		t.Fatalf("tefca principal=%+v ok=%v", p, ok)
 	}
 
 	if _, ok := b.Authenticate(""); ok {
@@ -41,6 +52,15 @@ func TestDenyReasonPerCell(t *testing.T) {
 	if b.DenyReason("eu") != "credential_required" {
 		t.Fatal("eu deny reason")
 	}
+}
+
+func hasXP(codes []string, want string) bool {
+	for _, code := range codes {
+		if code == want {
+			return true
+		}
+	}
+	return false
 }
 
 func findRoot(t *testing.T) string {

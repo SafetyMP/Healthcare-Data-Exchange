@@ -55,11 +55,15 @@ export async function getPatient(id: string, params: { purpose: string }, author
   });
 }
 
-export async function resolveIdentity(params: { system?: string; value?: string }) {
+export async function resolveIdentity(
+  params: { system?: string; value?: string },
+  authorization: string,
+) {
   const qs = new URLSearchParams();
-  if (params.system) qs.set("system", params.system);
-  if (params.value) qs.set("value", params.value);
-  return request<Record<string, unknown>>(`/v1/identity/resolve?${qs}`);
+  if (params.value) qs.set("identifier", params.value);
+  return request<Record<string, unknown>>(`/v1/identity/resolve?${qs}`, {
+    headers: { Authorization: authorization },
+  });
 }
 
 export async function postConsent(params: {
@@ -80,9 +84,13 @@ export async function postConsent(params: {
   });
 }
 
-export async function postAiTriage(body: { patient_id: string; symptoms: string[] }) {
+export async function postAiTriage(
+  body: { patient_id: string; symptoms: string[] },
+  authorization: string,
+) {
   return request<Record<string, unknown>>("/v1/ai/triage", {
     method: "POST",
+    headers: { Authorization: authorization },
     body: JSON.stringify(body),
   });
 }

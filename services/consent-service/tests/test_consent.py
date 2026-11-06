@@ -1,12 +1,16 @@
 import os
+import tempfile
+from pathlib import Path
 
 # Keep unit tests network-free: never attempt a real OPAL publish.
 os.environ["CHEX_OPAL_PUBLISH"] = "0"
 os.environ["CHEX_ADMIN_SECRET"] = "test-admin-secret"
+os.environ["CHEX_CONSENT_PATH"] = ""
 
 from fastapi.testclient import TestClient
 
 from chex_consent.main import app
+from chex_consent.store import SEED, ConsentStore
 
 client = TestClient(app)
 ADMIN_HEADERS = {"Authorization": "Bearer test-admin-secret"}
@@ -86,6 +90,35 @@ def test_unsupported_purpose_rejected() -> None:
         headers=ADMIN_HEADERS,
     )
     assert resp.status_code == 400
+
+
+def test_unpublished_revoke_is_not_success(monkeypatch) -> None:
+    monkeypatch.setattr("chex_consent.main.publish_data_update", lambda reason: False)
+    resp = client.post(
+        "/v1/consent/patient-probe/revoke",
+        params={"purpose": "research"},
+        headers=ADMIN_HEADERS,
+    )
+    assert resp.status_code == 502
+    assert client.get("/policy-data").json()["patient-probe"]["research"] is False
+
+
+def test_revoke_survives_a_new_store() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        path = str(Path(directory) / "consent.json")
+        first = ConsentStore(path, SEED)
+        first.set_purpose("patient-eu-002", "research", False)
+        second = ConsentStore(path, SEED)
+        assert second.get("patient-eu-002") == {
+            "research": False,
+            "treatment": True,
+            "derivative": True,
+        }
+        assert second.get("patient-eu-001") == {
+            "research": False,
+            "treatment": True,
+            "derivative": True,
+        }
 
 
 def test_missing_consent_record_is_404() -> None:

@@ -8,9 +8,16 @@ associations:
     jurisdiction: us-home
     scopes:
       - patient.read
+    # US-home treatment derives T-TREAT when X-TEFCA-XP is absent.
+    allowed_tefca_xp:
+      - T-TREAT
   us-clinician-client:
     secret: demo-us-clinician-secret
     jurisdiction: us-clinician
     scopes:
       - patient.read
     cross_bloc_permitted: true
+    # Treatment and healthcare-operations defaults. T-IAS is not granted.
+    allowed_tefca_xp:
+      - T-TREAT
+      - T-HCO

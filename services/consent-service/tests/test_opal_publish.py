@@ -39,4 +39,14 @@ def test_auth_headers_mints_jwt_from_master(monkeypatch) -> None:
 
 def test_publish_skipped_when_disabled() -> None:
     os.environ["CHEX_OPAL_PUBLISH"] = "0"
+    assert opal_publish.publish_data_update("test") is None
+
+
+def test_publish_failure_is_false(monkeypatch) -> None:
+    os.environ["CHEX_OPAL_PUBLISH"] = "1"
+
+    def fail(*_args, **_kwargs):
+        raise opal_publish.httpx.HTTPError("down")
+
+    monkeypatch.setattr(opal_publish.httpx, "post", fail)
     assert opal_publish.publish_data_update("test") is False

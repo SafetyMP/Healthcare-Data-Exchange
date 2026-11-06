@@ -19,6 +19,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from chex_consent.opal_publish import publish_data_update
+from chex_consent.store import SEED, ConsentStore
 
 logger = logging.getLogger("chex.consent")
 _bearer = HTTPBearer(auto_error=False)
@@ -51,16 +52,14 @@ def _require_admin_secret_on_startup() -> None:
 # Purposes that are consent-gated in policy (chex.authz reads data.consent[subject][purpose]).
 CONSENT_PURPOSES = ("research", "treatment", "derivative")
 
-# Seed matches the demo subjects. Research starts revoked for *-001 so that
-# read is 403; treatment and derivative start granted so those reads can pass OPA.
-_SEED: dict[str, dict[str, bool]] = {
-    "patient-eu-001": {"research": False, "treatment": True, "derivative": True},
-    "patient-eu-002": {"research": True, "treatment": True, "derivative": True},
-    "patient-us-001": {"research": False, "treatment": True, "derivative": True},
-    "patient-us-002": {"research": True, "treatment": True, "derivative": True},
-}
+def _consent_path() -> str | None:
+    configured = os.environ.get("CHEX_CONSENT_PATH")
+    if configured is not None:
+        return configured.strip() or None
+    return os.path.join(os.environ.get("CHEX_CONSENT_DIR", "data"), "consent.json")
 
-_consent: dict[str, dict[str, bool]] = {s: dict(flags) for s, flags in _SEED.items()}
+
+_store = ConsentStore(_consent_path(), SEED)
 
 
 @app.get("/health")
@@ -71,12 +70,12 @@ def health() -> dict[str, str]:
 @app.get("/policy-data")
 def policy_data() -> dict[str, dict[str, bool]]:
     """OPAL data source: complete, current consent picture keyed by subject."""
-    return _consent
+    return _store.snapshot()
 
 
 @app.get("/v1/consent/{subject}")
 def get_consent(subject: str) -> dict[str, object]:
-    flags = _consent.get(subject)
+    flags = _store.get(subject)
     if flags is None:
         raise HTTPException(status_code=404, detail="no consent record")
     return {"subject": subject, "consent": flags}
@@ -94,15 +93,19 @@ def set_consent(
     if purpose not in CONSENT_PURPOSES:
         raise HTTPException(status_code=400, detail=f"purpose must be one of {CONSENT_PURPOSES}")
 
-    flags = _consent.setdefault(subject, {})
-    flags[purpose] = action == "grant"
+    flags = _store.set_purpose(subject, purpose, action == "grant")
     published = publish_data_update(reason=f"consent.{action}:{subject}:{purpose}")
+    if published is False:
+        raise HTTPException(
+            status_code=502,
+            detail="consent saved; policy decision point was not updated",
+        )
 
     return {
         "subject": subject,
         "purpose": purpose,
         "action": action,
         "consent": flags,
-        "opal_published": published,
+        "opal_published": published is True,
         "at": datetime.now(UTC).isoformat(),
     }

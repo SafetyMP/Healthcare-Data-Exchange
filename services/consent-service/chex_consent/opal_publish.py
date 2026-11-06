@@ -59,10 +59,14 @@ def auth_headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def publish_data_update(reason: str) -> bool:
-    """Ask OPAL server to publish a data update so clients re-fetch consent."""
+def publish_data_update(reason: str) -> bool | None:
+    """Ask OPAL to publish a data update so clients re-fetch consent.
+
+    None means publish is turned off. False means the decision point was not
+    updated. True means OPAL accepted the update.
+    """
     if os.getenv("CHEX_OPAL_PUBLISH", "1") != "1":
-        return False
+        return None
 
     server = os.getenv("OPAL_SERVER_URL", "http://opal-server:7002")
     data_url = os.getenv("CHEX_CONSENT_DATA_URL", "http://consent-service:8084/policy-data")
