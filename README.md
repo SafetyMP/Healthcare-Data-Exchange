@@ -42,13 +42,21 @@ consent, and follow the resulting decision history. The redesigned workspace
 includes searchable patient selection, readable allowed/blocked decisions,
 identity matching examples, and a human-oversight demonstration.
 
+**First visit:** choose **Start guided walkthrough** on Overview. Nine checkpoints
+lead through consent grant/revoke, purpose-specific access, requesting-team
+changes, regional denial and the limited derivative exception. The guide waits
+for the actual form result before enabling **Next step**. You can pause, resume
+after a reload, or restart; starting and restarting clearly reset this tab's
+simulated consent and activity.
+
 The hosted demo runs entirely in the browser. It uses a simplified synthetic
 fixture model, makes no gateway API requests, and resets with **Reset demo**.
 It is not live OPA/OPAL/HAPI evidence or a clinical system. The existing local
 server mode remains available for gateway-backed demonstrations.
 
 See [frontend setup and validation](web/README.md) and the
-[redesign notes](docs/experience-redesign.md).
+[redesign notes](docs/experience-redesign.md) and
+[guided walkthrough notes](docs/guided-walkthrough.md).
 
 ## Original backend demo
 

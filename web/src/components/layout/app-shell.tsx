@@ -8,6 +8,7 @@ import { resetSelectedPatient } from "@/components/clinical/patient-selector";
 import { resetAccessContext } from "@/components/clinical/use-access-context";
 import { type NavItem } from "@/lib/navigation";
 import { IS_DEMO, resetDemo } from "@/lib/demo";
+import { GuidedWalkthroughProvider, WalkthroughPanel } from "@/components/walkthrough/guided-walkthrough";
 
 const icons = [LayoutDashboard, Users, ShieldCheck, Fingerprint, Activity, Sparkles];
 type Props = { productName: string; eyebrow: string; nav: NavItem[]; children: React.ReactNode };
@@ -22,7 +23,11 @@ function isCurrentPage(pathname: string, href: string) {
   return current === target || (target !== "/" && current.startsWith(`${target}/`));
 }
 
-export function AppShell({ nav, children }: Props) {
+export function AppShell(props: Props) {
+  return IS_DEMO ? <GuidedWalkthroughProvider><ShellContent {...props} /></GuidedWalkthroughProvider> : <ShellContent {...props} />;
+}
+
+function ShellContent({ nav, children }: Props) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -84,7 +89,7 @@ export function AppShell({ nav, children }: Props) {
         {mobileOpen && <nav id="mobile-nav" aria-label="Mobile" className="mobile-navigation">{nav.map((item) => <Link key={item.href} href={item.href} aria-current={isCurrentPage(pathname, item.href) ? "page" : undefined} onNavigate={() => navigateFromMobile(item.href)}>{item.label}</Link>)}<a href="https://github.com/SafetyMP/Healthcare-Data-Exchange" target="_blank" rel="noreferrer">Documentation <ArrowUpRight size={14} aria-hidden /><span className="sr-only"> (opens in a new tab)</span></a></nav>}
         <div className="demo-strip"><FlaskConical size={14} aria-hidden /><span>{IS_DEMO ? "A safe place to explore. All patients and access decisions are simulated." : "Synthetic records only. Requests use the configured gateway and its authorization policy."}</span><span className="demo-strip-tag">NO REAL PATIENT DATA</span></div>
         {notice && <div role="status" className="reset-notice">{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={16} /></button></div>}
-        <main ref={mainRef} id="main-content" tabIndex={-1} className="workspace-content">{children}</main>
+        <main ref={mainRef} id="main-content" tabIndex={-1} className="workspace-content">{IS_DEMO && <WalkthroughPanel />}{children}</main>
         <footer className="workspace-footer"><span>Healthcare Data Exchange <span aria-hidden>·</span> An open-source exploration</span><span>Synthetic data. Real questions about access.</span></footer>
       </div>
     </div>

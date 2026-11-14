@@ -246,3 +246,9 @@ a, button, input, select, summary { outline-offset: 4px; }
   .scenario-card h2 br { display: initial; }
   .principle { min-width: 0; }
 }
+
+/* Walkthrough entry points share the established overview visual language. */
+.overview-actions { width: 250px; flex-shrink: 0; display: grid; gap: 10px; }
+.overview-actions .primary-link { width: 100%; gap: 10px; font-size: 14px; }
+.explore-link { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 12px; font-size: 14px; color: #245d48; text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 700px) { .overview-actions { width: 100%; } }

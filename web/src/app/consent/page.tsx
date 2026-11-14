@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { type ApiResult, postConsent } from "@/lib/api";
 import { DEMO_EVENT, getDemoConsent, IS_DEMO } from "@/lib/demo";
 import { cn } from "@/lib/utils";
+import { reportWalkthroughAction } from "@/lib/walkthrough";
 
 export default function ConsentPage() {
   return <Suspense fallback={<p role="status">Loading consent context…</p>}><ConsentContent /></Suspense>;
@@ -58,6 +59,7 @@ function ConsentContent() {
     if (version !== requestVersion.current) return;
     setLoading(false);
     setResult(response);
+    if (IS_DEMO) reportWalkthroughAction({ kind: "consent", patientId, purpose, credential, granted, ok: response.ok });
     if (response.ok) setAdminToken("");
   }
 
