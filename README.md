@@ -84,7 +84,7 @@ npm run build:demo
 npm run preview:demo
 ```
 
-Open [localhost:3100/Healthcare-Data-Exchange/](http://127.0.0.1:3100/Healthcare-Data-Exchange/).
+Open `http://127.0.0.1:3100/Healthcare-Data-Exchange/`.
 For development, mode settings, tests, and publishing, see [web/README.md](web/README.md).
 
 ## Run the reference backend

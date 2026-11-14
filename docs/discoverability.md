@@ -29,8 +29,9 @@ canonical URLs under the GitHub Pages project path, Open Graph/Twitter cards and
 a shared social image. The static export contains readable initial content and
 ordinary navigation links. The walkthrough requires JavaScript.
 
-The [sitemap](https://safetymp.github.io/Healthcare-Data-Exchange/sitemap.xml)
-lists all six canonical routes without invented modification dates. Descriptive
+The [sitemap generator](../web/src/app/sitemap.ts) publishes
+`https://safetymp.github.io/Healthcare-Data-Exchange/sitemap.xml` with all six
+canonical routes and no invented modification dates. Descriptive
 `WebSite` and `SoftwareApplication` JSON-LD identify the educational software,
 source and license, without ratings, endorsements or clinical claims. This is
 not a claim of rich-result eligibility.
@@ -52,8 +53,9 @@ and [structured data](https://developers.google.com/search/docs/appearance/struc
 [AGENTS.md](../AGENTS.md) and the [agent guide](agent-guide.md) explain code paths,
 mode boundaries, protected surfaces and validation. Copilot instructions add
 path-specific guidance. The curated [llms.txt](../llms.txt) is also served
-[beside the demo](https://safetymp.github.io/Healthcare-Data-Exchange/llms.txt)
-and linked from HTML using `rel="describedby"`.
+[beside the demo](../web/public/llms.txt) at
+`https://safetymp.github.io/Healthcare-Data-Exchange/llms.txt` and linked from
+HTML using `rel="describedby"`.
 
 `llms.txt` is a supplemental [community proposal](https://llmstxt.org/), not a
 universal agent protocol, crawler permission file or ranking requirement.
