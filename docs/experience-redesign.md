@@ -60,6 +60,10 @@ unhelpful live denial messages, and stale results after browser history navigati
 All were corrected and closed by independent source review with regression coverage.
 
 Final local checks passed: ESLint, nine adapter unit tests, typecheck, static export,
-19 browser checks including history regressions, and the
+20 browser checks including history and purpose-input regressions, and the
 server-mode build with two smoke/accessibility checks. GitHub CI and the Pages
 workflow are the authoritative remote build and deployment records.
+
+Remote CodeQL also identified unencoded purpose URL parameters and a local preview
+check/read file race. Parameters now use explicit encoding and runtime allowlists;
+the preview reads through the same opened file handle that it inspects.

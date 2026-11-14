@@ -212,3 +212,16 @@ test.describe("Static synthetic demo", () => {
     await expect(page.getByRole("navigation", { name: "Mobile", exact: true })).toHaveCount(0);
   });
 });
+
+test("unrecognized purpose input cannot alter workflow links", async ({ page }) => {
+  const injected = '<img src=x onerror=alert(1)>&patient=patient-us-001';
+  await page.goto(`./patients/?purpose=${encodeURIComponent(injected)}`);
+  await expect(page.getByLabel("Purpose of access")).toHaveValue("treatment");
+  await page.getByLabel("Purpose of access").selectOption("research");
+  await page.getByRole("button", { name: "Check access", exact: true }).click();
+  const link = page.getByRole("link", { name: "Review consent", exact: true });
+  await expect(link).toHaveAttribute("href", /purpose=research$/);
+  await link.click();
+  await expect(page.getByLabel("Purpose", { exact: true })).toHaveValue("research");
+  await expect(page.locator("img[onerror]")).toHaveCount(0);
+});
