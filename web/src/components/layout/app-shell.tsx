@@ -2,119 +2,44 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Moon, Sun, X } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Activity, ArrowUpRight, ArrowRightLeft, BookOpen, ChevronDown, Fingerprint, FlaskConical, LayoutDashboard, Menu, RotateCcw, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
+import { resetSelectedPatient } from "@/components/clinical/patient-selector";
 import { type NavItem } from "@/lib/navigation";
-import { cn } from "@/lib/utils";
+import { IS_DEMO, resetDemo } from "@/lib/demo";
 
-type Props = {
-  productName: string;
-  eyebrow: string;
-  nav: NavItem[];
-  children: React.ReactNode;
-};
+const icons = [LayoutDashboard, Users, ShieldCheck, Fingerprint, Activity, Sparkles];
+type Props = { productName: string; eyebrow: string; nav: NavItem[]; children: React.ReactNode };
 
-function NavLinks({
-  nav,
-  pathname,
-  onNavigate,
-  className,
-}: {
-  nav: NavItem[];
-  pathname: string;
-  onNavigate?: () => void;
-  className?: string;
-}) {
-  return (
-    <nav aria-label="Primary" className={cn("flex flex-col gap-1", className)}>
-      {nav.map((item) => {
-        const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "touch-target rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent",
-            )}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
-export function AppShell({ productName, eyebrow, nav, children }: Props) {
+export function AppShell({ nav, children }: Props) {
   const pathname = usePathname();
-  const { resolvedTheme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-
+  const [notice, setNotice] = useState("");
+  function reset() {
+    resetSelectedPatient();
+    resetDemo();
+    setNotice("Demo reset. Original patients and consent restored.");
+  }
   return (
-    <div className="flex min-h-screen w-full">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <div className="border-b border-sidebar-border px-4 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{eyebrow}</p>
-          <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">{productName}</p>
-        </div>
-        <div className="flex-1 p-3">
-          <NavLinks nav={nav} pathname={pathname} />
-        </div>
+    <div className="exchange-app">
+      <aside className="desktop-sidebar">
+        <Link href="/" className="brand" aria-label="Healthcare Data Exchange home"><span className="brand-mark"><ArrowRightLeft size={21} /></span><span>healthcare<span className="brand-sub">DATA EXCHANGE</span></span></Link>
+        <div className="workspace-label"><span className="workspace-icon">S</span><span>Sandbox workspace<small>Synthetic patient data</small></span><ChevronDown size={14} aria-hidden /></div>
+        <p className="nav-caption">WORKSPACE</p>
+        <nav aria-label="Primary" className="side-nav">{nav.map((item, index) => {
+          const Icon = icons[index] || Activity;
+          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined}><Icon size={18} aria-hidden /><span>{item.label}</span>{item.href === "/patients" && <span className="nav-count">4</span>}</Link>;
+        })}</nav>
+        <div className="sidebar-bottom"><div className="sidebar-note"><ShieldCheck size={22} /><h2>Purpose before access.</h2><p>Explore how consent and regional boundaries shape data sharing.</p><a href="https://github.com/SafetyMP/Healthcare-Data-Exchange#what-the-demo-is-designed-to-prove" target="_blank" rel="noreferrer">Explore the project <ArrowUpRight size={14} /></a></div><a className="source-link" href="https://github.com/SafetyMP/Healthcare-Data-Exchange" target="_blank" rel="noreferrer"><BookOpen size={17} /> Documentation <ArrowUpRight size={14} /></a><div className="profile"><span>DW</span><div>Demo workspace<small>{IS_DEMO ? "Local simulation" : "Live gateway mode"}</small></div></div></div>
       </aside>
-
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/50"
-            aria-label="Close navigation menu"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="relative flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar shadow-lg">
-            <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-4">
-              <p className="font-semibold text-foreground">{productName}</p>
-              <Button variant="ghost" size="sm" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
-                <X className="h-5 w-5" aria-hidden />
-              </Button>
-            </div>
-            <div className="flex-1 p-3">
-              <NavLinks nav={nav} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
-            </div>
-          </aside>
-        </div>
-      ) : null}
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur sm:px-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="lg:hidden"
-            aria-label="Open navigation menu"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="h-5 w-5" aria-hidden />
-          </Button>
-          <p className="hidden text-sm font-medium text-muted-foreground lg:block">Clinician console</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          >
-            {resolvedTheme === "dark" ? <Sun className="h-5 w-5" aria-hidden /> : <Moon className="h-5 w-5" aria-hidden />}
-          </Button>
-        </header>
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </main>
+      <div className="workspace-main">
+        <header className="workspace-topbar"><div className="topbar-location"><button className="mobile-menu icon-button" aria-label={mobileOpen ? "Close navigation" : "Open navigation"} aria-expanded={mobileOpen} aria-controls="mobile-nav" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>{nav.find((item) => item.href === pathname || (item.href !== "/" && pathname.startsWith(item.href)))?.label || "Overview"}</strong></div><div className="topbar-actions"><span className="mode-badge"><span />{IS_DEMO ? "Interactive demo" : "Live gateway"}</span>{IS_DEMO && <button className="reset-button" onClick={reset}><RotateCcw size={14} />Reset demo</button>}<span className="avatar-small" aria-hidden>DW</span></div></header>
+        {mobileOpen && <nav id="mobile-nav" aria-label="Mobile" className="mobile-navigation">{nav.map((item) => <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}>{item.label}</Link>)}</nav>}
+        <div className="demo-strip"><FlaskConical size={14} aria-hidden /><span>{IS_DEMO ? "A safe place to explore. All patients and access decisions are simulated." : "Synthetic records only. Requests use the configured gateway and its authorization policy."}</span><span className="demo-strip-tag">NO REAL PATIENT DATA</span></div>
+        {notice && <div role="status" className="reset-notice">{notice}<button aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={16} /></button></div>}
+        <main id="main-content" tabIndex={-1} className="workspace-content">{children}</main>
+        <footer className="workspace-footer"><span>Healthcare Data Exchange <span aria-hidden>·</span> An open-source exploration</span><span>Synthetic data. Real questions about access.</span></footer>
       </div>
     </div>
   );

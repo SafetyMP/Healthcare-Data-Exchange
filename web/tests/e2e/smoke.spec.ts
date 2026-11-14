@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 
 test.describe("CHEX web smoke @smoke", () => {
   test("dashboard renders with accessible landmarks", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Cloud Healthcare Exchange" })).toBeVisible();
+    await page.goto("./");
+    await expect(page.getByRole("heading", { name: "The right data. The right access.", level: 1 })).toBeVisible();
     await expect(page.locator("#main-content")).toBeVisible();
 
     const results = await new AxeBuilder({ page })
@@ -14,8 +14,8 @@ test.describe("CHEX web smoke @smoke", () => {
   });
 
   test("patient lookup page is reachable", async ({ page }) => {
-    await page.goto("/patients");
-    await expect(page.getByRole("heading", { name: "Patient lookup" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Fetch patient" })).toBeVisible();
+    await page.goto("./patients/");
+    await expect(page.getByRole("heading", { name: "Patient access", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Check access", exact: true })).toBeVisible();
   });
 });

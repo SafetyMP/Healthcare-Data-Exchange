@@ -1,117 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { ClinicalStatus } from "@/components/clinical/status";
+import { PatientSelector, ResponseDetails, selectClass, useSelectedPatient } from "@/components/clinical/patient-selector";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { postConsent } from "@/lib/api";
+import { type ApiResult, postConsent } from "@/lib/api";
+import { DEMO_EVENT, getDemoConsent, IS_DEMO } from "@/lib/demo";
+import { cn } from "@/lib/utils";
+
+type Purpose = "research" | "treatment" | "derivative";
 
 export default function ConsentPage() {
-  const [patientId, setPatientId] = useState("patient-eu-001");
-  const [purpose, setPurpose] = useState("research");
-  const [adminToken, setAdminToken] = useState("");
+  const { patientId, setPatientId, patient } = useSelectedPatient();
+  const [purpose, setPurpose] = useState<Purpose>("research");
   const [granted, setGranted] = useState(true);
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [currentConsent, setCurrentConsent] = useState<boolean | null>(null);
+  const [adminToken, setAdminToken] = useState("");
+  const [storedResult, setResult] = useState<ApiResult<Record<string, unknown>> | null>(null);
+  const [resultPatientId, setResultPatientId] = useState(patientId);
+  // Never show a prior patient's response, including the render before effects run.
+  const result = resultPatientId === patientId ? storedResult : null;
   const [loading, setLoading] = useState(false);
+  const requestVersion = useRef(0);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    // Patient context may change through browser navigation, outside form handlers.
+    requestVersion.current += 1;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setResult(null);
-    const res = await postConsent({
-      patient_id: patientId,
-      purpose,
-      granted,
-      admin_token: adminToken,
-    });
     setLoading(false);
-    if (!res.ok) {
-      setError(`${res.status}: ${res.error}`);
-      return;
-    }
-    setResult(JSON.stringify(res.data, null, 2));
+  }, [patientId]);
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("purpose");
+    // Hydrate the browser URL after the shared static HTML has mounted.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (requested === "research" || requested === "treatment" || requested === "derivative") setPurpose(requested);
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => { if (IS_DEMO) { setCurrentConsent(getDemoConsent(patientId, purpose)); setResult(null); } };
+    refresh();
+    window.addEventListener(DEMO_EVENT, refresh);
+    return () => window.removeEventListener(DEMO_EVENT, refresh);
+  }, [patientId, purpose]);
+
+  function clearResult() { requestVersion.current += 1; setResult(null); setLoading(false); }
+
+  async function saveConsent(event: React.FormEvent) {
+    event.preventDefault();
+    const version = ++requestVersion.current;
+    setLoading(true);
+    setResultPatientId(patientId);
+    setResult(null);
+    const response = await postConsent({ patient_id: patientId, purpose, granted, admin_token: adminToken });
+    if (version !== requestVersion.current) return;
+    setLoading(false);
+    setResult(response);
+    if (response.ok) setAdminToken("");
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        eyebrow="Admin"
-        title="Consent management"
-        description="Grant or revoke consent via the gateway admin API (requires CHEX_ADMIN_SECRET bearer). OPAL propagates revocation to the PDP."
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Consent action</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="consent-patient">Patient ID</Label>
-                <Input id="consent-patient" value={patientId} onChange={(e) => setPatientId(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="consent-purpose">Purpose</Label>
-                <Input id="consent-purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} required />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="admin-token">Admin bearer token</Label>
-                <Input
-                  id="admin-token"
-                  type="password"
-                  autoComplete="off"
-                  value={adminToken}
-                  onChange={(e) => setAdminToken(e.target.value)}
-                  placeholder="CHEX_ADMIN_SECRET value"
-                  required
-                />
-              </div>
-            </div>
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Decision</legend>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input type="radio" name="granted" checked={granted} onChange={() => setGranted(true)} />
-                  Grant consent
-                </label>
-                <label className="flex min-h-11 items-center gap-2 text-sm">
-                  <input type="radio" name="granted" checked={!granted} onChange={() => setGranted(false)} />
-                  Revoke consent
-                </label>
-              </div>
-            </fieldset>
-            <Button type="submit" variant={granted ? "default" : "destructive"} disabled={loading}>
-              {loading ? "Submitting…" : granted ? "Grant consent" : "Revoke consent"}
-            </Button>
+    <div className="space-y-7">
+      <PageHeader eyebrow="WORKSPACE / CONSENT" title="Consent management" description="Make the patient's sharing preferences visible, specific and easy to change." />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(260px,1fr)]">
+        <section className="rounded-xl border border-border bg-card p-6 sm:p-7" aria-labelledby="consent-title">
+          <h2 id="consent-title" className="text-lg font-semibold">Manage a sharing preference</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Consent applies to one patient and one purpose.</p>
+          <form onSubmit={saveConsent} className="mt-6 space-y-6">
+            <PatientSelector value={patientId} onChange={(value) => { clearResult(); setPatientId(value); }} />
+            <div className="space-y-2"><label htmlFor="consent-purpose" className="text-sm font-medium">Purpose</label><select id="consent-purpose" className={selectClass} value={purpose} onChange={(event) => { clearResult(); setPurpose(event.target.value as Purpose); }}><option value="research">Research</option><option value="treatment">Treatment</option><option value="derivative">Limited derivative</option></select></div>
+            {IS_DEMO && <div className="flex items-center justify-between gap-3 rounded-lg bg-background p-4 text-sm"><span>Current demo consent</span><span className={cn("rounded-full px-3 py-1 text-xs font-semibold", currentConsent ? "bg-primary-muted text-primary" : "bg-warning-muted text-foreground")}>{currentConsent === null ? "Loading…" : currentConsent ? "Granted" : "Not granted"}</span></div>}
+            {!IS_DEMO && <div className="space-y-2"><label htmlFor="admin-token" className="text-sm font-medium">Administrator token</label><Input id="admin-token" type="password" autoComplete="off" value={adminToken} onChange={(event) => { clearResult(); setAdminToken(event.target.value); }} required /><p className="text-xs text-muted-foreground">Required by the local gateway. The token is not saved.</p></div>}
+            <fieldset><legend className="mb-3 text-sm font-medium">New preference</legend><div className="grid gap-3 sm:grid-cols-2">{[{ value: true, title: "Grant consent", text: "Allow this purpose, subject to regional rules." }, { value: false, title: "Revoke consent", text: "Block future access for this purpose." }].map((option) => <label key={option.title} className={cn("flex cursor-pointer items-start gap-3 rounded-lg border p-4", granted === option.value ? "border-primary bg-primary-muted" : "border-border")}><input type="radio" name="consent-decision" checked={granted === option.value} onChange={() => { clearResult(); setGranted(option.value); }} className="mt-1 accent-primary" /><span><span className="block text-sm font-semibold">{option.title}</span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{option.text}</span></span></label>)}</div></fieldset>
+            <Button type="submit" disabled={loading}>{loading ? "Saving consent…" : "Save consent"}<ArrowRight className="h-4 w-4" aria-hidden /></Button>
           </form>
-        </CardContent>
-      </Card>
-
-      {error ? (
-        <div role="alert" className="rounded-lg border-2 border-destructive/40 bg-destructive/10 p-4 text-sm">
-          {error}
-        </div>
-      ) : null}
-
-      {result ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Result <ClinicalStatus variant="success">Updated</ClinicalStatus>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="overflow-x-auto rounded-lg bg-muted p-4 text-xs">{result}</pre>
-          </CardContent>
-        </Card>
-      ) : null}
+        </section>
+        <aside className="space-y-5">
+          <section className="rounded-xl border border-border bg-card p-6"><ShieldCheck className="mb-4 h-7 w-7 text-primary" aria-hidden /><h2 className="text-lg font-semibold">Choice stays with the patient</h2><p className="mt-3 text-sm leading-relaxed text-muted-foreground">Changing {patient?.name ?? "the patient"}&apos;s consent affects only the selected purpose. A research preference does not change treatment consent.</p><div className="my-5 h-px bg-border" /><p className="text-sm leading-relaxed text-muted-foreground">{IS_DEMO ? "Changes stay in this browser tab. Check access again to see the simulated result, or reset the demo to restore the starting scenario." : "The service publishes this change to the policy system. Check access again after propagation to verify its effect."}</p></section>
+          <p className="px-1 text-xs leading-relaxed text-muted-foreground">Granting consent does not bypass residency or credential checks. No production records or policies are changed by the browser demo.</p>
+        </aside>
+      </div>
+      <div aria-live="polite" aria-atomic="true">
+        {result?.ok && <section className="rounded-xl border border-primary/25 bg-card p-6"><div className="flex gap-3"><CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-primary" aria-hidden /><div><h2 className="text-lg font-semibold">Consent updated</h2><p className="mt-2 text-sm text-muted-foreground">{patient?.name}: {purpose} consent {granted ? "granted" : "revoked"}.{IS_DEMO ? " This is a browser-local change." : " Check access to verify policy propagation."}</p></div></div><Link href={`/patients?patient=${encodeURIComponent(patientId)}&purpose=${purpose}`} className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4">Check patient access<ArrowRight className="h-4 w-4" aria-hidden /></Link><ResponseDetails data={result.data} /></section>}
+        {result && !result.ok && <section role="alert" className="rounded-xl border border-warning/40 bg-card p-6"><h2 className="font-semibold">Consent was not updated</h2><p className="mt-2 text-sm text-muted-foreground">{result.status === 0 ? "The gateway could not be reached. Check the backend connection and try again." : result.error}</p><ResponseDetails data={result.body ?? { status: result.status, error: result.error }} /></section>}
+      </div>
     </div>
   );
 }

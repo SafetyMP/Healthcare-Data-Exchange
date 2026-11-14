@@ -17,8 +17,8 @@ A healthcare data authorization reference using Fast Healthcare Interoperability
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#demo">Demo</a> ·
-  <a href="#what-the-demo-proves">Scenarios</a> ·
+  <a href="#interactive-demo">Demo</a> ·
+  <a href="#what-the-demo-is-designed-to-prove">Scenarios</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="docs/README.md">Docs</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
@@ -31,7 +31,26 @@ This demo runs [HAPI FHIR](https://github.com/hapifhir/hapi-fhir) as the EU and 
 
 Synthetic records only. Jurisdiction comes from the per-cell bearer, not from a query parameter. `./scripts/verify.sh` runs the hermetic tests. `./scripts/demo.sh` runs the Compose path, including the research consent revoke.
 
-## Demo
+## Interactive demo
+
+[Open the GitHub Pages demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+
+![Redesigned patient access workspace](docs/assets/redesigned-workspace.jpg)
+
+Explore four synthetic patients, check purpose-specific access, grant or revoke
+consent, and follow the resulting decision history. The redesigned workspace
+includes searchable patient selection, readable allowed/blocked decisions,
+identity matching examples, and a human-oversight demonstration.
+
+The hosted demo runs entirely in the browser. It uses a simplified synthetic
+fixture model, makes no gateway API requests, and resets with **Reset demo**.
+It is not live OPA/OPAL/HAPI evidence or a clinical system. The existing local
+server mode remains available for gateway-backed demonstrations.
+
+See [frontend setup and validation](web/README.md) and the
+[redesign notes](docs/experience-redesign.md).
+
+## Original backend demo
 
 <p align="center">
   <img src="docs/assets/demo.gif" alt="Synthetic FHIR cell demo — overview, patient lookup, consent, and AI triage" width="900" />
