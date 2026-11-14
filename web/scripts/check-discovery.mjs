@@ -16,7 +16,10 @@ const expectedTitles = [
   "Demo activity | Healthcare Data Exchange",
   "AI oversight example | Healthcare Data Exchange",
 ];
-const decode = (value) => value.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;|&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+const htmlEntities = { "&amp;": "&", "&quot;": '"', "&#x27;": "'", "&#39;": "'", "&apos;": "'", "&lt;": "<", "&gt;": ">" };
+// One pass preserves encoded entities (e.g. &amp;quot; becomes &quot;, not a quote).
+const decode = (value) => value.replace(/&(?:amp|quot|#x27|#39|apos|lt|gt);/g, (entity) => htmlEntities[entity]);
+assert.equal(decode("&amp;quot; &quot; &amp;amp;"), '&quot; " &amp;');
 function tags(html, name) {
   return Array.from(html.matchAll(new RegExp(`<${name}\\b[^>]*>`, "gi")), ([tag]) => Object.fromEntries(Array.from(tag.matchAll(/([\w:-]+)="([^"]*)"/g), (match) => [match[1], decode(match[2])])));
 }
