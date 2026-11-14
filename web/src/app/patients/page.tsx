@@ -2,24 +2,16 @@
 
 import Link from "next/link";
 import { ArrowRight, Check, CircleCheck, FileText, LockKeyhole, Search, ShieldCheck } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { ResponseDetails, selectClass, useSelectedPatient } from "@/components/clinical/patient-selector";
+import { isAccessPurpose, isRequesterPreset, requesterPresets, useAccessContext } from "@/components/clinical/use-access-context";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DEMO_CREDENTIALS, type ApiResult, type CredentialProfile, getPatient } from "@/lib/api";
-import { DEMO_EVENT, DEMO_PATIENTS, DEMO_RESET_EVENT, IS_DEMO } from "@/lib/demo";
+import { DEMO_CREDENTIALS, type ApiResult, getPatient } from "@/lib/api";
+import { DEMO_EVENT, DEMO_PATIENTS, IS_DEMO } from "@/lib/demo";
 import { cn } from "@/lib/utils";
-
-const credentialOptions: { value: CredentialProfile; label: string }[] = [
-  { value: "eu-visiting", label: "EU visiting care team" },
-  { value: "eu-home", label: "EU home care team" },
-  { value: "us-home", label: "US home care team" },
-  { value: "us-clinician", label: "US care team · limited cross-region access" },
-];
-
-type Purpose = "treatment" | "research" | "derivative";
 
 function returnedFields(data: Record<string, unknown>) {
   const source = typeof data.patient === "object" && data.patient !== null ? data.patient as Record<string, unknown> : data;
@@ -40,43 +32,30 @@ function returnedFields(data: Record<string, unknown>) {
 }
 
 export default function PatientsPage() {
+  return <Suspense fallback={<p role="status">Loading access context…</p>}><PatientAccessContent /></Suspense>;
+}
+
+function PatientAccessContent() {
   const { patientId, setPatientId, patient } = useSelectedPatient();
   const [search, setSearch] = useState("");
-  const [purpose, setPurpose] = useState<Purpose>("treatment");
-  const [credential, setCredential] = useState<CredentialProfile>("eu-visiting");
+  const { purpose, credential, setPurpose, setCredential, ready } = useAccessContext("treatment", patient?.region);
+  const contextKey = `${patientId}:${purpose}:${credential}`;
+  const credentialInput = useRef<HTMLSelectElement>(null);
+  const purposeInput = useRef<HTMLSelectElement>(null);
   const [storedResult, setResult] = useState<ApiResult<Record<string, unknown>> | null>(null);
-  const [resultPatientId, setResultPatientId] = useState(patientId);
-  // Never show a prior patient's response, including the render before effects run.
-  const result = resultPatientId === patientId ? storedResult : null;
+  const [resultContext, setResultContext] = useState(contextKey);
+  // Hide any decision whose patient, purpose or requester no longer matches.
+  const result = resultContext === contextKey ? storedResult : null;
   const [loading, setLoading] = useState(false);
   const requestVersion = useRef(0);
 
   useEffect(() => {
-    // Patient context may change through browser navigation, outside form handlers.
+    // Browser navigation can change any part of the request context.
     requestVersion.current += 1;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setResult(null);
     setLoading(false);
-  }, [patientId]);
-  const credentialChosen = useRef(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requestedPurpose = params.get("purpose");
-    // Hydrate the browser URL after the shared static HTML has mounted.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (requestedPurpose === "treatment" || requestedPurpose === "research" || requestedPurpose === "derivative") setPurpose(requestedPurpose);
-  }, []);
-
-  useEffect(() => {
-    if (!credentialChosen.current) setCredential(patient?.region === "US" ? "us-home" : "eu-visiting");
-  }, [patient?.region]);
-
-  useEffect(() => {
-    const resetCredential = () => { credentialChosen.current = false; setCredential("eu-visiting"); };
-    window.addEventListener(DEMO_RESET_EVENT, resetCredential);
-    return () => window.removeEventListener(DEMO_RESET_EVENT, resetCredential);
-  }, []);
+  }, [contextKey]);
 
   useEffect(() => {
     const reset = () => { requestVersion.current += 1; setResult(null); setLoading(false); };
@@ -90,7 +69,7 @@ export default function PatientsPage() {
     event.preventDefault();
     const version = ++requestVersion.current;
     setLoading(true);
-    setResultPatientId(patientId);
+    setResultContext(contextKey);
     setResult(null);
     const response = await getPatient(patientId, { purpose }, DEMO_CREDENTIALS[credential]);
     // Demo activity events can fire during a request; input edits still invalidate live requests.
@@ -99,8 +78,12 @@ export default function PatientsPage() {
     setLoading(false);
   }
 
-  const visiblePatients = DEMO_PATIENTS.filter((item) => `${item.name} ${item.id} ${item.region}`.toLowerCase().includes(search.toLowerCase().trim()));
+  const visiblePatients = DEMO_PATIENTS.filter((item) => `${item.name} ${item.id} ${item.identifier} ${item.region}`.toLowerCase().includes(search.toLowerCase().trim()));
   const denied = result && !result.ok && result.status === 403;
+  const denialBody = result && !result.ok && typeof result.body === "object" && result.body !== null ? result.body as Record<string, unknown> : null;
+  const residencyDenied = denied && denialBody?.reason === "residency_denied";
+  const purposeDenied = denied && denialBody?.reason === "xp_denied";
+  const consentHref = `/consent?patient=${encodeURIComponent(patientId)}&purpose=${encodeURIComponent(purpose)}&requester=${encodeURIComponent(credential)}`;
 
   return (
     <div className="space-y-7">
@@ -129,18 +112,18 @@ export default function PatientsPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-6"><div><p className="mb-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">Selected patient</p><h2 id="request-title" className="text-xl font-semibold">{patient?.name ?? patientId}</h2></div><span className="rounded-full border border-border px-3 py-1.5 text-xs font-medium">{patient?.region} data region</span></div>
             <form onSubmit={checkAccess} className="space-y-5 p-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><label htmlFor="purpose" className="text-sm font-medium">Purpose of access</label><select id="purpose" className={selectClass} value={purpose} onChange={(event) => { const value = event.target.value; if (value !== "treatment" && value !== "research" && value !== "derivative") return; clearResult(); setPurpose(value); }}><option value="treatment">Treatment</option><option value="research">Research</option><option value="derivative">Limited derivative</option></select></div>
-                <div className="space-y-2"><label htmlFor="credential" className="text-sm font-medium">Requesting team</label><select id="credential" className={selectClass} value={credential} onChange={(event) => { clearResult(); credentialChosen.current = true; setCredential(event.target.value as CredentialProfile); }}>{credentialOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div>
+                <div className="space-y-2"><label htmlFor="purpose" className="text-sm font-medium">Purpose of access</label><select ref={purposeInput} id="purpose" className={selectClass} value={purpose} onChange={(event) => { const value = event.target.value; if (!isAccessPurpose(value)) return; clearResult(); setPurpose(value); }}><option value="treatment">Treatment</option><option value="research">Research</option><option value="derivative">Limited derivative</option></select></div>
+                <div className="space-y-2"><label htmlFor="credential" className="text-sm font-medium">Requesting team</label><select ref={credentialInput} id="credential" className={selectClass} value={credential} onChange={(event) => { const value = event.target.value; if (!isRequesterPreset(value)) return; clearResult(); setCredential(value); }}>{requesterPresets.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div>
               </div>
               <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />{IS_DEMO ? "The simulation checks consent, the team's preset identity and regional sharing rules." : "The gateway verifies the selected demo credential before checking consent and regional policy."}</p>
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">{loading ? "Checking access…" : "Check access"}<ArrowRight className="h-4 w-4" aria-hidden /></Button>
+              <Button type="submit" disabled={loading || !ready} className="w-full sm:w-auto">{loading ? "Checking access…" : "Check access"}<ArrowRight className="h-4 w-4" aria-hidden /></Button>
             </form>
           </section>
 
           <div aria-live="polite" aria-atomic="true">
             {!result && !loading && <section className="rounded-xl border border-dashed border-border p-7 text-center"><FileText className="mx-auto mb-3 h-7 w-7 text-muted-foreground" aria-hidden /><h2 className="font-semibold">A clear decision before data is shared</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">Check access to see the decision and the fields available for this purpose.</p></section>}
-            {result?.ok && <section className="rounded-xl border border-primary/25 bg-card p-6"><div className="flex items-start gap-3"><CircleCheck className="mt-0.5 h-6 w-6 shrink-0 text-primary" aria-hidden /><div><h2 className="text-lg font-semibold">Access allowed</h2><p className="mt-1 text-sm text-muted-foreground">{IS_DEMO ? "Simulated decision. " : "Gateway decision. "}Only the fields returned for this request appear below.</p></div></div><dl className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">{returnedFields(result.data).map((field) => <div key={field.label}><dt className="text-xs text-muted-foreground">{field.label}</dt><dd className="mt-1 break-words text-sm font-medium">{field.value}</dd></div>)}</dl>{result.data.cross_bloc === true && <p className="mt-4 rounded-lg bg-warning-muted p-3 text-sm">Limited cross-region derivative: identifying clinical fields are withheld.</p>}<ResponseDetails data={result.data} /></section>}
-            {result && !result.ok && <section role="alert" className="rounded-xl border border-warning/40 bg-card p-6"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 h-6 w-6 shrink-0 text-warning" aria-hidden /><div><h2 className="text-lg font-semibold">{denied ? "Access blocked" : "Unable to check access"}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{result.status === 0 ? "The gateway could not be reached. Check that the local backend is running, then try again." : result.error}</p></div></div><div className="mt-5 flex flex-wrap gap-4 text-sm"><Link href={`/consent?patient=${encodeURIComponent(patientId)}&purpose=${encodeURIComponent(purpose)}`} className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">Review consent<ArrowRight className="h-4 w-4" aria-hidden /></Link><p className="self-center text-xs text-muted-foreground">Consent alone does not override regional restrictions.</p></div><ResponseDetails data={result.body ?? { status: result.status, error: result.error }} /></section>}
+            {result?.ok && <section className="rounded-xl border border-primary/25 bg-card p-6"><div className="flex items-start gap-3"><CircleCheck className="mt-0.5 h-6 w-6 shrink-0 text-primary" aria-hidden /><div><h2 className="text-lg font-semibold">Access allowed</h2><p className="mt-1 text-sm text-muted-foreground">{IS_DEMO ? "Simulated decision. " : "Gateway decision. "}Only the fields returned for this request appear below.</p></div></div><dl className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">{returnedFields(result.data).map((field) => <div key={field.label}><dt className="text-xs text-muted-foreground">{field.label}</dt><dd className="mt-1 break-words text-sm font-medium">{field.value}</dd></div>)}</dl>{result.data.cross_bloc === true && <p className="mt-4 rounded-lg bg-warning-muted p-3 text-sm">Limited cross-region derivative: identifying clinical fields are withheld.</p>}<Link href={consentHref} className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4">Manage consent<ArrowRight className="h-4 w-4" aria-hidden /></Link><ResponseDetails data={result.data} /></section>}
+            {result && !result.ok && <section role="alert" className="rounded-xl border border-warning/40 bg-card p-6"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 h-6 w-6 shrink-0 text-warning" aria-hidden /><div><h2 className="text-lg font-semibold">{denied ? "Access blocked" : "Unable to check access"}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{result.status === 0 ? "The gateway could not be reached. Check that the local backend is running, then try again." : result.error}</p></div></div><div className="mt-5 flex flex-wrap gap-4 text-sm">{residencyDenied ? <Button onClick={() => credentialInput.current?.focus()}>Change requesting team<ArrowRight className="h-4 w-4" aria-hidden /></Button> : purposeDenied ? <Button onClick={() => purposeInput.current?.focus()}>Change purpose<ArrowRight className="h-4 w-4" aria-hidden /></Button> : null}<Link href={consentHref} className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">{residencyDenied || purposeDenied ? "View consent" : "Review consent"}<ArrowRight className="h-4 w-4" aria-hidden /></Link><p className="self-center text-xs text-muted-foreground">Consent alone does not override regional restrictions.</p></div><ResponseDetails data={result.body ?? { status: result.status, error: result.error }} /></section>}
           </div>
         </div>
       </div>
