@@ -23,7 +23,7 @@ export function resetSelectedPatient() {
   const url = new URL(window.location.href);
   if (url.searchParams.has("patient")) {
     url.searchParams.delete("patient");
-    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }
 }
 
@@ -41,7 +41,7 @@ export function useSelectedPatient() {
     const url = new URL(window.location.href);
     if (url.searchParams.has("patient") && url.searchParams.get("patient") !== value) {
       url.searchParams.set("patient", value);
-      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
     }
   }, []);
 

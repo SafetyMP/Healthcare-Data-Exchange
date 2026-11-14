@@ -21,6 +21,22 @@ mobile and keyboard usability; typecheck, build, meaningful browser checks,
 independent review, required repository checks, and deployed Pages verification.
 Simulation checks are not live OPA, OPAL, HAPI or clinical validation.
 
+## Follow-up: independent live experience review (2026-11-14)
+
+The user explicitly requests independent agents to review the published demo,
+fix remaining usability, visual and workflow friction, and update GitHub Pages.
+This authorizes the current follow-up only; historical fleet state remains halted.
+Reviewers inspect the baseline independently through coordinator-captured live
+screenshots, accessibility trees and reviewer-directed keyboard sequences. Subagent
+browser access was unavailable; the Safari fallback timed out before interaction.
+Source and captured-evidence review proceed concurrently. Implementers own disjoint
+frontend paths.
+
+Acceptance: record reproduced findings and scope decisions; resolve actionable
+issues without changing backend authorization; add focused regression checks;
+independently review the fixes; pass frontend and required remote checks including
+CodeQL; deploy the reviewed commit and verify its public behavior.
+
 ---
 
 # Historical multi-agent contract (phase 3; preserved)

@@ -70,6 +70,9 @@ test.describe("Static synthetic demo", () => {
     await checkResearch(page, true);
     await page.getByRole("button", { name: "Reset demo", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Access allowed", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Purpose of access")).toHaveValue("treatment");
+    await expect(page.getByLabel("Requesting team")).toHaveValue("eu-visiting");
+    await page.getByLabel("Purpose of access").selectOption("research");
     await page.getByRole("button", { name: "Check access", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Access blocked", exact: true })).toBeVisible();
   });
@@ -122,7 +125,7 @@ test.describe("Static synthetic demo", () => {
     await page.evaluate(() => {
       const url = new URL(window.location.href);
       url.searchParams.set("patient", "patient-us-001");
-      window.history.pushState(window.history.state, "", url);
+      window.history.pushState(null, "", url);
       window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
     });
     await expect(page.getByRole("button", { name: "Maria Johnson · US", exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -220,7 +223,15 @@ test("unrecognized purpose input cannot alter workflow links", async ({ page }) 
   await page.getByLabel("Purpose of access").selectOption("research");
   await page.getByRole("button", { name: "Check access", exact: true }).click();
   const link = page.getByRole("link", { name: "Review consent", exact: true });
-  await expect(link).toHaveAttribute("href", /purpose=research$/);
+  const href = await link.getAttribute("href");
+  expect(href).not.toBeNull();
+  const destination = new URL(href ?? "", page.url());
+  expect(destination.origin).toBe(new URL(page.url()).origin);
+  expect(destination.pathname).toMatch(/\/consent\/?$/);
+  expect([...destination.searchParams.keys()].sort()).toEqual(["patient", "purpose", "requester"]);
+  expect(destination.searchParams.get("patient")).toBe("patient-eu-001");
+  expect(destination.searchParams.get("purpose")).toBe("research");
+  expect(destination.searchParams.get("requester")).toBe("eu-visiting");
   await link.click();
   await expect(page.getByLabel("Purpose", { exact: true })).toHaveValue("research");
   await expect(page.locator("img[onerror]")).toHaveCount(0);

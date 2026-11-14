@@ -43,6 +43,14 @@ type DemoState = {
 
 const STORAGE_KEY = "chex-synthetic-demo-v1";
 const PURPOSES: readonly DemoPurpose[] = ["treatment", "research", "derivative"];
+// Match the requesting-team presets without importing their client hook (which
+// imports this module). Activity stores readable preset names, never credentials.
+const REQUESTER_LABELS: Record<CredentialProfile, string> = {
+  "eu-visiting": "EU visiting care team",
+  "eu-home": "EU home care team",
+  "us-home": "US home care team",
+  "us-clinician": "US care team · limited cross-region access",
+};
 let memoryState: DemoState | undefined;
 
 function initialState(): DemoState {
@@ -145,18 +153,28 @@ function failure(status: number, reason: string, message: string): ApiResult<Rec
 /** Illustrates policy/authz.rego for these fixtures only. This is not an authorization engine. */
 export function simulatePatient(id: string, purpose: string, credential: CredentialProfile | undefined): ApiResult<Record<string, unknown>> {
   const patient = DEMO_PATIENTS.find((entry) => entry.id === id);
-  if (!credential) return failure(401, "invalid_credential", "Choose a recognized demo caller profile.");
-  if (!patient) return failure(404, "patient_not_found", "This patient is not in the synthetic demo. Choose one of the sample patients.");
-  if (!isPurpose(purpose)) return failure(400, "invalid_purpose", "Choose treatment, research, or derivative use.");
+  if (!credential) {
+    record("Request not evaluated", "Unrecognized requester · choose a demo caller profile", "blocked");
+    return failure(401, "invalid_credential", "Choose a recognized demo caller profile.");
+  }
+  const requester = REQUESTER_LABELS[credential];
+  if (!patient) {
+    record("Request not evaluated", `${requester} · patient is not in the synthetic demo`, "blocked");
+    return failure(404, "patient_not_found", "This patient is not in the synthetic demo. Choose one of the sample patients.");
+  }
+  if (!isPurpose(purpose)) {
+    record("Request not evaluated", `${patient.name} · ${requester} · unrecognized purpose`, "blocked");
+    return failure(400, "invalid_purpose", "Choose treatment, research, or derivative use.");
+  }
   if (!getDemoConsent(id, purpose)) {
-    record("Access blocked", `${patient.name} · ${purpose} consent is not granted`, "blocked");
+    record("Access blocked", `${patient.name} · ${requester} · ${purpose} consent is not granted`, "blocked");
     return failure(403, "consent_required", `Consent for ${purpose} is not granted. Review this patient's consent, then check access again.`);
   }
   const requesterRegion = credential.startsWith("eu-") ? "EU" : "US";
   const crossBloc = requesterRegion !== patient.region;
   const derivativeException = crossBloc && credential === "us-clinician" && purpose === "derivative";
   if (crossBloc && !derivativeException) {
-    record("Access blocked", `${patient.name} · cross-region ${purpose} request`, "blocked");
+    record("Access blocked", `${patient.name} · ${requester} · cross-region ${purpose} request`, "blocked");
     return failure(403, "residency_denied", "The caller and patient are in different regions. Consent alone does not permit this transfer. Use a caller in the patient's region; the limited derivative example requires the US clinician profile.");
   }
   const [given, ...family] = patient.name.split(" ");
@@ -167,7 +185,7 @@ export function simulatePatient(id: string, purpose: string, credential: Credent
     birthDate: patient.birthDate,
     gender: patient.gender,
   };
-  record(derivativeException ? "Limited access allowed" : "Access allowed", `${patient.name} · ${purpose} · ${derivativeException ? "identifier only" : "minimum-necessary fields"}`, "allowed");
+  record(derivativeException ? "Limited access allowed" : "Access allowed", `${patient.name} · ${requester} · ${purpose} · ${derivativeException ? "identifier only" : "minimum-necessary fields"}`, "allowed");
   return { ok: true, status: 200, data: {
     patient: resource,
     subject: patient.id,
