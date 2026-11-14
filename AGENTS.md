@@ -1,92 +1,70 @@
-# AGENTS.md — Synthetic FHIR cell demo
+# AGENTS.md — Healthcare Data Exchange
 
-Community contract for humans and coding agents. This repo runs HAPI FHIR as
-the EU and US cell stores and OPAL to push consent into OPA. It is not a
-health-information exchange, not a clinical record system, and not a Medplum
-or HAPI replacement.
+Healthcare Data Exchange is a guided synthetic demonstration of how consent,
+requesting teams, and regional boundaries affect patient access. The published
+GitHub Pages experience runs locally in the browser. A separate backend reference
+uses HAPI FHIR EU/US cells, OPA, and OPAL. Neither mode is a production exchange,
+a clinical record system, or a replacement for Medplum or HAPI FHIR.
 
-Factory/corporate site overlay (handoffs, digest boundary, never self-approve)
-lives in [docs/factory-overlay.md](docs/factory-overlay.md). Start here.
+Start with the user's current scope and this contract. Read the
+[agent guide](docs/agent-guide.md) for task-specific files, setup, routes, and checks;
+read the [factory overlay](docs/factory-overlay.md) for applicable corporate/site
+handoff and digest boundaries. This root contract also covers all four services;
+there are no `services/*/AGENTS.md` files.
 
-There are no `services/*/AGENTS.md` files; this file is the contract for
-gateway, consent-service, identity-broker, and ai-governance.
+## Boundaries
 
-## Never do
-
-- **No real PHI.** `fhir/samples/` is synthetic. Do not load production patient data into issues, PRs, demos, or Compose.
-- **No query-param jurisdiction.** Patient-read authorization must come from **verified per-cell caller credentials** (EU auth + US SSRAA stub via the principal abstraction). Never honor `requester_jurisdiction` (or similar) as identity.
+- **Synthetic data only.** No real PHI in code, forms, issues, PRs, logs, demos, or Compose.
+- **Caller identity comes from verified credentials.** Never authorize live patient
+  reads using `requester_jurisdiction`, a URL preset, or another caller-supplied
+  jurisdiction. Browser requester presets are demonstration context, not proof of identity.
 - Never read or print `.env` contents, `deploy/opal/dev-secrets.env`, or OPAL keys.
-- Do not invent a policy-sync mechanism. After `policy/*.rego` edits, run the existing `./scripts/sync-policy-repo.sh` before `./scripts/demo.sh` or claiming OPAL policy is current.
-- Do not claim FedRAMP/GDPR certification, an ATO, or production hardening.
+  Never persist live bearer/admin tokens in URLs, browser storage, logs, or public assets.
+- Live consent is `data.consent` published through OPAL. Browser session consent
+  is simulation only; never substitute it for a failed live request.
+- This repository owns canonical `policy/*.rego`. After policy edits, use the
+  existing `./scripts/sync-policy-repo.sh` before `./scripts/demo.sh` or claiming
+  OPAL policy is current. Do not edit the `healthcare-policy` mirror by hand or
+  invent another synchronization path.
+- Do not claim certification, FedRAMP/GDPR compliance certification, an ATO,
+  production hardening, clinical validity, or live policy proof from frontend tests.
+- Preserve `.harness/`, `.corp-harness/`, archived evidence, and stopped work.
+  Never edit corporate approval state or self-approve. Read
+  [the current mandate](specs/MANDATE.md) before parallel implementation; historical
+  phase-3 fleet work remains halted. Reopening that work requires explicit user
+  authorization (`proceed`) and a refreshed mandate; new frontend work does not reactivate it.
 
-## Commands
+## Commands and evidence
 
-| Command | Purpose |
-|---------|---------|
-| `./scripts/verify.sh` | Definition of Done (hermetic: harness + go + python×3 + opa) |
-| `./scripts/run-dev.sh` | Start EU + US cells + OPAL (`--down-first` to recycle) |
-| `./scripts/teardown-dev.sh` | Stop compose stack (`--volumes` to drop DB volumes) |
-| `./scripts/demo.sh` | Cooperative E2E (Compose must be up) |
-| `./scripts/adversarial.sh` | Tier-3 adversarial oracle (auth/residency denies) |
-| `./scripts/sync-policy-repo.sh` | Mirror `policy/*.rego` to healthcare-policy (existing script) |
-| `./scripts/check-portfolio.sh` | Portfolio contract + policy-mirror drift |
-| `./scripts/check-harness.sh` | Validate multi-repo harness + corp-site overlay |
-| `cd web && npm run verify` | Web UI typecheck + build + smoke + axe |
+Run web commands from `web/` with Node 22 and npm 10.9.2–10.x after `npm ci`.
+Install the test browser once with `npx playwright install chromium`.
 
-## Definition of Done
+| Task | Command | Evidence boundary |
+|---|---|---|
+| Preview the static demo | `npm run build:demo && npm run preview:demo` | Browser simulation at `/Healthcare-Data-Exchange/` |
+| Check the static demo | `npm run verify:demo` | Unit, typecheck, export, browser flows and accessibility |
+| Check gateway-mode web UI | `npm run verify` | Typecheck, build, smoke and accessibility; not backend E2E |
+| Repository Definition of Done | `./scripts/verify.sh` from root | Hermetic harness, Go, Python and OPA checks; no Docker |
+| Backend runtime proof | `./scripts/demo.sh` then `./scripts/adversarial.sh` from root | Requires the running Compose stack |
 
-```bash
-./scripts/verify.sh
-./scripts/demo.sh            # cooperative tier — stack up
-./scripts/adversarial.sh     # tier-3 denies — after demo or standalone when stack up
-cd web && npm run verify   # optional: clinician console (requires gateway for live API)
-```
+`verify.sh` remains the repository Definition of Done and stop-hook gate. Do not
+cite it alone as cross-region or live-consent runtime proof. Backend/auth/policy
+changes also need the runtime gates above; see the guide for startup, teardown,
+policy, and portfolio commands. Preserve required CI and branch protections.
 
-`verify.sh` is hermetic (no Docker) and gates the agent stop hook. Do **not**
-cite it alone as proof of cross-bloc or demo scenarios. Compose E2E is
-`./scripts/demo.sh` plus `./scripts/adversarial.sh` (CI: `demo-e2e`). Threat
-model: `docs/adr/0000-threat-model.md` + `specs/threat-model.yaml`.
+## Source map and conventions
 
-## Layout
+- `web/src/app/`: task routes; `web/src/components/walkthrough/` and
+  `web/src/lib/walkthrough.ts`: guided checkpoints.
+- `web/src/lib/demo.ts`: synthetic fixtures and simulation;
+  `web/src/lib/api.ts`: explicit demo/live routing and live request contracts.
+- `services/`, `policy/`, `config/`, `fhir/`, `deploy/`: backend reference,
+  policy, routing, synthetic FHIR fixtures, and Compose.
+- `docs/`: current product guidance plus architecture/ADRs and retained evidence;
+  `specs/portfolio.yaml`: canonical repository and policy-mirror contract.
 
-| Path | Purpose |
-|------|---------|
-| `services/gateway/` | Go jurisdiction router + OPA PEP + identity broker + consent proxy |
-| `services/consent-service/` | Python FastAPI consent state + OPAL data source (ADR 0008) |
-| `services/identity-broker/` | Python FastAPI ITI-78 identifier resolve (ADR 0010) |
-| `services/ai-governance/` | Python FastAPI AI governance stub |
-| `policy/` | Canonical OPA Rego + tests (consent from `data.consent`) |
-| `config/` | Routing, identity registry, OPAL hardening, EU auth, SSRAA |
-| `deploy/docker-compose.yml` | EU + US cells + OPAL (server/client/broadcast) |
-| `fhir/samples/` | Synthetic Patient resources (`eu/`, `us/`) |
-| `web/` | Next.js clinician console (BFF → gateway :8081) |
-| `docs/` | Mandate, architecture, ADRs, roadmap |
-| `specs/portfolio.yaml` | Multi-repo contract (canonical + healthcare-policy) |
-| `.harness/` | Multi-repo harness (solo profile + policy-sync-stamp) — keep live |
-
-## Domain gotchas
-
-- Consent decisions read **`data.consent`** published by OPAL, not a static request field.
-- This repo is the **canonical** policy tree. [healthcare-policy](https://github.com/SafetyMP/healthcare-policy) is a mirror only — do not edit it by hand; use `./scripts/sync-policy-repo.sh`.
-- Do not archive or remove `.harness/`.
-- First `./scripts/verify.sh` may create Python `.venv` dirs under the services and download OPA to `.tools/bin/`.
-- `./scripts/run-dev.sh` then `./scripts/demo.sh`: HAPI JVM boot can take 2+ minutes per cell. First `run-dev.sh` writes gitignored OPAL secrets under `deploy/opal/`.
-- Smallest correct diff; match existing conventions in each service.
-
-## Coding rules
-
-- Smallest correct diff; match existing conventions.
-- Never read or print `.env` contents.
-- Reopen parallel factory work via `proceed` + refreshed `specs/MANDATE.md` before fleet tracks. See [docs/factory-overlay.md](docs/factory-overlay.md).
-
-## Cursor Cloud specific instructions
-
-- **Hermetic verify:** `./scripts/verify.sh` installs a Python `.venv` under `services/ai-governance/` and downloads OPA to `.tools/bin/` on first run.
-- **Docker demo:** `./scripts/run-dev.sh` then `./scripts/demo.sh` — HAPI JVM boot can take 2+ minutes per cell.
-- Hooks: `python3 .cursor/hooks/<hook>.py < payload.json` — avoid blocked patterns on the shell command line when testing guards.
-
-## Coding standards (September 2026)
-
-Path-specific Copilot instructions: [`.github/instructions/`](.github/instructions/).
-Repository-wide Copilot file: [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
-Copilot code review skill: [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md).
+Keep changes scoped and match the existing stack and conventions. Follow
+[path-specific standards](.github/instructions/) and
+[Copilot instructions](.github/copilot-instructions.md); use the
+[repository review guidance](.github/skills/code-review/SKILL.md) for review.
+Report implementation, local checks, remote CI, and published behavior separately.

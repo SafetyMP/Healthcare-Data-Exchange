@@ -1,224 +1,169 @@
-<h1 align="center">Healthcare Data Exchange: Synthetic FHIR Consent and OPA Demo</h1>
+# Healthcare Data Exchange
 
-A healthcare data authorization reference using Fast Healthcare Interoperability Resources (FHIR R4), HAPI FHIR cell stores, Open Policy Agent (OPA) and OPAL consent distribution. This is a synthetic-data demonstration, not a production health-information exchange.
+**A guided synthetic demo of consent, requesting teams, and regional data access—with a separate FHIR, OPA, and OPAL reference backend.**
 
-<p align="center">
-  One Compose stack. A synthetic FHIR R4 Patient is read from an EU or US HAPI cell only after a per-cell bearer passes OPA. Revoking research consent makes the next research read return 403.
-</p>
+[**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
-<p align="center">
-  <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml"><img src="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg" alt="portfolio-verify"/></a>
-  <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/demo-e2e.yml"><img src="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/demo-e2e.yml/badge.svg" alt="demo-e2e"/></a>
-  <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml"><img src="https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg" alt="CodeQL"/></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/SafetyMP/Healthcare-Data-Exchange"><img src="docs/assets/badges/scorecard.svg" alt="OpenSSF Scorecard 6.6/10"/></a>
-  <a href="LICENSE"><img src="docs/assets/badges/license.svg" alt="Apache-2.0"/></a>
-  <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/releases/tag/v0.5.0"><img src="docs/assets/badges/release.svg" alt="release v0.5.0"/></a>
-</p>
+[![Pages checks and deployment](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml)
+[![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
+[![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
-<p align="center">
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#interactive-demo">Demo</a> ·
-  <a href="#what-the-demo-is-designed-to-prove">Scenarios</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="docs/README.md">Docs</a> ·
-  <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="SECURITY.md">Security</a>
-</p>
+![Healthcare Data Exchange patient access workspace with synthetic patients and readable access decisions](docs/assets/redesigned-workspace.jpg)
 
----
+Healthcare data access depends on more than finding a record. The purpose of a
+request, the requesting team's permissions, the patient's consent, and regional
+restrictions can all change what is returned. This project makes those decisions
+visible and lets you explore how they interact.
 
-This demo runs [HAPI FHIR](https://github.com/hapifhir/hapi-fhir) as the EU and US cell stores and [OPAL](https://github.com/permitio/opal) to push consent into OPA. It does not replace either project, and it is not a health-information exchange or a clinical record system.
+The public demo works without an account or backend setup. All patients and
+outcomes are synthetic. It is an educational and product-design reference, not a
+clinical record system, a production health information exchange, or compliance
+certification.
 
-Synthetic records only. Jurisdiction comes from the per-cell bearer, not from a query parameter. `./scripts/verify.sh` runs the hermetic tests. `./scripts/demo.sh` runs the Compose path, including the research consent revoke.
+## Try the guided walkthrough
 
-## Interactive demo
+Open the [demo](https://safetymp.github.io/Healthcare-Data-Exchange/) and choose
+**Start guided walkthrough** on Overview. Nine checkpoints use the actual forms:
 
-[Open the GitHub Pages demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+1. See a research request blocked when consent is absent.
+2. Grant research consent and check the same request again.
+3. Revoke consent and verify that the next request is blocked.
+4. Check treatment separately from research.
+5. Switch requesting teams to encounter a regional restriction.
+6. Confirm that saving consent does not override that restriction.
+7. See why choosing a limited purpose alone does not grant permission.
+8. Use the permitted team preset and inspect the limited derivative response.
+9. Review the simulated decisions and consent changes in Activity.
 
-![Redesigned patient access workspace](docs/assets/redesigned-workspace.jpg)
+The guide waits for matching form results before allowing you to continue. Pause
+and resume it, reload the page, or explore freely. Starting or restarting the
+guide resets this tab's simulated consent and activity; **Reset demo** also clears
+guide progress. Browser session storage retains state across reloads when available.
 
-Explore four synthetic patients, check purpose-specific access, grant or revoke
-consent, and follow the resulting decision history. The redesigned workspace
-includes searchable patient selection, readable allowed/blocked decisions,
-identity matching examples, and a human-oversight demonstration.
+Outside the guide, search four synthetic patients, compare purposes and teams,
+resolve example identifiers, or inspect a fixed AI oversight example. The AI
+example does not provide a clinical assessment. See the [walkthrough design](docs/guided-walkthrough.md)
+and [experience notes](docs/experience-redesign.md).
 
-**First visit:** choose **Start guided walkthrough** on Overview. Nine checkpoints
-lead through consent grant/revoke, purpose-specific access, requesting-team
-changes, regional denial and the limited derivative exception. The guide waits
-for the actual form result before enabling **Next step**. You can pause, resume
-after a reload, or restart; starting and restarting clearly reset this tab's
-simulated consent and activity.
+## Choose your starting point
 
-The hosted demo runs entirely in the browser. It uses a simplified synthetic
-fixture model, makes no gateway API requests, and resets with **Reset demo**.
-It is not live OPA/OPAL/HAPI evidence or a clinical system. The existing local
-server mode remains available for gateway-backed demonstrations.
+| You want to… | Start here |
+|---|---|
+| Understand consent and access decisions | [Live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/) |
+| Review the experience or suggest improvements | [Product scope](docs/product-mandate.md), [independent experience review](docs/live-experience-review.md) |
+| Run or change the frontend | [Web workspace guide](web/README.md) |
+| Investigate FHIR, policy enforcement, or consent distribution | [Reference backend setup](#run-the-reference-backend), [architecture](docs/architecture/overview.md) |
+| Contribute with a coding agent | [Contributing](CONTRIBUTING.md), then [AGENTS.md](AGENTS.md) |
 
-See [frontend setup and validation](web/README.md) and the
-[redesign notes](docs/experience-redesign.md) and
-[guided walkthrough notes](docs/guided-walkthrough.md).
+## Two execution modes
 
-## Original backend demo
+| | Browser demo on GitHub Pages | Local reference backend |
+|---|---|---|
+| Purpose | Explore the experience and synthetic access scenarios | Exercise service integration and policy enforcement |
+| Data and state | Four fixture patients; tab-local simulated consent and activity | Synthetic FHIR R4 patients in EU and US HAPI stores; local consent service |
+| Decisions | Simplified browser fixture rules | Go gateway, verified demo credentials, OPA policy and OPAL consent distribution |
+| Setup | Open a URL | Docker Compose plus the local frontend |
+| Evidence | Frontend interactions, accessibility checks, static route behavior | Hermetic service tests and separate Compose scenarios |
 
-<p align="center">
-  <img src="docs/assets/demo.gif" alt="Synthetic FHIR cell demo — overview, patient lookup, consent, and AI triage" width="900" />
-</p>
+The browser demo makes no gateway API requests and does not run OPA, OPAL, HAPI,
+or a clinical AI model. Its outcomes do not establish live policy enforcement,
+actual data residency, clinical validity, or legal compliance. The reference
+backend uses development credentials and service stubs; it is also not a
+production deployment. Neither mode accepts real protected health information.
 
-### Screenshots
+## Run the browser demo locally
 
-| Overview | Patient lookup | Consent | AI triage |
-|:--------:|:--------------:|:-------:|:---------:|
-| ![Overview](docs/assets/overview.png) | ![Patient lookup](docs/assets/patients.png) | ![Consent](docs/assets/consent.png) | ![AI triage](docs/assets/ai-triage.png) |
-
-| Identity resolve |
-|:----------------:|
-| ![Identity resolve](docs/assets/identity.png) |
-
-The **clinician console** in [`web/`](web/) proxies gateway APIs for local demos. Start the backend with `./scripts/run-dev.sh`, then `cd web && npm install && npm run dev` on port **3100**. Regenerate visuals with `cd web && npm run screenshots` (requires a running dev server); see [`docs/assets/README.md`](docs/assets/README.md).
-
-_Synthetic FHIR only — no real PHI._
-
-## What the running stack does
-
-HAPI serves the synthetic Patient. The gateway asks OPA before it returns that Patient. OPAL delivers a consent revoke, and the next research read is 403. Treatment is consent-gated the same way: a purpose string does not skip the check.
-
-## Architecture overview
-
-| Jurisdiction cells | Component architecture | Policy + OPAL flow |
-|:------------------:|:----------------------:|:------------------:|
-| ![Jurisdiction architecture](docs/assets/architecture.png) | ![Component architecture](docs/assets/architecture-detailed.png) | ![Policy and OPAL flow](docs/assets/policy-opal-flow.png) |
-
-_Diagrams show jurisdiction cells and policy distribution — not clinical UI._
-
-## Quick start
-
-**Prerequisites:** Docker, Go 1.22+, Python 3.12+, `curl`, and PyYAML (`pip install pyyaml` for local `./scripts/verify.sh`)
+Requires Node.js **22** and npm **10.9.2–10.x**, as declared in
+[web/package.json](web/package.json).
 
 ```bash
 git clone https://github.com/SafetyMP/Healthcare-Data-Exchange.git
-cd Healthcare-Data-Exchange
+cd Healthcare-Data-Exchange/web
+npm ci
+npm run build:demo
+npm run preview:demo
+```
 
-# Hermetic definition of done (no Docker; first run may download OPA + Python venvs)
-./scripts/verify.sh
+Open [localhost:3100/Healthcare-Data-Exchange/](http://127.0.0.1:3100/Healthcare-Data-Exchange/).
+For development, mode settings, tests, and publishing, see [web/README.md](web/README.md).
 
-# Full stack: EU + US HAPI, OPAL, gateway, services (~2 min JVM boot)
+## Run the reference backend
+
+From the repository root, with Docker Compose available:
+
+```bash
 ./scripts/run-dev.sh
-
-# End-to-end proof (compose must be running; this is the runtime acceptance gate)
 ./scripts/demo.sh
+./scripts/adversarial.sh
+```
 
-# Tear down when finished
+The startup script builds the services, creates gitignored development secrets on
+first run, and waits for service health. HAPI startup can take several minutes.
+The cooperative demo exercises synthetic reads and consent changes; the adversarial
+script checks authorization and residency denial paths. See
+[backend architecture and data flows](docs/architecture/overview.md) for the service boundaries.
+
+In another terminal, start the gateway-backed frontend with the browser-demo
+switch unset:
+
+```bash
+cd web
+npm ci
+npm run dev
+# http://localhost:3100
+```
+
+Stop the local stack when finished:
+
+```bash
 ./scripts/teardown-dev.sh
-
-# Clinician console (optional — requires backend stack above)
-cd web && npm install && npm run dev   # http://localhost:3100
 ```
 
-First `run-dev.sh` generates local OPAL dev secrets under `deploy/opal/` (gitignored).
+Default teardown retains data volumes. Never commit generated secrets or use real
+patient data. The [security policy](SECURITY.md) describes reporting and boundaries.
 
-## What the demo is designed to prove
+## Verification and evidence
 
-**Status:** Rows below describe **target** E2E behaviour exercised by `./scripts/demo.sh`. They are **not** claims about production readiness. A row becomes a verified claim only when `demo.sh` exits 0 locally and in [`.github/workflows/demo-e2e.yml`](.github/workflows/demo-e2e.yml) against Compose.
+| Check | Command | What it covers |
+|---|---|---|
+| Browser demo | `cd web && npm run verify:demo` | Adapter and metadata tests, TypeScript, static export checks, browser journeys and automated accessibility |
+| Gateway frontend | `cd web && npm run verify` | TypeScript, server-mode build and frontend smoke/accessibility checks |
+| Reference services | `./scripts/verify.sh` | Repository contracts, OPA tests, Go vet/tests and Python lint/tests; no Compose |
+| Running stack | `./scripts/demo.sh` and `./scripts/adversarial.sh` | Cooperative and adversarial service scenarios; requires Compose |
 
-| Scenario | Target evidence (via `demo.sh`) |
-|:---------|:---------|
-| Intra-EU treatment read | EU-cell caller credential → residency + minimum-necessary fields |
-| Research without consent | `403 policy_denied` (reason: `consent_required`) |
-| Cross-bloc deny / exception | Deny-by-default + derivative exception when credential permits |
-| US TEFCA + SSRAA stub | 401 without US association; 200 with US SSRAA bearer |
-| Identity broker (ITI-78) | Direct resolve + gateway patient read by identifier |
-| Live consent revoke/grant | 403↔200 via OPAL with no restart |
-| AI triage gate | Human oversight required (Art. 50 transparency stub) |
-| Tenant crypto-shred | 410 Gone after key destruction |
+Install Chromium for frontend tests with `cd web && npx playwright install chromium`.
+The hermetic backend gate requires Go **1.22+**, Python **3.12+**, PyYAML, and
+`curl`; its first run may download pinned OPA and install local Python environments.
+The [contribution guide](CONTRIBUTING.md) documents environment details and checks.
 
-**Hermetic tests (`verify.sh`)** cover Rego policy, gateway handler + real bundle integration, and service stubs — but **do not** start Compose or HAPI. **Do not** cite `verify.sh` alone as proof of cross-bloc or demo scenarios.
+[GitHub Actions](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions) records
+remote check results. A passing frontend or hermetic test is not proof of a live
+exchange. [Review records](docs/README.md#design-and-verification-records) describe
+expert inspection and synthetic regression testing; improved customer engagement
+has not been measured.
 
-## Architecture
+## Repository map
 
-<p align="center">
-  <img src="docs/assets/architecture-detailed.png" alt="CHEX PoC component architecture with services and ports" width="900"/>
-</p>
+| Path | Responsibility |
+|---|---|
+| [`web/`](web/) | Next.js 16 / React / TypeScript workspace; browser demo and gateway mode |
+| [`fhir/samples/`](fhir/samples/) | Synthetic FHIR Patient fixtures |
+| [`services/`](services/) | Go gateway and Python consent, identity, and AI-governance references |
+| [`policy/`](policy/) and [`config/`](config/) | Canonical OPA rules and demo routing/identity configuration |
+| [`deploy/`](deploy/) | Local Compose stack |
+| [`docs/`](docs/) | Current product scope, architecture, design records, and historical context |
 
-<p align="center">
-  <img src="docs/assets/architecture.png" alt="EU and US jurisdiction cells with PHI-free global control plane" width="720"/>
-</p>
+Policy changes belong in this repository. The separate
+[healthcare-policy](https://github.com/SafetyMP/healthcare-policy) repository is a
+mirror, maintained by the existing sync workflow; see
+[ADR 0007](docs/adr/0007-opal-policy-mirror.md). Frontend changes do not require
+policy publication.
 
-```mermaid
-flowchart TB
-  subgraph global["Global control plane (no PHI)"]
-    GW[Gateway]
-    OPA[OPA / OPAL client]
-    CS[consent-service]
-    IB[identity-broker]
-    OPALS[OPAL server]
-  end
-  subgraph eu["EU cell"]
-    FHIR_EU[HAPI FHIR EU]
-  end
-  subgraph us["US cell"]
-    FHIR_US[HAPI FHIR US]
-  end
-  POLICY[(healthcare-policy mirror)]
-  Client --> GW
-  GW --> OPA
-  GW --> FHIR_EU
-  GW --> FHIR_US
-  GW --> IB
-  CS --> OPALS
-  POLICY --> OPALS
-  OPALS --> OPA
-```
+## Contribute and reuse
 
-| Service | Port | Role |
-|---------|------|------|
-| Gateway | 8081 | Jurisdiction router, OPA PEP, admin APIs |
-| OPA (opal-client) | 8181 | Policy decision point |
-| OPAL server | 7002 | Policy + consent sync |
-| consent-service | 8084 | Dynamic consent + OPAL publish |
-| identity-broker | 8085 | Preferred-identifier resolve |
-| ai-governance | 8082 | AI triage + oversight stub |
-| HAPI EU / US | 8080 / 8083 | Synthetic FHIR R4 patients |
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for development and review, [SUPPORT.md](SUPPORT.md)
+for questions, and [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+The [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md), and [governance](GOVERNANCE.md)
+explain direction, history, and decisions. Citation metadata is in [CITATION.cff](CITATION.cff).
 
-## Repository layout
-
-| Path | Purpose |
-|------|---------|
-| `services/gateway/` | Go jurisdiction router + PEP |
-| `services/consent-service/` | OPAL consent data source |
-| `services/identity-broker/` | ITI-78 identifier broker |
-| `services/ai-governance/` | AI governance stub |
-| `policy/` | Canonical OPA Rego (+ tests) |
-| `config/` | Routing, **eu-auth**, SSRAA (US), identity registry, OPAL profile |
-| `deploy/docker-compose.yml` | EU + US cells + OPAL stack |
-| `web/` | Next.js clinician console (BFF → gateway) |
-| `docs/` | Mandate, architecture, ADRs, roadmap |
-| `scripts/verify.sh` | Hermetic definition of done |
-| `scripts/demo.sh` | Compose E2E demonstration |
-
-## Multi-repo portfolio
-
-Policy consumed by OPAL is mirrored to [healthcare-policy](https://github.com/SafetyMP/healthcare-policy). Edit `policy/*.rego` here, run `./scripts/sync-policy-repo.sh`, then `./scripts/demo.sh`. See [specs/portfolio.yaml](specs/portfolio.yaml) and [ADR 0007](docs/adr/0007-opal-policy-mirror.md).
-
-## Documentation
-
-| Resource | Link |
-|----------|------|
-| Docs index | [docs/README.md](docs/README.md) |
-| Roadmap | [docs/roadmap.md](docs/roadmap.md) |
-| ADRs | [docs/adr/](docs/adr/) (0001–0011) |
-| Compliance mapping | [docs/architecture/compliance-mapping.md](docs/architecture/compliance-mapping.md) |
-| Changelog | [CHANGELOG.md](CHANGELOG.md) |
-| Governance | [GOVERNANCE.md](GOVERNANCE.md) |
-| Cite this repo | [CITATION.cff](CITATION.cff) |
-
-## Contributing
-
-Contributions welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `./scripts/verify.sh` before opening a PR. When touching gateway auth, compose, or demo paths: **`./scripts/demo.sh` must pass** (same gate as [demo-e2e CI](.github/workflows/demo-e2e.yml)). Need help? See [SUPPORT.md](SUPPORT.md).
-
-## Security
-
-Synthetic FHIR samples only — no real PHI. See [SECURITY.md](SECURITY.md) for vulnerability reporting via [private vulnerability reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new).
-
-## License
-
-Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Licensed under **Apache License 2.0**. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

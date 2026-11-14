@@ -1,23 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title">
-  <title id="title">Cloud Healthcare Exchange social preview</title>
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0c4a6e"/>
-      <stop offset="50%" stop-color="#1e3a5f"/>
-      <stop offset="100%" stop-color="#312e81"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="630" fill="url(#g)"/>
-  <circle cx="180" cy="120" r="80" fill="#0ea5e9" opacity="0.25"/>
-  <circle cx="1020" cy="520" r="120" fill="#a78bfa" opacity="0.2"/>
-  <text x="80" y="200" fill="#f8fafc" font-family="system-ui,Segoe UI,sans-serif" font-size="56" font-weight="800">Cloud Healthcare Exchange</text>
-  <text x="80" y="270" fill="#bae6fd" font-family="system-ui,sans-serif" font-size="28">Federated HIE reference | OPA | OPAL | FHIR</text>
-  <text x="80" y="340" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="22">EU + US jurisdiction cells | policy-as-code | live consent</text>
-  <rect x="80" y="400" width="220" height="44" rx="8" fill="#0ea5e9"/>
-  <text x="190" y="428" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600">verify.sh</text>
-  <rect x="320" y="400" width="220" height="44" rx="8" fill="#8b5cf6"/>
-  <text x="430" y="428" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600">demo.sh</text>
-  <rect x="560" y="400" width="280" height="44" rx="8" fill="#f97316"/>
-  <text x="700" y="428" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Apache-2.0</text>
-  <text x="80" y="520" fill="#64748b" font-family="system-ui,sans-serif" font-size="18">github.com/SafetyMP/Healthcare-Data-Exchange</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Healthcare Data Exchange</title>
+  <desc id="description">Consent. Requesting teams. Regional access. A guided synthetic demo with a separate FHIR, OPA and OPAL reference backend.</desc>
+  <rect width="1280" height="640" fill="#173c32"/>
+  <path d="M850 0H1280V470H1080C930 470 850 335 850 180Z" fill="#214b3d"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <!-- Product mark: the same sage and forest palette as the demo. -->
+    <rect x="64" y="54" width="46" height="46" rx="12" fill="#d5e8ad"/>
+    <path d="M80 77h14M87 70v14" stroke="#214d3b" stroke-width="3" stroke-linecap="round"/>
+    <text x="128" y="83" fill="#d5e3d6" font-size="17" letter-spacing="2.4">EXPLORE THE EXCHANGE</text>
+
+    <text x="60" y="211" fill="#f6f7ef" font-size="72" font-weight="700" letter-spacing="-2.5">Healthcare</text>
+    <text x="60" y="292" fill="#f6f7ef" font-size="72" font-weight="700" letter-spacing="-2.5">Data Exchange</text>
+    <text x="64" y="355" fill="#d5e8ad" font-size="25">Consent. Requesting teams. Regional access.</text>
+    <text x="64" y="410" fill="#c0d3c5" font-size="20">Follow the decisions behind a patient-data request.</text>
+
+    <!-- A conceptual regional-access diagram, not a live status display. -->
+    <text x="887" y="150" fill="#d5e3d6" font-size="13" letter-spacing="2">REGIONAL ACCESS</text>
+    <path d="M942 252v34h168v-34M1026 286v35" fill="none" stroke="#8bab92" stroke-width="2"/>
+    <rect x="882" y="176" width="120" height="76" rx="14" fill="#eff3e7"/>
+    <rect x="1050" y="176" width="120" height="76" rx="14" fill="#eff3e7"/>
+    <text x="942" y="222" text-anchor="middle" fill="#254d39" font-size="23" font-weight="700">EU cell</text>
+    <text x="1110" y="222" text-anchor="middle" fill="#254d39" font-size="23" font-weight="700">US cell</text>
+    <circle cx="1026" cy="286" r="5" fill="#d5e8ad"/>
+    <rect x="906" y="321" width="240" height="86" rx="14" fill="#d5e8ad"/>
+    <path d="M931 353l8-3 8 3v9c0 8-8 12-8 12s-8-4-8-12Z" fill="none" stroke="#254d39" stroke-width="2" stroke-linejoin="round"/>
+    <text x="963" y="359" fill="#254d39" font-size="20" font-weight="700">Access check</text>
+    <text x="963" y="383" fill="#426148" font-size="15">Purpose + consent</text>
+
+    <!-- The public browser demo and reference backend are separate modes. -->
+    <path d="M64 477H1216" stroke="#50705b"/>
+    <rect x="64" y="510" width="8" height="64" rx="4" fill="#d5e8ad"/>
+    <text x="92" y="534" fill="#f6f7ef" font-size="24" font-weight="700">Guided synthetic demo</text>
+    <text x="92" y="567" fill="#c0d3c5" font-size="18">Browser-based walkthrough</text>
+    <path d="M565 510v64" stroke="#50705b"/>
+    <text x="606" y="534" fill="#f6f7ef" font-size="23" font-weight="700">FHIR · OPA · OPAL reference backend</text>
+    <text x="606" y="567" fill="#c0d3c5" font-size="18">Separate local development stack</text>
+  </g>
 </svg>

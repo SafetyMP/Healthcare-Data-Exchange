@@ -1,44 +1,57 @@
 name: Bug report
-description: Report incorrect behavior in verify, demo, or services
+description: Report a problem with the guided demo, reference backend, or documentation
 title: "[bug]: "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use synthetic data only. Do not include real PHI or credentials.
-  - type: textarea
-    id: description
+        Use fictional or synthetic data only. Do not include real health information, credentials, tokens, or private records. Report vulnerabilities through [private security reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new), not this public form.
+        An access denial can be an expected scenario result; include the reason shown and your selected context.
+  - type: dropdown
+    id: mode
     attributes:
-      label: What happened?
-      description: What did you expect vs what you observed?
+      label: Where does the problem occur?
+      options:
+        - Hosted GitHub Pages demo
+        - Local static browser demo
+        - Local live-gateway frontend
+        - Reference backend / policy / OPAL
+        - Documentation / setup / CI
+        - Another area or unsure
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Describe what you expected, what happened, and how it affected your task.
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
       label: Steps to reproduce
+      description: Include the route or guide step and synthetic patient, purpose, and requesting team when relevant. For backend issues, include the commands used and sanitized output.
       placeholder: |
-        1. ./scripts/run-dev.sh
-        2. ./scripts/demo.sh
-        3. ...
+        1. Open the demo and start the guided walkthrough.
+        2. On the consent step, select ...
+        3. Choose ...
+        4. Observe ...
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Commit or branch
-      placeholder: main @ abc1234
-  - type: dropdown
-    id: area
+      label: URL and commit or branch, if known
+      placeholder: https://safetymp.github.io/Healthcare-Data-Exchange/consent/ or main at abc1234
+  - type: textarea
+    id: environment
     attributes:
-      label: Area
-      options:
-        - verify.sh / CI
-        - demo.sh / docker-compose
-        - gateway
-        - policy / OPA
-        - OPAL / consent
-        - identity-broker
-        - documentation
-        - other
+      label: Environment and interaction details
+      description: For browser issues, include browser, device, viewport, and keyboard/pointer/screen reader use. For backend issues, include OS and relevant tool versions.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or sanitized logs
+      description: Remove private data and secrets before attaching evidence. Describe the visual issue in text as well.

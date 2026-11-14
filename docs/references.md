@@ -1,88 +1,60 @@
-# References — Cloud Healthcare Exchange
+# References — Healthcare Data Exchange
 
-> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+This index separates current implementation sources from historical design and
+regulatory research. Source code explains behavior; a dated test result is needed
+to establish that a particular revision was exercised successfully.
 
-Authoritative external sources cited in mandate, architecture, and ADRs. Verify URLs periodically; regulatory status changes.
+## Current project and browser sources
 
----
+| Source | What to use it for |
+|---|---|
+| [Project overview](../README.md) and [product mandate](product-mandate.md) | Current identity, intended audience, scope and limits |
+| [Web README](../web/README.md) | Browser development, demo build and verification commands |
+| [Demo functions](../web/src/lib/demo.ts) | Fictional patients, consent, regional decisions, limited fields and Activity |
+| [Walkthrough definitions](../web/src/lib/walkthrough.ts) | Nine checkpoints and matching action requirements |
+| [Guide component](../web/src/components/walkthrough/guided-walkthrough.tsx) | Start/restart, pause/resume, navigation and checkpoint persistence |
+| [API dispatch](../web/src/lib/api.ts) and [Next.js configuration](../web/next.config.ts) | Boundary between browser simulation and backend requests |
+| [Web test suite](../web/tests/) | Automated scenarios; not evidence of a current passing run by itself |
+| [Architecture](architecture/overview.md) and [data flows](architecture/data-flows.md) | How the two execution modes fit together |
 
-## FedRAMP and US federal
+## Reference backend sources
 
-| ID | Source | Use in this project |
-|----|--------|---------------------|
-| REF-FED-01 | [FedRAMP.gov](https://www.fedramp.gov/) | No government-wide US-person citizenship requirement |
-| REF-FED-02 | NIST SP 800-53 Rev 5 **SA-9(5)** — External System Services (location) | US jurisdiction for High-impact data processing/storage |
-| REF-FED-03 | [FedRAMP High baseline](https://www.fedramp.gov/) (410 controls) | Architecture alignment target |
-| REF-FED-04 | [TEFCA / RCE](https://www.healthit.gov/topic/interoperability/trusted-exchange-framework-and-common-agreement-tefca) | US QHIN exchange patterns (PoC pattern-only) |
-| REF-FED-05 | TEFCA Facilitated FHIR / HL7 FAST **SSRAA** (UDAP) | FHIR node authentication; new nodes **2027-01-01**; interim Jul/Nov 2026 milestones |
-| REF-FED-06 | [Common Agreement 2.1](https://www.healthit.gov/topic/interoperability/trusted-exchange-framework-and-common-agreement-tefca) | TEFCA framework terms; CHEX is not a QHIN signatory |
-| REF-FED-07 | Facilitated FHIR Implementation SOP **2.0** (effective 2026-03-08) | FHIR R4 4.0.1, US Core ≥ 6.1.0, XP codes, SSRAA path |
-| REF-FED-08 | [HTI-1 final rule](https://www.healthit.gov/) — USCDI v3 in certification | USCDI v3 floor as of **2026-01-01** |
-| REF-FED-09 | [HTI-2 final rule](https://www.healthit.gov/regulations/hti-rules/hti-2-final-rule/) — TEFCA / Manner Exception | 45 CFR Part 172 framing; not a CHEX certification target |
-| REF-FED-10 | CMS-0057-F Interoperability and Prior Authorization | **Out of PoC scope** (payer APIs; full set 2027-01-01) |
+| Source | What to use it for |
+|---|---|
+| [Gateway handlers](../services/gateway/internal/handlers/handlers.go) and [caller principals](../services/gateway/internal/principal/) | Authenticated request handling and enforcement |
+| [Rego policy](../policy/authz.rego) | Consent, regional restrictions, exchange-purpose checks and permitted fields |
+| [Consent service](../services/consent-service/) and [ADR 0008](adr/0008-opal-consent-sync.md) | Consent state and OPAL publication |
+| [ADR 0011](adr/0011-opal-production-hardening.md) | Recorded OPAL hardening decisions and limits |
+| [Identity broker](../services/identity-broker/chex_identity/main.py) | Demo registry resolution and registration |
+| [AI governance stub](../services/ai-governance/chex_ai_governance/main.py) | Fixed-score outputs, in-memory decision records and approve/reject endpoints |
+| [Compose stack](../deploy/docker-compose.yml) and [synthetic samples](../fhir/samples/) | Reference services and fixture data |
+| [Threat model](../specs/threat-model.yaml) and [ADR 0000](adr/0000-threat-model.md) | Caller and trust boundaries |
+| [Hermetic verification](../scripts/verify.sh), [cooperative demo](../scripts/demo.sh), [adversarial checks](../scripts/adversarial.sh) | Separate scopes of backend verification |
+| [Security policy](../SECURITY.md) | Supported scope and reporting process |
 
----
+## Technical background
 
-## GDPR and EU data protection
+These upstream links provide background on the technologies used. They do not
+certify this project's implementation or replace its pinned dependencies and tests.
 
-| ID | Source | Use in this project |
-|----|--------|---------------------|
-| REF-EU-01 | GDPR Articles 5, 6, 9, 17, 25, 32, 35 | Lawfulness, special categories, erasure, DPIA |
-| REF-EU-02 | EDPB guidance on international transfers | SCC + TIA; DPF not default |
-| REF-EU-03 | *Trump v. Slaughter*, US Supreme Court (2026-06-29) | DPF institutional fragility |
-| REF-EU-04 | noyb “Schrems III” announcement; *Latombe* CJEU appeal | DPF risk register |
-| REF-EU-05 | Hunton Andrews Kurth; Fieldfisher analyses (2026) | DPF post-ruling commentary |
+- [HL7 FHIR R4](https://hl7.org/fhir/R4/) — resource and API specification.
+- [HAPI FHIR](https://hapifhir.io/) — reference FHIR server project.
+- [Open Policy Agent](https://www.openpolicyagent.org/) — policy engine and Rego.
+- [OPAL](https://github.com/permitio/opal) — policy and data distribution project.
 
----
+## Preserved historical bibliography
 
-## EHDS and cross-border health (EU)
+The [original reference list at revision bae1c21](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/references.md)
+preserves reference identifiers `REF-FED-*`, `REF-EU-*`, `REF-EHDS-*`, `REF-AI-*`
+and `REF-INT-*` used by earlier “Cloud Healthcare Exchange” design documents.
+It includes standards, regulatory texts, commentary, and proposed regulatory
+calendars. Entries vary in precision; some name a source without a direct link.
+They have not been revalidated in this documentation update and should not be
+presented as current legal guidance or verified compliance evidence.
 
-| ID | Source | Use in this project |
-|----|--------|---------------------|
-| REF-EHDS-01 | Regulation (EU) 2025/327 — European Health Data Space | Primary/secondary use framework |
-| REF-EHDS-02 | [MyHealth@EU / eHDSI](https://health.ec.europa.eu/ehealth-digital-health-and-care/digital-health-and-care/electronic-cross-border-health-services_en) | NCP federated access |
-| REF-EHDS-03 | IHE ITI-78 (PDQm), ITI-119 (`$match`) | Patient identity resolution |
-| REF-EHDS-04 | IHE ATNA — audit trail patterns | Audit retention vs erasure tension |
-| REF-EHDS-05 | MyHealth@EU AI Act tutorial; PMC sectoral retention | Identifiers in audit logs |
-
----
-
-## EU AI Act
-
-| ID | Source | Use in this project |
-|----|--------|---------------------|
-| REF-AI-01 | Regulation (EU) 2024/1689 — Artificial Intelligence Act | High-risk AI obligations |
-| REF-AI-02 | Council (2026-06-29); Parliament (2026-06-16) — Digital Omnibus package (project calendar) | Confirm against Official Journal |
-| REF-AI-03 | Art. 50 — transparency (project calendar 2026-08-02) | Labeling / disclosure |
-| REF-AI-04 | Annex III standalone high-risk (2027-12-02) | Timeline |
-| REF-AI-05 | Annex I embedded medical-device AI (2028-08-02) | Timeline |
-| REF-AI-06 | JDSupra; Gibson Dunn summaries (2026) | Secondary date commentary |
-
----
-
-## Interoperability and standards
-
-| ID | Source | Use in this project |
-|----|--------|---------------------|
-| REF-INT-01 | HL7 FHIR R4 (4.0.1) | Data plane API |
-| REF-INT-02 | [US Core IG](https://hl7.org/fhir/us/core/) **6.1.0** | US PoC / TEFCA Facilitated FHIR floor |
-| REF-INT-03 | [USCDI](https://www.healthit.gov/isp/united-states-core-data-interoperability-uscdi) **v3** (floor); v6 published; Draft/final **v7** (Jul 2026 target) | Required data classes — PoC subset only |
-| REF-INT-04 | FHIR Provenance | Audit lineage |
-| REF-INT-05 | [HAPI FHIR](https://hapifhir.io/) | Reference server; `HFJ_SPIDX_*` search index behavior |
-| REF-INT-06 | [OPA](https://www.openpolicyagent.org/) / Rego | Policy engine |
-| REF-INT-07 | [Cedar](https://www.cedarpolicy.com/) | Noted for entity authz (ADR 0002) |
-| REF-INT-08 | OPAL — policy sync | Consent revocation propagation (target state) |
-| REF-INT-09 | [ONC Standards Bulletin 2026-1](https://www.healthit.gov/standards-and-technology/onc-standards-bulletin/onc-standards-bulletin-2026-1/) | USCDI v7 draft/final schedule |
-| REF-INT-10 | TEFCA Exchange Purpose (XP) SOP — codes e.g. `T-TREAT`, `T-IAS`, `T-HCO` | PoC `X-TEFCA-XP` allowlist |
-
----
-
-## Internal project documents
-
-| Document | Path |
-|----------|------|
-| Implementation plan | [plan.md](plan.md) |
-| Product mandate | [product-mandate.md](product-mandate.md) |
-| Architecture | [architecture/](architecture/) |
-| ADRs | [adr/](adr/) |
-| Roadmap | [roadmap.md](roadmap.md) |
+For original context, see the preserved
+[compliance mapping](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/architecture/compliance-mapping.md),
+[implementation plan](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/plan.md),
+and [roadmap](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/roadmap.md).
+The [ADRs](adr/) remain the decision history. Consult primary sources afresh before
+reusing historical legislative dates or legal interpretations for any new purpose.

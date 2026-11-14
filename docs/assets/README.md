@@ -1,29 +1,67 @@
 # Repository assets
 
-Visual assets for README, docs, and GitHub social preview.
+Visual assets for Healthcare Data Exchange documentation and social sharing.
+All patient examples are synthetic.
 
-## Clinician console (web UI)
+## Current social preview
+
+The preview matches the guided demo's forest-green, sage and cream palette. It
+presents the browser walkthrough and the separate FHIR · OPA · OPAL reference
+backend as two modes, without implying clinical readiness or a live backend on
+GitHub Pages.
 
 | File | Purpose |
 |------|---------|
-| [`demo.gif`](demo.gif) | README hero — overview, patient lookup, consent, AI triage (4 frames, 2s each). Regenerate with `cd web && npm run screenshots`. |
-| [`overview.png`](overview.png) | Dashboard / workflow index |
-| [`patients.png`](patients.png) | Policy-gated FHIR patient read |
-| [`consent.png`](consent.png) | Consent grant/revoke admin |
-| [`ai-triage.png`](ai-triage.png) | AI governance triage stub |
-| [`identity.png`](identity.png) | ITI-78-style identifier resolve |
+| [`social-preview.svg`](social-preview.svg) | Editable source, exactly 1280 × 640 |
+| [`social-preview.png`](social-preview.png) | Canonical rendered PNG, exactly 1280 × 640 |
+| [`../../.github/social-preview.png`](../../.github/social-preview.png) | Identical copy for GitHub repository social preview upload |
+| [`../../web/public/social-preview.png`](../../web/public/social-preview.png) | Identical copy published by the website for social metadata |
 
-Synthetic demo data only — no real PHI. Regenerate when the clinician console layout changes materially:
+After editing the SVG, install the web dependencies if needed, then run the
+social-only renderer from the repository root:
 
 ```bash
-./scripts/run-dev.sh          # backend stack (optional for static UI capture)
-cd web && npm ci && npm run build && npm run start
-cd web && npm run screenshots # or npm run screenshots:rebuild-gif from existing PNGs
+cd web && npm ci && cd ..
+./scripts/render-social-preview.sh
 ```
+
+The script uses the web app's installed Sharp renderer, verifies 1280 × 640 output,
+and synchronizes all three PNG copies without regenerating architecture diagrams.
+Commit the source and all copies together. Upload `.github/social-preview.png` in
+GitHub repository **Settings → General → Social preview**; committing the image
+does not update that repository setting. The website copy is published through
+the GitHub Pages workflow.
+
+## Product images and historical captures
+
+| File | Purpose |
+|------|---------|
+| [`redesigned-workspace.jpg`](redesigned-workspace.jpg) | Redesigned workspace reference image; a static illustration, not verification of current behavior |
+| [`demo.gif`](demo.gif) | Historical four-frame console tour (overview, patient lookup, consent and AI triage); not the current guided walkthrough |
+| [`overview.png`](overview.png) | Retained console overview capture |
+| [`patients.png`](patients.png) | Retained patient-access capture |
+| [`consent.png`](consent.png) | Retained consent-management capture |
+| [`ai-triage.png`](ai-triage.png) | Retained AI-governance capture |
+| [`identity.png`](identity.png) | Retained identity-matching capture |
+
+These retained screenshots and GIF may lag the current interface. Prefer the
+[live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/) for current
+behavior. The capture utility remains available for an intentional refresh:
+
+```bash
+# In one terminal, serve the built application.
+cd web && npm ci && npm run build && npm run start
+# In another terminal, capture the running UI.
+cd web && npm run screenshots
+```
+
+`npm run screenshots:rebuild-gif` rebuilds the GIF from existing PNGs only; it does
+not capture or validate the current UI. Captures must use synthetic data.
 
 ## README status badges
 
-Local SVGs used when third-party badge hosts are flaky. CI status still comes from GitHub Actions.
+Local SVGs used when third-party badge hosts are flaky. CI status still comes
+from GitHub Actions.
 
 | File | Purpose |
 |------|---------|
@@ -33,28 +71,19 @@ Local SVGs used when third-party badge hosts are flaky. CI status still comes fr
 
 ## Architecture diagrams
 
-Sources are SVG; PNGs are generated for crisp rendering on GitHub and social platforms.
+Sources are SVG; PNGs are rendered for documentation. These diagrams describe
+the reference backend rather than the browser-local simulation.
 
 | File | Purpose |
 |------|---------|
 | [`architecture.svg`](architecture.svg) | Jurisdiction-cell overview (EU / US + global plane) |
-| [`architecture.png`](architecture.png) | PNG export (1280px) |
-| [`architecture-detailed.svg`](architecture-detailed.svg) | PoC component diagram with ports and services |
-| [`architecture-detailed.png`](architecture-detailed.png) | PNG export (1400px) |
+| [`architecture.png`](architecture.png) | PNG export (1280px wide) |
+| [`architecture-detailed.svg`](architecture-detailed.svg) | Reference component diagram with ports and services |
+| [`architecture-detailed.png`](architecture-detailed.png) | PNG export (1400px wide) |
 | [`policy-opal-flow.svg`](policy-opal-flow.svg) | Policy mirror + OPAL + consent distribution |
 | [`policy-opal-flow.png`](policy-opal-flow.png) | PNG export |
-| [`social-preview.svg`](social-preview.svg) | GitHub social preview source (1280x630) |
-| [`social-preview.png`](social-preview.png) | Upload to **Settings → Social preview** |
 
-Regenerate PNGs after editing SVG sources:
-
-```bash
-./scripts/render-assets.sh
-```
-
-Social preview upload (one-time browser login):
-
-```bash
-./scripts/upload-social-preview.sh --login
-./scripts/upload-social-preview.sh
-```
+For an intentional full diagram refresh, run `./scripts/render-assets.sh`. That
+legacy command also renders the social preview; follow it with
+`./scripts/render-social-preview.sh` to synchronize the website copy and keep all
+social PNGs identical. For social-only changes, use only the social renderer above.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cloud Healthcare Exchange — Definition of Done (hermetic).
+# Healthcare Data Exchange — Definition of Done (hermetic).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

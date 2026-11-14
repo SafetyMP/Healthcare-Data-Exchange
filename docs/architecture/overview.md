@@ -1,186 +1,102 @@
-# Architecture Overview — Cloud Healthcare Exchange
+# Architecture — Healthcare Data Exchange
 
-> **What runs.** The [root README](../../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+Healthcare Data Exchange has two execution modes: a guided synthetic browser demo
+and a separate FHIR/OPA/OPAL reference backend. The public demo runs locally in the
+visitor's browser; its decisions do not establish that backend services ran.
+The [project overview](../../README.md) and [product mandate](../product-mandate.md)
+define the current scope.
 
-**Product:** Cloud Healthcare Exchange  
-**Version:** 0.1 (design authority)  
-**See also:** [compliance-mapping.md](compliance-mapping.md), [data-flows.md](data-flows.md)
+## Browser demo
 
----
-
-## Problem statement
-
-Health data exchange must span organizations and jurisdictions while respecting **conflicting legal regimes**: US federal cloud security (FedRAMP High baseline), EU GDPR and EHDS, and EU AI Act obligations for AI-assisted clinical features. A single global database fails sovereignty, erasure, and transfer rules.
-
-Cloud Healthcare Exchange solves this as a **federation of jurisdiction cells** joined by a **PHI-free control plane**.
-
----
-
-## Logical architecture
-
-<p align="center">
-  <img src="../assets/architecture.png" alt="Jurisdiction cells and global control plane" width="720"/>
-</p>
-
-<p align="center">
-  <img src="../assets/architecture-detailed.png" alt="PoC services, ports, and regional FHIR cells" width="900"/>
-</p>
-
-<p align="center">
-  <img src="../assets/policy-opal-flow.png" alt="Policy mirror and OPAL distribution" width="800"/>
-</p>
-
-```mermaid
-flowchart TB
-  subgraph clients [Clients]
-    EUClin[EU Clinician / NCP client]
-    USClin[US Clinician / QHIN client]
-  end
-
-  subgraph poc [PoC runtime — single global gateway]
-    GW[Gateway — router + PEP]
-    OPA[OPA opal-client PDP]
-    CS[consent-service]
-    IB[identity-broker]
-    OPALS[OPAL server]
-    AIGov[ai-governance]
-  end
-
-  subgraph eu [EU jurisdiction cell]
-    EFHIR[HAPI FHIR EU + postgres-eu]
-  end
-
-  subgraph us [US jurisdiction cell]
-    UFHIR[HAPI FHIR US + postgres-us]
-  end
-
-  EUClin --> GW
-  USClin --> GW
-  GW --> OPA
-  GW --> IB
-  GW --> EFHIR
-  GW --> UFHIR
-  GW --> AIGov
-  CS --> OPALS
-  OPALS --> OPA
-```
-
-> **PoC note:** Production target architecture uses **per-cell region gateways** (see ADR 0001). The walking skeleton runs one `gateway` service that routes to both FHIR cells via `config/routing.yaml`.
-
-### Planes
-
-| Plane | Contents | PHI |
-|-------|----------|-----|
-| **Global control** | Routing, tenants, policy bundles, AI model registry metadata, identity broker state (pseudonymous routing tokens) | No |
-| **Regional data** | FHIR resources, Postgres, regional keys, regional audit | Yes (in-region) |
-
----
-
-## Components
-
-### Jurisdiction router (Go)
-
-- Terminates client requests (TLS, authn stub → SSRAA/UDAP in production).
-- Selects target cell from tenant config and patient home jurisdiction.
-- Delegates authorization to regional PEP; never caches PHI in global memory.
-
-### Policy Enforcement Point (Go, in-region)
-
-- Calls OPA with structured input: subject, purpose, consent flags, resource type, requester jurisdiction.
-- Enforces **minimum necessary** response shaping (field filtering).
-- Emits audit events to regional sink.
-
-### OPA (Rego PDP)
-
-- Evaluates consolidated `policy/authz.rego` (residency, consent via `data.consent`, purpose).
-- PoC: `opal-client` sidecar; HTTP API from gateway.
-- **OPAL consent sync implemented** (ADR 0008): `consent-service` publishes revocations; no gateway restart.
-- Target: Envoy `ext_authz` sidecar in production mesh.
-
-### FHIR data plane (HAPI + Postgres)
-
-- One database per jurisdiction cell (separate-DB isolation).
-- US Core **6.1.0** + USCDI **v3** floor for US cell (PoC subset); EU profiles for EU cell in target state. TEFCA Facilitated FHIR pattern only (not QHIN).
-- Search indexes (`HFJ_SPIDX_*`) constrain erasure granularity (see ADR 0003).
-
-### Key custody
-
-- Envelope encryption with region/tenant master keys.
-- PoC: software KMS stand-in representing Cloud KMS / Key Vault / CloudHSM.
-
-### AI governance (Python/FastAPI)
-
-- Model registry, inference decision log, human-oversight gate, Art. 50 transparency flag.
-- Applies only when gateway invokes an **AI feature** — not for deterministic reads.
-
-### Identity broker
-
-- Federated lookup: route to home NCP / regional MPI via identifier or constrained `$match`.
-- No EU-wide MPI (ADR 0006).
-
----
-
-## Reference slice (walking skeleton)
-
-**PoC on `main` (Phase 4b):** dual EU + US cells, single global gateway, OPAL consent sync, identity broker, SSRAA stub.
-
-| Service | Role |
-|---------|------|
-| `gateway` | Global router + PEP (proxies to identity-broker, consent-service, FHIR cells) |
-| `opal-client` + `opal-server` | PDP + policy/consent distribution |
-| `consent-service` | Dynamic consent + OPAL publish |
-| `identity-broker` | ITI-78-style identifier resolve |
-| `hapi-eu` / `hapi-us` + Postgres | Regional FHIR data planes |
-| `ai-governance` | AI triage + oversight stub |
-
-Phase 1–3 delivered the EU-centric skeleton; Phase 4a/4b extended to US cell, OPAL hardening, and dedicated broker service. See [roadmap.md](../roadmap.md).
-
----
-
-## Deployment targets
-
-| Environment | Orchestration |
-|-------------|---------------|
-| Local dev | `docker-compose` via `scripts/run-dev.sh` |
-| Production target | Kubernetes, GitOps, service mesh (mTLS), Kyverno admission, OPA `ext_authz` |
-
-Out of scope for reference slice: Terraform, GovCloud, multi-region K8s.
-
----
-
-## Security boundaries
+The Next.js application is built with `NEXT_PUBLIC_DEMO_MODE=true` and exported as
+static files for GitHub Pages. [Build configuration](../../web/next.config.ts)
+disables the backend rewrite in this mode. [API dispatch](../../web/src/lib/api.ts)
+calls the local [simulation functions](../../web/src/lib/demo.ts), not the gateway.
 
 ```mermaid
 flowchart LR
-  subgraph trust [Trust boundaries]
-    Internet[Internet / QHIN / NCP]
-    Global[Global control — low PHI trust]
-    Regional[Regional cell — high PHI trust]
-    Data[Postgres + keys]
-  end
-  Internet -->|mTLS + auth| Global
-  Global -->|route only| Regional
-  Regional --> Data
+  Visitor[Visitor] --> Forms[Patient and consent forms]
+  Guide[Nine-checkpoint guide] --> Forms
+  Forms --> Simulation[Browser simulation]
+  Simulation --> Results[Decision and returned fields]
+  Simulation --> Session[Tab consent and activity]
+  Forms --> Checkpoints[Observed action checkpoints]
+  Checkpoints --> Guide
 ```
 
-- **Fail closed:** PDP deny → no FHIR read.
-- **Default deny cross-border PHI** — derivatives only with explicit policy path.
-- **Secrets:** never in repo; `protect-secrets` hook blocks `.env` reads in agent sessions.
+Four fictional patient records support exploration of purpose-specific consent,
+requester presets, regional restrictions, and a limited derivative exception. The
+[nine checkpoints](data-flows.md#guided-browser-walkthrough) use the same forms as
+free exploration. The guide observes completed matching actions; it does not
+submit access requests or save consent on the visitor's behalf.
 
----
+Consent, recent activity, selected context, and guide progress use browser session
+storage. The demo falls back to page memory when storage is unavailable; persistence
+across reloads is then unavailable. Starting or restarting the guide resets this
+tab's consent and activity. Pausing preserves them. Reset demo also clears guide
+progress. These are synthetic preferences, not changes to patient records or
+production authorization policies.
 
-## Related ADRs
+Identity matching uses a small synthetic registry. The AI oversight page generates
+a fixed example marked as pending human review. It neither runs a clinical model
+nor provides approve/reject controls. Activity is a tab-local list, not a production
+audit log.
 
-| ADR | Topic |
-|-----|-------|
-| [0001](../adr/0001-jurisdiction-cells.md) | Jurisdiction cells |
-| [0002](../adr/0002-policy-opa-cedar.md) | OPA + Cedar notes |
-| [0003](../adr/0003-key-custody-crypto-shred.md) | Keys and erasure |
-| [0004](../adr/0004-fhir-us-core-interop.md) | FHIR / US Core |
-| [0005](../adr/0005-ai-governance-layer.md) | AI governance |
-| [0006](../adr/0006-patient-identity-matching.md) | Patient identity |
-| [0007](../adr/0007-opal-policy-mirror.md) | Policy mirror repo |
-| [0008](../adr/0008-opal-consent-sync.md) | OPAL consent sync |
-| [0009](../adr/0009-ssraa-auth-stub.md) | SSRAA authentication stub |
-| [0010](../adr/0010-identity-broker-service.md) | Identity broker service |
-| [0011](../adr/0011-opal-production-hardening.md) | OPAL hardening |
+## Separate reference backend
+
+With demo mode disabled, the web application rewrites `/api/*` to the configured
+Go gateway. Local Compose supplies two HAPI FHIR/Postgres cells and the supporting
+services. This is a local reference implementation, not geographically deployed EU
+and US infrastructure.
+
+```mermaid
+flowchart LR
+  Console[Web console in backend mode] --> Gateway[Go gateway]
+  Gateway --> Principal[Verified demo caller principal]
+  Gateway --> OPA[OPA policy decision]
+  Gateway --> Identity[Identity broker]
+  Gateway --> EU[HAPI EU and Postgres]
+  Gateway --> US[HAPI US and Postgres]
+  Gateway --> Consent[Consent service]
+  Consent --> OPAL[OPAL]
+  OPAL --> OPA
+  Gateway --> AI[AI governance stub]
+```
+
+| Component | Implemented role | Source |
+|---|---|---|
+| Go gateway | Resolves caller identity, evaluates policy, routes reads and filters returned fields | [handlers](../../services/gateway/internal/handlers/handlers.go), [principal](../../services/gateway/internal/principal/) |
+| OPA / Rego | Checks purpose-specific consent, regional rules, permitted exception and exchange-purpose codes | [policy](../../policy/authz.rego) |
+| Consent service / OPAL | Publishes consent data used by OPA | [ADR 0008](../adr/0008-opal-consent-sync.md), [ADR 0011](../adr/0011-opal-production-hardening.md) |
+| HAPI FHIR / Postgres | Separate synthetic EU and US data stores in the Compose stack | [Compose](../../deploy/docker-compose.yml), [samples](../../fhir/samples/) |
+| Identity broker | Preferred-identifier or subject lookup in a demo registry, with a registration endpoint | [service](../../services/identity-broker/chex_identity/main.py) |
+| AI governance | Fixed-score stub, in-memory model/decision records and approve/reject endpoints | [service](../../services/ai-governance/chex_ai_governance/main.py) |
+| Software key store | Reference tenant-key lifecycle and shred behavior; not production HSM or complete database erasure | [implementation](../../services/gateway/internal/crypto/keystore.go), [ADR 0003](../adr/0003-key-custody-crypto-shred.md) |
+
+Backend patient-read identity comes from verified per-cell demo credentials.
+Browser query parameters select demo context; they are not backend authentication.
+See [ADR 0000](../adr/0000-threat-model.md) and the
+[threat-model specification](../../specs/threat-model.yaml).
+
+## Evidence boundaries
+
+- `cd web && npm run verify:demo` checks the browser implementation against local
+  synthetic scenarios. A successful run is not proof of the deployed revision.
+- `./scripts/verify.sh` checks backend code, policy and repository contracts without
+  a running Compose stack. It does not run the browser suite.
+- `./scripts/demo.sh` and `./scripts/adversarial.sh` exercise a running backend.
+  Claims about those paths require their own results for the revision tested.
+- A deployed-browser review verifies the particular URL, revision and interactions
+  observed. It does not establish compliance, clinical safety or production readiness.
+
+## Historical target architecture
+
+The [original architecture at revision bae1c21](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/architecture/overview.md)
+retains the earlier “Cloud Healthcare Exchange” design, illustrations and proposed
+federated control plane. Per-cell gateways, NCP/QHIN federation, Kubernetes/service
+mesh, HSM custody and production compliance ambitions are historical proposals,
+not features established by the browser demo. The [ADRs](../adr/) preserve the
+decision record; each document's status and implementation limits still matter.
+
+See also [data flows](data-flows.md), [compliance and evidence boundaries](compliance-mapping.md),
+and the [reference index](../references.md).

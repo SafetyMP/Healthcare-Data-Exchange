@@ -1,32 +1,47 @@
 name: Feature request
-description: Suggest an enhancement aligned with the product mandate
+description: Suggest a clearer workflow, accessible interaction, or reference-backend improvement
 title: "[feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        CHEX is a reference implementation toward FedRAMP / GDPR / EHDS / TEFCA patterns — not a production HIE product. Features should fit [docs/product-mandate.md](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/product-mandate.md) and [docs/roadmap.md](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/roadmap.md).
+        Healthcare Data Exchange is a guided synthetic browser demo for consent, requesting-team and regional access scenarios, with a separate reference backend. Explain the user problem and how the proposal fits that scope. Use synthetic examples only; do not post real health information or secrets.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area would this improve?
+      options:
+        - Guided walkthrough / first-time experience
+        - Consent / requesting-team / regional access workflow
+        - Accessibility / responsive design
+        - Live-gateway frontend
+        - Reference backend / policy / OPAL
+        - Documentation / contribution experience
+        - Another area or unsure
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
-      label: Problem or use case
-      description: What gap does this address?
+      label: User and problem
+      description: Who encounters the problem, what are they trying to do, and where does the current experience fall short?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Proposed approach
-      description: High-level solution or ADR-worthy decision
+      label: Proposed behavior
+      description: Describe the resulting experience, with a synthetic scenario if useful. Alternatives are welcome.
     validations:
       required: true
-  - type: checkboxes
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: How would we know it works?
+      description: Suggest observable success criteria, including allowed and blocked outcomes or keyboard/mobile behavior when relevant.
+  - type: textarea
     id: scope
     attributes:
-      label: Scope check
-      options:
-        - label: Fits reference / walking-skeleton scope (not production ATO claim)
-          required: true
-        - label: Can be verified with verify.sh and/or demo.sh
-          required: false
+      label: Scope and dependencies
+      description: Note any backend dependency, browser-simulation limit, compatibility concern, or unresolved question. Do not imply production readiness or regulatory certification.

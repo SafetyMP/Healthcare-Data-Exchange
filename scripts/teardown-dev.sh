@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-echo "Stopping Cloud Healthcare Exchange dev stack..."
+echo "Stopping Healthcare Data Exchange dev stack..."
 if [[ "$VOLUMES" -eq 1 ]]; then
   docker compose down --remove-orphans -v
   echo "Stack stopped; named volumes removed."

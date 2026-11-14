@@ -1,25 +1,31 @@
 cff-version: 1.2.0
-title: Cloud Healthcare Exchange
+title: Healthcare Data Exchange
 message: >-
-  If you use this software, please cite it using these metadata.
+  If you use this project, cite Healthcare Data Exchange and identify the exact
+  commit or release you used. These metadata describe the current repository;
+  use the selected release's metadata when citing a tagged release.
 type: software
 authors:
   - name: SafetyMP
 repository-code: https://github.com/SafetyMP/Healthcare-Data-Exchange
-url: https://github.com/SafetyMP/Healthcare-Data-Exchange
+url: https://safetymp.github.io/Healthcare-Data-Exchange/
 license: Apache-2.0
-version: 0.5.0
-date-released: 2026-07-08
 keywords:
   - healthcare
+  - synthetic-data
+  - patient-consent
+  - access-control
+  - regional-data-access
+  - guided-demo
   - fhir
   - open-policy-agent
-  - opa
   - opal
-  - gdpr
-  - health-information-exchange
-  - reference-architecture
+  - reference-implementation
 abstract: >-
-  Reference implementation of a federated health information exchange with EU and
-  US jurisdiction cells, policy-as-code (OPA/Rego), dynamic consent (OPAL), and
-  regulatory-aligned architecture documentation.
+  A guided synthetic demo of purpose-specific consent, requesting-team permissions,
+  and regional healthcare data access. The browser workspace uses deterministic
+  fixtures and tab-local activity, with a nine-checkpoint walkthrough hosted on
+  GitHub Pages. A separate local reference backend uses FHIR R4, HAPI stores,
+  a Go gateway, OPA policy, and OPAL consent distribution. The project supports
+  learning, product review, and implementation experiments; it is not a clinical
+  system, production health information exchange, or certification claim.

@@ -2,44 +2,60 @@
 
 ## Supported versions
 
-| Version | Supported |
-|---------|-----------|
-| `main` | Yes |
+| Version | Receives fixes |
+|---|---|
+| Latest `main` | Yes |
 
-This is a reference implementation under active development. Only the latest `main` branch receives fixes.
+Healthcare Data Exchange is an actively developed synthetic demo and reference
+implementation. This support policy is not a production-security guarantee.
 
-## Reporting a vulnerability
+## Report a vulnerability privately
 
-**Please do not open public GitHub issues for security vulnerabilities.**
+**Do not open a public GitHub issue for a security vulnerability.**
 
-Use [GitHub private vulnerability reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new) for this repository (enabled on `SafetyMP/Healthcare-Data-Exchange`), or contact the maintainers through GitHub if that option is unavailable.
+Use [GitHub private vulnerability reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new).
+If that option is unavailable, contact the maintainers through GitHub without posting
+exploit details or secrets publicly.
 
-Include:
+Include the affected commit, mode and paths; impact; steps using synthetic data;
+and a suggested fix if available. Identify whether the issue affects the browser
+simulation, frontend gateway proxy, backend service, policy, deployment or build process.
+Do not attach real patient records, bearer tokens, administrator tokens or local secrets.
 
-- Description of the issue and potential impact
-- Steps to reproduce
-- Affected paths or services (gateway, OPAL, consent-service, etc.)
-- Suggested fix if you have one
+We aim to acknowledge reports within a reasonable timeframe. This volunteer-maintained
+project has no formal response SLA.
 
-We aim to acknowledge reports within a reasonable timeframe. This is an open-source reference project without a formal SLA.
+## Two modes, different boundaries
 
-## Scope notes
+- **Hosted browser demo:** the guided walkthrough uses fictional records and browser-local
+  simulated decisions. It makes no gateway API requests and does not prove live policy
+  enforcement. Editing local demo state is not a bypass of the reference backend.
+- **Reference backend and live-gateway frontend:** authorization comes from verified
+  caller credentials, purpose, consent and regional policy. Query parameters must not
+  become a substitute for verified identity. Report failures in those boundaries privately.
+- **Synthetic data only:** do not introduce real PHI into the app, samples, issues, PRs
+  or demonstrations.
+- **Local secrets stay local:** never commit `.env`, `deploy/opal/dev-secrets.env`,
+  `deploy/opal/keys/`, or other credentials. Do not run this stack as-is for regulated workloads.
 
-- **No real PHI** — FHIR samples under `fhir/samples/` are synthetic. Do not use production patient data in issues, PRs, or demos.
-- **Dev secrets** — `deploy/opal/dev-secrets.env` and `deploy/opal/keys/` are local-only PoC credentials. Never commit them.
-- **Not production-hardened** — OPAL secure mode, SSRAA, and KMS are demonstrative stubs. Do not deploy this stack as-is for regulated workloads.
+## Explicit limitations
 
-### Explicit non-claims (PoC gaps)
+The reference backend is not production hardened. The
+[threat model](docs/adr/0000-threat-model.md), [roadmap](docs/roadmap.md) and
+[OPAL hardening profile](config/opal-hardening.yaml) distinguish implemented controls
+from gaps. Known limitations include:
 
-These are tracked in `docs/roadmap.md` Phase 4b+ and `config/opal-hardening.yaml` `gaps:` — not present in this reference stack:
-
-- Per-cell region gateways (PoC uses one global gateway; ADR 0001 target)
-- Production SSRAA/UDAP / EHDS credentials (shared-secret stubs only)
-- Cosign/sigstore signed OPAL policy bundles (`signed_bundles: false`)
-- mTLS between OPAL server and clients; HSM-backed OPAL auth keys
-- Authenticated consent-service `/policy-data` (internal-network trust in PoC)
-- FedRAMP ATO / GDPR certification evidence (`docs/architecture/compliance-mapping.md` is design mapping only)
+- One global gateway in the PoC rather than the per-cell target architecture.
+- Demonstrative shared-secret requester credentials rather than production SSRAA/UDAP
+  or EHDS credentials.
+- Unsigned OPAL bundles (`signed_bundles: false`), no OPAL server/client mTLS, and no
+  HSM-backed OPAL authentication keys.
+- Consent-service `/policy-data` relies on internal-network trust in the PoC.
+- No FedRAMP ATO, GDPR certification or clinical-readiness claim.
+  [Compliance mapping](docs/architecture/compliance-mapping.md) is design documentation.
 
 ## Safe harbor
 
-We appreciate responsible disclosure. Researchers who follow this policy and avoid privacy violations (real PHI, unauthorized access to third-party systems) will not be pursued for good-faith security research on this repository's intended local/demo deployment.
+We appreciate responsible disclosure. Researchers who follow this policy and avoid
+privacy violations (real PHI, unauthorized access to third-party systems) will not be
+pursued for good-faith security research on this repository's intended local/demo deployment.

@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Guided synthetic browser demo on GitHub Pages, with nine checkpoints for consent, requesting-team identity, regional blocking and limited derivative access ([#179](https://github.com/SafetyMP/Healthcare-Data-Exchange/pull/179), [#180](https://github.com/SafetyMP/Healthcare-Data-Exchange/pull/180), [#181](https://github.com/SafetyMP/Healthcare-Data-Exchange/pull/181)).
+- Per-route titles, descriptions, canonicals, social cards, descriptive schema, sitemap and a supplemental public agent index.
+- Demo-first documentation, community forms and agent source maps; historical plans clearly separated from current scope.
+
+
 ### Security
+
+- Patch minimatch under typescript-estree to 11.0.1 with a parent-scoped override (GHSA-g3hv-75wg-m249), following [upstream adoption](https://github.com/typescript-eslint/typescript-eslint/commit/837401e92d7379a8623ccf6a0883250f4e706ad7). Other minimatch consumers are unchanged; remove the override after a compatible published estree release adopts the fix.
+
+- Update hash-pinned `certifi` to 2026.10.18 to remove the affected bundled roots.
 
 - Audit pseudonym is now a domain-separated HMAC-SHA256 (`v2:` + full digest); consent admin audit no longer writes raw subject ids ([#16](https://github.com/SafetyMP/Healthcare-Data-Exchange/issues/16))
 - Force `browserslist >= 4.28.9` via npm `overrides` (GHSA-73wf-gq98-2v4g / CVE-2026-73088)
@@ -15,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pin service Docker base images to registry digests; hash-pin CI and image `pip` installs
 
 ### Changed
+
+- Align repository metadata, citation and social preview with Healthcare Data Exchange and its separate reference backend; update the frontend to Next.js 16.4.6.
 
 - GitHub Actions: CodeQL `v4.37.9` and OpenSSF Scorecard `v2.4.4`, pinned to full commit SHAs (checkout comments corrected to `v7.0.1`)
 - Clinician console: Next.js / `eslint-config-next` 16.3.0, React 19.2.8, `@types/node` 26.1.2; force `postcss >= 8.5.28`
