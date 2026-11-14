@@ -1,0 +1,34 @@
+name: Usage or design question
+description: Ask about the guided demo, local setup, or reference architecture
+title: "[question]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search the [documentation](https://github.com/SafetyMP/Healthcare-Data-Exchange/tree/main/docs) and existing issues first. This project demonstrates synthetic scenarios; it does not provide clinical advice or production incident support. Do not include real health information, credentials, or secrets.
+        Use [private security reporting](https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new) for vulnerabilities.
+  - type: dropdown
+    id: area
+    attributes:
+      label: What is your question about?
+      options:
+        - Hosted demo or guided walkthrough
+        - Local static browser demo
+        - Live-gateway frontend or reference backend
+        - Architecture / policy / project scope
+        - Contribution process
+        - Another area or unsure
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question and context
+      description: Describe what you are trying to understand or accomplish. Include the route, scenario, or command when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: Documentation or steps already tried
+      description: Link to the relevant guide and explain what remains unclear. Include sanitized output only.

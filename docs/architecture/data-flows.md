@@ -1,176 +1,119 @@
-# Data Flows — Cloud Healthcare Exchange
+# Data flows — Healthcare Data Exchange
 
-> **What runs.** The [root README](../../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+The browser demo and reference backend are separate execution paths. This page
+shows what each path does; [architecture](overview.md) describes their components.
+All examples use synthetic data.
 
-**Product:** Cloud Healthcare Exchange  
-**Primary demo:** Intra-EU (MyHealth@EU-style)  
-**Secondary:** US TEFCA path  
-**Exception:** Cross-bloc derivative (labeled, policy-gated)
+## Guided browser walkthrough
 
-> **PoC note:** Sequence diagrams label separate "Home EU Gateway" / "US Gateway" participants. The walking skeleton runs a **single `gateway` service** that routes to EU/US FHIR cells via `config/routing.yaml`. Treat "Gateway" in diagrams as that global PEP.
+Start from the [public demo](https://safetymp.github.io/Healthcare-Data-Exchange/).
+Starting or restarting the guide resets this tab's demo consent and activity.
+Anna Mueller is the selected synthetic EU patient throughout these checkpoints.
 
----
+| Step | Visitor action | Expected simulated observation |
+|---|---|---|
+| 1. Consent protects a record | Check Research with the EU visiting care team | Blocked: research consent is not granted |
+| 2. Grant and recheck | Save granted Research consent, then repeat the same request | Allowed |
+| 3. Revoke and recheck | Save revoked Research consent, then repeat the same request | Blocked: consent is not granted |
+| 4. Separate purposes | Check Treatment with the EU visiting care team | Allowed: treatment has its own consent preference |
+| 5. Change region | Keep Treatment; select the US home care team and check | Blocked by the regional rule |
+| 6. Consent does not override region | Save the already-granted Treatment preference; recheck with the same US home team | Still blocked by the regional rule |
+| 7. Purpose alone is insufficient | Check Limited derivative with the US home care team | Blocked: that requester lacks the exception |
+| 8. Inspect limited sharing | Check Limited derivative with the US care team preset permitting limited cross-region access | Allowed with `id` and `resourceType`; name, birth date and gender are withheld |
+| 9. Review Activity | Compare the consent changes, requester contexts and access decisions; finish the guide | A tab-local simulated decision trail |
 
-## Flow 1 — Intra-EU primary (visiting clinician, home data)
+The guide enables Next after matching form actions complete. Matching includes
+patient, purpose, requester, action and outcome. It does not advance just because
+a page opens or because a prior activity entry exists. Step 9 ends with an explicit
+Finish action on Activity. The [checkpoint definitions](../../web/src/lib/walkthrough.ts)
+and [guide component](../../web/src/components/walkthrough/guided-walkthrough.tsx)
+are the implementation sources.
 
-EU clinician treats patient whose records live in **home member state**. Data never leaves home cell; visiting clinician receives minimum-necessary response via brokered route.
+Pause keeps the current checkpoint and permits free exploration; actions while
+paused do not advance the guide. Resume and Return to this step restore the
+checkpoint's route and selections without submitting a request or changing consent.
+With session storage available, progress survives a reload. Reset demo clears it.
 
 ```mermaid
 sequenceDiagram
-  participant C as Clinician (visiting MS)
-  participant R as Jurisdiction Router
-  participant B as Identity Broker
-  participant G as Gateway (PEP)
-  participant O as OPA PDP
-  participant F as HAPI FHIR (home)
-  participant K as Key Custody
-  participant A as Audit Sink
-
-  C->>R: GET Patient (identifier + purpose=treatment)
-  R->>B: Resolve home jurisdiction
-  B-->>R: cell=eu-home
-  R->>G: Forward (no PHI in router logs)
-  G->>O: input(subject, purpose, consent, requester)
-  O-->>G: allow + min_necessary_fields
-  G->>F: FHIR read (in-region)
-  F->>K: decrypt envelope (in-region)
-  F-->>G: Patient bundle
-  G->>A: audit(event, pseudonymized where possible)
-  G-->>C: filtered FHIR response
+  participant V as Visitor
+  participant F as Browser form
+  participant S as Local simulation
+  participant G as Guide
+  V->>F: Select patient, purpose and requester
+  V->>F: Check access or Save consent
+  F->>S: Evaluate synthetic action
+  S-->>F: Result and tab activity update
+  F-->>G: Completed action and context
+  G-->>V: Matching stage complete
+  V->>G: Next step
 ```
 
-**Compliance hooks:** GDPR Art. 5 minimization, Art. 9; EHDS primary use; no Chapter V transfer (data stayed home).
+The normal allowed response contains the fixture's `id`, `resourceType`, `name`,
+`birthDate` and `gender`. A blocked response contains the denial reason, not the
+patient resource. The limited response still includes a synthetic record ID; it
+must not be described as anonymous or as a real-world transfer authorization.
 
----
+## Other browser routes
 
-## Flow 2 — Consent denied
+| Route | Actual behavior | Limit |
+|---|---|---|
+| Identity matching | Resolve a configured synthetic preferred identifier or sample record ID; continue to Patient access | A match does not grant access; no live NCP or QHIN lookup |
+| AI oversight | Submit example inputs and receive a fixed result marked `pending_human_oversight` | No clinical model, diagnosis, prioritization, or approval/rejection action |
+| Activity | Show recent simulated actions from this tab | No backend audit feed; reset clears the entries |
 
-```mermaid
-sequenceDiagram
-  participant C as Clinician
-  participant G as Gateway (PEP)
-  participant O as OPA PDP
-  participant A as Audit Sink
+These routes use [local simulation functions](../../web/src/lib/demo.ts) in the
+published demo. Requesting-team presets illustrate identity context; they do not
+establish a visitor's real identity or permissions.
 
-  C->>G: Request with purpose=research
-  G->>O: evaluate consent + purpose
-  O-->>G: deny (no valid consent)
-  G->>A: audit(deny)
-  G-->>C: 403 + policy reason (no PHI)
-```
+## Reference backend patient read
 
----
-
-## Flow 3 — US TEFCA (secondary demo)
-
-US clinician accesses US patient via QHIN. All processing in **US cell** (SA-9(5)).
+The separately run backend evaluates a patient read through the gateway and OPA.
+The gateway derives requester attributes from the verified caller principal, not
+from a requester-jurisdiction query parameter. Consent comes from OPA's
+`data.consent`, published through the consent-service/OPAL path.
 
 ```mermaid
 sequenceDiagram
-  participant Q as QHIN Client
-  participant R as Router
-  participant G as Gateway (PEP)
-  participant O as OPA PDP
-  participant F as HAPI FHIR US
-
-  Q->>R: US patient query
-  R->>G: route cell=us
-  G->>O: policy check
-  O-->>G: allow
-  G->>F: FHIR read
-  F-->>G: US Core bundle
-  G-->>Q: response
-```
-
----
-
-## Flow 4 — Cross-bloc exception (not headline)
-
-EU-origin patient; **minimum-necessary derivative** requested by US requester. Raw PHI does **not** leave EU cell.
-
-```mermaid
-sequenceDiagram
-  participant U as US Requester
-  participant R as Router
-  participant G as Gateway (PEP)
-  participant O as OPA PDP
-  participant F as HAPI FHIR EU
-
-  Note over U,F: Exception path — explicit policy + legal basis only
-  U->>R: derivative request (e.g. summarized labs)
-  R->>G: route to EU cell
-  G->>O: cross_bloc + SCC_flag + purpose
-  alt policy deny
-    O-->>G: deny
-    G-->>U: 403
-  else policy allow
-    O-->>G: allow derivative schema only
-    G->>F: read + transform in-region
-    F-->>G: derivative payload
-    G-->>U: derivative only (no raw PHI export)
+  participant C as Backend client
+  participant G as Go gateway
+  participant P as Caller principal verification
+  participant O as OPA
+  participant H as Selected HAPI cell
+  C->>G: Patient read with bearer and purpose
+  G->>P: Verify configured demo credential
+  P-->>G: Verified principal or authentication failure
+  Note over G,O: Continue only after successful authentication
+  G->>O: Purpose, consent subject, caller and home context
+  alt Policy denies
+    O-->>G: Deny reason
+    G-->>C: 403 without patient resource
+  else Policy allows
+    O-->>G: Allow and permitted fields
+    G->>H: Read synthetic Patient
+    H-->>G: Patient resource
+    G-->>C: Filtered resource and decision context
   end
 ```
 
-**Risk:** EU→US Article 9 transfer — DPF not default; SCC+TIA required (Proc).
+The [gateway handlers](../../services/gateway/internal/handlers/handlers.go) and
+[Rego policy](../../policy/authz.rego) define this path. The exception filters to
+`id` and `resourceType`; it does not compute summarized lab results or establish a
+legal basis for transfer. The local Compose cells are logical partitions, not
+proof of physical EU/US residency.
 
----
+Backend consent updates require the administrator route and propagate through
+OPAL; verifying the resulting policy decision requires a subsequent backend read.
+See [ADR 0008](../adr/0008-opal-consent-sync.md). The backend identity service uses a
+demo registry. Its AI governance service has stub approve/reject endpoints, which
+the public browser demonstration does not expose. See the
+[component sources](overview.md#separate-reference-backend).
 
-## Flow 5 — Region/tenant erasure (crypto-shred)
+## Historical proposed flows
 
-```mermaid
-sequenceDiagram
-  participant Admin as Tenant Admin
-  participant G as Gateway (PEP)
-  participant K as Key Custody
-  participant F as HAPI FHIR EU
-
-  Admin->>G: erasure request (tenant scope)
-  G->>K: destroy tenant master key
-  K-->>G: key destroyed
-  Note over F: ciphertext blobs unreadable;<br/>indexes may retain searchable metadata (ADR 0003)
-  G-->>Admin: erasure complete (scope documented)
-```
-
----
-
-## Flow 6 — AI feature with human oversight
-
-Applies only when clinician invokes an **AI-assisted** feature (not standard FHIR read).
-
-```mermaid
-sequenceDiagram
-  participant C as Clinician
-  participant G as Gateway
-  participant AI as AI Governance
-  participant M as Model (stub)
-
-  C->>G: AI triage request
-  G->>AI: register decision context
-  AI->>M: infer
-  M-->>AI: score + explanation
-  AI-->>G: pending (human_oversight_required)
-  G-->>C: provisional result + Art.50 label
-  C->>AI: approve / reject
-  AI-->>G: final decision logged
-  G-->>C: released or blocked output
-```
-
----
-
-## Data classification by plane
-
-| Data type | Global plane | EU cell | US cell |
-|-----------|--------------|---------|---------|
-| FHIR Patient/Observation | Never | Yes | Yes |
-| Tenant routing config | Yes | Replica | Replica |
-| OPA policy bundles | Metadata only | Full eval in-region | Full eval in-region |
-| AI model weights | Registry metadata | Inference in-region | Inference in-region |
-| Audit with patient ID | Never raw export | Regional sink | Regional sink |
-
----
-
-## Related documents
-
-- [overview.md](overview.md)
-- [compliance-mapping.md](compliance-mapping.md)
-- [../adr/0006-patient-identity-matching.md](../adr/0006-patient-identity-matching.md)
+The [original data-flow document at revision bae1c21](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/architecture/data-flows.md)
+preserves proposed NCP/QHIN exchange, envelope decryption, derivative transformation,
+erasure and AI lifecycle diagrams. Those diagrams are historical design evidence,
+not a description of the guided browser experience or proof of a production system.
+Backend execution claims need the scoped test evidence described in
+[architecture](overview.md#evidence-boundaries).

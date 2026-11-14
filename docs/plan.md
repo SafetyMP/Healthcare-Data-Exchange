@@ -1,10 +1,30 @@
-# Healthcare Exchange — Implementation Plan (corrected)
+# Historical implementation plan — July 2026
 
-> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+> **Superseded; non-operative historical record.** This document preserves the
+> earlier Cloud Healthcare Exchange design, regulatory assumptions, delivery
+> phases, and fleet playbook. It is not the current product brief or an active
+> implementation mandate. The commands, activation steps, dates, and authority
+> examples below are retained for provenance, not instructions for new work.
 
-**Status:** Active plan (portfolio doc audit refresh, 2026-07-12)  
-**Harness profile:** `solo` — phase 4a complete; fleet mandate HALTED. See [Fleet playbook](#fleet-initialization-playbook) for future parallel work.  
-**Deliverable default:** Design-document set + minimal runnable **walking skeleton** (one jurisdiction cell first), wired into `scripts/verify.sh` (hermetic) and `scripts/demo.sh` (compose E2E).
+**Status:** Historical; superseded by the [current product scope](product-mandate.md)
+and [roadmap](roadmap.md) on November 14, 2026.
+
+Healthcare Data Exchange now leads with a guided synthetic browser demo of consent,
+requesting-team permissions, and regional access, alongside a separate local
+reference backend. See the [repository overview](../README.md) and
+[documentation index](README.md) for current capabilities and setup.
+
+For new contributions or agent work, follow [CONTRIBUTING.md](../CONTRIBUTING.md)
+and [AGENTS.md](../AGENTS.md). Nothing in this historical plan reactivates archived
+runtimes, changes approval state, or authorizes deployment. Its legal and regulatory
+statements are dated design assumptions, not current legal guidance.
+
+## Recorded planning context
+
+The source plan was refreshed July 12, 2026. It recorded a `solo` harness profile,
+phase 4a completion, a halted fleet mandate, and a design-document plus minimal
+walking-skeleton deliverable. The historical sections below are preserved from
+that plan, including its proposed architecture and unimplemented future work.
 
 ---
 

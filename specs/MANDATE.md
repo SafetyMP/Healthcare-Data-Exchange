@@ -51,6 +51,24 @@ reload and reset recovery; keyboard and mobile usability; no guide in live gatew
 mode; independent review, relevant local/remote tests, and verified Pages deployment.
 Native implementers use disjoint files; coordinator owns shell/page integration.
 
+## Follow-up: repository vision and discoverability (2026-11-14)
+
+The user requests repository-wide alignment with the guided synthetic-demo vision,
+GitHub best practices, and discovery by search engines and agents. Scope includes
+active public/contributor/agent documentation, repo description/homepage/topics,
+citation and social metadata, site metadata and crawlable discovery resources,
+and validation. Preserve historical evidence and ADR decisions; clearly label
+historical or proposed material. Do not change backend authorization, license,
+repository ownership, security protections, or archived runtime state.
+
+Acceptance: consistent project identity and two-mode explanation; executable setup
+commands; accurate community and agent entry points; canonical per-page metadata,
+valid static sitemap and linked machine-readable index; refreshed social assets;
+link/metadata checks, independent review, required CI and verified publication.
+No claims of guaranteed search ranking, AI citations, clinical readiness or compliance.
+Disjoint documentation and discovery workers may proceed; coordinator owns delivery
+and repository settings. Existing schedules are preserved, not expanded.
+
 ---
 
 # Historical multi-agent contract (phase 3; preserved)

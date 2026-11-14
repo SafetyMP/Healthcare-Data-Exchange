@@ -1,45 +1,45 @@
-# Glossary — Cloud Healthcare Exchange
+# Glossary — Healthcare Data Exchange
 
-> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+Terms used by the guided demo and its separate reference backend. The
+[product mandate](product-mandate.md) defines scope; the [architecture](architecture/overview.md)
+explains the two execution modes.
 
-Terms used across architecture, ADRs, and compliance documents.
+| Term | Meaning in this project |
+|---|---|
+| **Healthcare Data Exchange** | The current project name: a guided synthetic browser demonstration and a separate backend reference implementation. |
+| **Synthetic patient** | One of four fictional fixture records; never a real patient's information. |
+| **Guided walkthrough** | Nine checkpoints using the real demo forms to compare consent, regional restrictions, limited responses and Activity. |
+| **Checkpoint** | A guided step completed through matching form actions; some steps require both a consent save and a subsequent access check. |
+| **Purpose of access** | Treatment, Research or Limited derivative; each selects a separate consent preference in the demo. |
+| **Requesting team / requester preset** | A selectable demo caller context used by the browser simulation. It does not authenticate the visitor. |
+| **Consent management** | The demo form for granting or revoking one synthetic patient's preference for one purpose. |
+| **Regional restriction** | A fixture policy that compares the selected caller region and patient's home region. It is not evidence of physical data location. |
+| **Limited derivative** | The explicitly permitted cross-region example returning only `id` and `resourceType`; not anonymous data or a clinical summary. |
+| **Activity** | Recent simulated decisions and changes recorded in the current browser tab, not a production audit log. |
+| **Session storage** | Browser storage used to retain tab-local state through reloads. When unavailable, the demo uses page memory and cannot promise reload persistence. |
+| **Reset demo** | Restore initial synthetic consent and clear Activity, selected context and walkthrough progress. |
+| **Identity matching** | Lookup of a configured preferred identifier or sample record ID; matching alone grants no access. |
+| **AI oversight example** | Fixed output held for human review. The browser runs no clinical model and offers no approval/rejection action. |
+| **Reference backend** | The separately run Go gateway, OPA/OPAL, HAPI FHIR, Postgres and supporting Python services. Browser simulation results do not verify this stack. |
+| **Cell** | One logical EU or US HAPI/Postgres partition in the local reference stack; not a certified regional deployment. |
+| **FHIR** | HL7 Fast Healthcare Interoperability Resources. The reference stack uses FHIR R4 Patient fixtures. |
+| **HAPI FHIR** | The FHIR server used by the backend's two reference cells. |
+| **OPA / PDP** | Open Policy Agent, the backend policy decision point evaluating Rego rules. |
+| **PEP** | Policy enforcement point: the gateway enforces the backend decision and filters returned fields. |
+| **Rego** | The policy language used in `policy/authz.rego`. |
+| **OPAL** | The backend policy/data distribution component used for consent propagation. It does not run in the browser demo. |
+| **Verified caller principal** | Backend requester identity derived from a validated per-cell demo credential, not a query parameter. |
+| **SSRAA stub** | The reference US caller-authentication mechanism. It is not full production UDAP/SSRAA federation. |
+| **Key shred demonstration** | A reference software key-lifecycle scenario; it does not prove all HAPI data, indexes or backups have been erased. |
+| **ADR** | Architecture decision record. ADRs preserve decisions and proposed targets; their presence does not prove implementation or validation. |
+| **PHI** | Protected health information, a US terminology used in historical design documents. Real health data is outside this project's demo scope. |
+| **ATO** | Authorization to operate. This project makes no ATO claim. |
+| **Cloud Healthcare Exchange** | Historical project name retained in older design documents, source identifiers and evidence. |
 
-| Term | Definition |
-|------|------------|
-| **AI governance layer** | Control-plane service registering AI models, logging decisions, enforcing human oversight and Art. 50 transparency — scoped to **AI features**, not deterministic exchange logic. |
-| **Article 9 data** | GDPR special category personal data; includes health data. |
-| **ATO** | Authority to Operate — US federal authorization for a system to run in production under FedRAMP. |
-| **ATNA** | IHE Audit Trail and Node Authentication; audit patterns requiring identifiable patient references in health exchange. |
-| **Cell (jurisdiction cell)** | Isolated regional deployment: in-region FHIR data plane, database, keys, and audit sink. US and EU cells are separate. |
-| **Cloud Healthcare Exchange** | Original product name in the design pages. The repository that runs is the synthetic FHIR cell demo in the root README, not a health-information exchange. |
-| **ConMon** | Continuous monitoring — FedRAMP ongoing assessment requirement. |
-| **Crypto-shred** | Erasure by destroying encryption keys for a scope (region/tenant in PoC); data blobs become unreadable without wiping every copy. |
-| **Control plane** | Global layer: routing, tenant registry, policy distribution, AI governance registry — **no PHI**. |
-| **Data plane** | In-region FHIR services and databases holding PHI. |
-| **DPF** | EU-US Data Privacy Framework — adequacy mechanism; treat as **unreliable** for design defaults (2026 legal fragility). |
-| **EHDS** | European Health Data Space — EU framework for primary (MyHealth@EU) and secondary health data use. |
-| **Envelope encryption** | Data encrypted with per-object data keys wrapped by a region/tenant master key. |
-| **FHIR** | Fast Healthcare Interoperability Resources — HL7 standard; R4 baseline for this project. |
-| **HAPI FHIR** | Open-source FHIR server; used as regional data plane in reference slice. |
-| **HealthData@EU** | EHDS secondary-use access pathway with opt-out. |
-| **High-risk AI system** | EU AI Act category for systems listed in Annex III (and Annex I embedded) — applies to specific AI components, not the whole exchange. |
-| **Identity broker** | Control-plane component routing patient lookup to home jurisdiction without a global MPI. |
-| **Minimum necessary** | HIPAA/GDPR principle; return only data elements required for stated purpose. |
-| **MPI** | Master Patient Index — national or organizational; **no EU-wide MPI**. |
-| **MyHealth@EU** | EHDS primary-use cross-border patient access via National Contact Points. |
-| **NCP** | National Contact Point — EU node for cross-border health data access. |
-| **OPA** | Open Policy Agent — policy engine evaluating Rego rules at the PEP. |
-| **PEP** | Policy Enforcement Point — gateway component enforcing PDP decisions. |
-| **PDP** | Policy Decision Point — OPA in this architecture. |
-| **PHI** | Protected Health Information (US HIPAA framing); overlaps with GDPR health data. |
-| **PoC** | Proof of concept — reference slice in this repo. |
-| **QHIN** | Qualified Health Information Network — US TEFCA participant. |
-| **Rego** | OPA policy language. |
-| **SA-9(5)** | FedRAMP control restricting High-impact data location to US jurisdiction. |
-| **SCC** | Standard Contractual Clauses — GDPR transfer mechanism. |
-| **SSRAA** | Secure, Standards-Based Application Association — US FHIR app auth framework (required 2027-01-01 for new nodes). |
-| **TEFCA** | Trusted Exchange Framework and Common Agreement — US nationwide health exchange policy. |
-| **TIA** | Transfer Impact Assessment — GDPR analysis for third-country transfers. |
-| **US Core** | US FHIR implementation guide; version 6.1.0 referenced in plan. |
-| **USCDI** | US Core Data for Interoperability — US data classes required for interoperability. |
-| **Walking skeleton** | Minimal runnable one-cell stack proving core patterns before second cell. |
+## Historical terminology
+
+The [original glossary at revision bae1c21](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/glossary.md)
+preserves the broader regulatory and target-architecture vocabulary, including
+NCP, QHIN, MPI, SCC, TIA, EHDS and FedRAMP. Its dated legal interpretations and
+deadlines have not been revalidated here. See [references](references.md) for the
+historical bibliography; these terms do not imply current integrations or compliance.

@@ -2,7 +2,7 @@
 applyTo: "**/*.py"
 ---
 
-# Python coding standards (September 2026)
+# Python coding standards
 
 - Type-annotate public functions and module-level APIs.
 - Follow the existing Ruff / pyproject configuration. Do not disable rules repository-wide to land a change.
@@ -12,5 +12,8 @@ applyTo: "**/*.py"
 
 ## This repository
 
-- FastAPI services: `consent-service`, `identity-broker`, `ai-governance`.
+- The backend reference FastAPI services are `consent-service`, `identity-broker`,
+  and `ai-governance`; the published browser demo does not run them.
 - Consent decisions read `data.consent` published by OPAL, not a static request field.
+- Preserve the governance stub's human-oversight boundary; do not present stub output
+  or browser simulation as a clinically validated model or completed human review.

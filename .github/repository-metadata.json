@@ -1,0 +1,24 @@
+{
+  "description": "Guided synthetic healthcare data demo: explore consent, requesting teams, and regional access. Includes a separate FHIR/OPA/OPAL reference backend.",
+  "homepage": "https://safetymp.github.io/Healthcare-Data-Exchange/",
+  "topics": [
+    "healthcare",
+    "synthetic-data",
+    "interactive-demo",
+    "consent-management",
+    "access-control",
+    "interoperability",
+    "fhir",
+    "fhir-r4",
+    "open-policy-agent",
+    "opa",
+    "opal",
+    "policy-as-code",
+    "nextjs",
+    "typescript",
+    "go",
+    "python",
+    "github-pages",
+    "reference-implementation"
+  ]
+}

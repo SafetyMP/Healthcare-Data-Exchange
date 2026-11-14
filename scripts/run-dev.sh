@@ -33,7 +33,7 @@ if [[ "$DOWN_FIRST" -eq 1 ]]; then
 fi
 
 ARCH="$("$ROOT/scripts/lib/docker-platform.sh")"
-echo "Starting Cloud Healthcare Exchange EU + US cells (OPAL consent sync; arch=$ARCH)..."
+echo "Starting Healthcare Data Exchange EU + US cells (OPAL consent sync; arch=$ARCH)..."
 docker compose up -d --build
 
 wait_for() {

@@ -2,7 +2,7 @@
 applyTo: "**/*.go"
 ---
 
-# Go coding standards (September 2026)
+# Go coding standards
 
 - Match the existing module's Go version and package layout. Do not bump Go in drive-by work.
 - Handle errors. Do not discard them with `_` unless the surrounding file already documents why.
@@ -12,5 +12,8 @@ applyTo: "**/*.go"
 
 ## This repository
 
-- Gateway lives in `services/gateway/`. Patient-read authorization comes from verified per-cell caller credentials.
+- The separately run backend reference gateway lives in `services/gateway/`.
+  Patient-read authorization comes from verified per-cell caller credentials.
 - Never honor `requester_jurisdiction` (or similar) as identity.
+- The hosted browser simulation does not call this gateway. Frontend fixture outcomes
+  do not establish gateway behavior; use the hermetic and applicable runtime gates.

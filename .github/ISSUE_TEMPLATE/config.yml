@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Try the guided browser demo
+    url: https://safetymp.github.io/Healthcare-Data-Exchange/
+    about: Explore synthetic consent, requesting-team, and regional access scenarios
   - name: Documentation
     url: https://github.com/SafetyMP/Healthcare-Data-Exchange/tree/main/docs
-    about: Architecture, ADRs, roadmap, and compliance mapping
+    about: Find frontend setup, reference architecture, project scope, and contribution guidance
   - name: Security advisory
     url: https://github.com/SafetyMP/Healthcare-Data-Exchange/security/advisories/new
-    about: Report a vulnerability privately
+    about: Report a vulnerability privately without public exploit details or secrets

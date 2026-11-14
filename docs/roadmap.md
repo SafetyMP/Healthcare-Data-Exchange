@@ -1,149 +1,62 @@
-# Roadmap — Cloud Healthcare Exchange
+# Healthcare Data Exchange roadmap
 
-> **What runs.** The [root README](../README.md) is the status of record: one Compose stack and a synthetic FHIR R4 Patient read from an EU or US HAPI cell after a per-cell bearer passes OPA. This page keeps the original Cloud Healthcare Exchange design. This repository is not a health-information exchange.
+**Updated:** November 14, 2026
 
-**Product:** Cloud Healthcare Exchange  
-**Last updated:** 2026-07-18
+The current direction is a guided synthetic experience that makes consent,
+requesting-team permissions, purpose, and regional restrictions understandable.
+The separate local FHIR/OPA/OPAL backend remains a reference for implementation
+experiments. Start with the [live demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+and [product scope](product-mandate.md).
 
-Aligns delivery phases with **regulatory deadlines** and the [implementation plan](plan.md).
+This roadmap distinguishes delivered capabilities from proposed work. Proposals
+are not scheduled commitments or authorization to execute a study, integration,
+publication campaign, or production rollout.
 
----
+## Delivered experience
 
-## Regulatory calendar
+| Capability | What is available | Source and evidence |
+|---|---|---|
+| Public browser demo | Static GitHub Pages workspace with four synthetic patients; no account or backend setup | [Frontend guide](../web/README.md), [Pages workflow](../.github/workflows/pages.yml) |
+| Patient access and consent | Search, purpose/team context, readable allowed/limited/blocked outcomes, grant/revoke and recheck | [Experience redesign](experience-redesign.md), [fixture adapter](../web/src/lib/demo.ts) |
+| Guided learning | Nine checkpoints across consent, separate treatment access, regional restrictions, limited sharing, and Activity | [Walkthrough design and checks](guided-walkthrough.md) |
+| Context and recovery | Patient/purpose/team continuity, browser history, pause/resume, reload, and reset | [Independent experience review](live-experience-review.md), [browser tests](../web/tests/e2e/) |
+| Supporting examples | Synthetic identifier matching and a fixed AI oversight demonstration | [Frontend routes](../web/README.md#routes-and-source-map) |
+| Reference backend | EU/US HAPI stores, credential-bound gateway requests, OPA policy and OPAL consent distribution | [Architecture](architecture/overview.md), [backend checks](../README.md#verification-and-evidence) |
 
-| Date | Milestone | Product impact |
-|------|-----------|----------------|
-| **2026-01-01** | **USCDI v3** floor for ONC certification (HTI-1) | Pin US PoC data classes to USCDI v3; not seeking certification |
-| **2026-03-08** | TEFCA **Facilitated FHIR SOP 2.0** effective | FHIR R4 + US Core ≥ 6.1.0; XP codes; SSRAA path (not QHIN) |
-| **2026-07** | **USCDI v7** final targeted (ONC SB26-1) | Track only — adopt after final + US Core mapping |
-| **2026-07-01** | TEFCA SSRAA **testing systems** milestone | Stub readiness narrative; not full UDAP |
-| **2026-08-02** | EU AI Act **Art. 50** transparency in force | AI governance layer must label AI outputs |
-| **2026-11-01** | QHINs support SSRAA onboarding (SOP) | Phase path toward real UDAP/SSRAA |
-| **2026-12-02** | Art. 50 watermarking grace ends | Watermarking for applicable AI systems (Phase) |
-| **2027-01-01** | **SSRAA** required for new US FHIR nodes | US cell auth must support SSRAA/UDAP |
-| **2027-03-26** | **EHDS** application / implementing acts deadline | MyHealth@EU profile alignment review |
-| **2027-12-02** | AI Act **Annex III** standalone high-risk | Full high-risk controls for AI triage features |
-| **2028-08-02** | **Annex I** embedded medical-device AI | Only if scope includes device software |
-| **2029** | EHDS primary-use Category 1 operational | Broader member-state connectivity |
-| **2031** | EHDS primary expansion / secondary remaining categories | HealthData@EU / secure processing |
+Delivered code and test coverage do not establish customer engagement, clinical
+usefulness, or real deployment safety. The browser demo uses simplified fixture
+decisions. Historical backend test results retain the scope and date of their
+own evidence; current runtime claims need a current stack run.
 
-**AI Act status:** Project calendar cites Council 2026-06-29 / Parliament 2026-06-16 (Digital Omnibus package); confirm against Official Journal before treating Art. 50 dates as final law.
+## Proposed next work
 
-**HTI-2:** Final rule codifies TEFCA definitions and the TEFCA Manner Exception (45 CFR Part 172) — compliance framing only; CHEX is not an information-blocking actor certification target.
+| Proposal | Question to resolve | Evidence needed before calling it successful |
+|---|---|---|
+| First-visit usability study | Can visitors explain why consent changes one request but not a regional denial? | An explicitly scoped study with observable task outcomes, misunderstandings, and documented limitations |
+| Assistive-technology review | Do announcements, focus movement, and guide progression make sense beyond automated checks? | Manual screen-reader and keyboard review of the complete journey; fixes tied to observed issues |
+| Improve recovery explanations | Can visitors identify a valid next step when a request is blocked or the gateway is unavailable? | Specific confusing cases, revised copy/interactions, and regression checks preserving request context |
+| Fixture/backend correspondence | Which teaching examples match backend rules, and where is the simplified model intentionally different? | A maintained scenario mapping with separate browser tests and backend contract/runtime evidence |
+| Maintain reproducible onboarding | Can a new contributor run the appropriate mode and checks using only the documented setup? | A fresh-environment rehearsal, version/dependency checks, and corrected instructions |
 
-### Explicit non-goals (PoC)
+Choose work based on a concrete need and available evidence. Broader interoperability,
+new scenarios, or additional infrastructure should follow a separately reviewed
+scope rather than expand the demo by default.
 
-- ONC Health IT Certification / HTI test procedures
-- QHIN / Participant / Subparticipant onboarding or RCE Directory
-- SMART App Launch (Facilitated FHIR SOP 2.0 removed mandatory SMART)
-- CMS-0057-F Prior Auth / Patient Access / Payer-to-Payer APIs (payer scope; full set **2027-01-01**)
-- Full US Core profile suite / Bulk FHIR `$export`
+## Work outside this roadmap
 
----
+Production identity federation, provider connections, real patient records,
+clinical AI, regulatory authorization, HSM/KMS deployment, and production hosting
+are not active delivery commitments. Earlier regulatory calendars and ATO or
+infrastructure ambitions are historical context, not present project deadlines.
 
-## Delivery phases
+## Historical roadmap and decisions
 
-### Phase 0 — Foundation (complete)
+The [July roadmap is preserved at commit bae1c21](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/roadmap.md).
+It records earlier phases, regulatory assumptions, and production-target proposals.
+Those statements have not been adopted as current legal guidance or current
+implementation status by this rewrite.
 
-| Item | Status |
-|------|--------|
-| Harness solo scaffold | Done |
-| `docs/plan.md` + fleet playbook | Done |
-| GitHub remote | Done |
-
-### Phase 1 — Design authority (complete)
-
-| Todo | Deliverable | Status |
-|------|-------------|--------|
-| docs-mandate | product-mandate, glossary, references | Done |
-| docs-architecture | overview, compliance-mapping, data-flows | Done |
-| docs-adrs | ADR 0001–0006 | Done |
-| docs-roadmap | This document | Done |
-
-**Exit criteria:** Docs merged on `main`; `./scripts/verify.sh` passes — **met**.
-
-### Phase 2a — EU walking skeleton (serial, solo harness) — complete
-
-| Todo | Deliverable | Completed |
-|------|-------------|-----------|
-| slice-scaffold | 1-cell docker-compose, module stubs | 2026 Q3 |
-| slice-gateway-policy | Go router + OPA PEP | 2026 Q3 |
-| slice-region-fhir | HAPI EU + Postgres + region keys | 2026 Q3 |
-| slice-ai-governance | FastAPI stub | 2026 Q3 |
-| verify-wiring | Hermetic verify.sh; run-dev.sh; demo.sh | 2026 Q3 |
-| test-demo | Intra-EU demo evidence | 2026 Q3 |
-
-**Exit criteria:** `demo.sh` proves residency, consent deny, region shred, AI oversight gate — **met**.
-
-### Phase 2b — Parallel slice (optional, **fleet harness**)
-
-Same todos split across tracks — see [fleet gate A](plan.md#fleet-gate-a--parallel-slice-scaffold).
-
-### Phase 3 — Second cell + exception path (complete)
-
-| Item | Deliverable | Status |
-|------|-------------|--------|
-| US cell | HAPI US + Postgres (SA-9(5) placement) | **Done** |
-| Cross-bloc policy | Exception flow; deny-by-default; SCC+TIA in architecture docs | **Done** |
-| Identity broker | Config stub + `/v1/identity/resolve`; NCP patterns | **Stub** (superseded by ADR 0010) |
-| Integration | `demo.sh` US TEFCA + cross-bloc scenarios; verify green | **Done** |
-
-**Exit criteria:** US TEFCA demo + documented cross-bloc deny-by-default — **met** on `main`.
-
-### Phase 4a — Dynamic consent with OPAL (complete)
-
-| Item | Deliverable | Status |
-|------|-------------|--------|
-| Policy repo | `SafetyMP/healthcare-policy` tracked by OPAL | **Done** |
-| consent-service | Consent state + OPAL data source + publish trigger (ADR 0008) | **Done** |
-| Policy | `data.consent`-driven research gate; hermetic Rego tests | **Done** |
-| Demo | Live revoke/grant flips research 200↔403 with no restart | **Done** |
-
-**Exit criteria:** `demo.sh` proves consent withdrawal propagates to the PDP at
-runtime — **met**.
-
-### Phase 4b — Production hardening (in progress)
-
-| Item | Deliverable | Status |
-|------|-------------|--------|
-| SSRAA auth stub | US-cell gateway gate + demo 401/200 (ADR 0009) | **Done** |
-| TEFCA XP purpose-of-use | `X-TEFCA-XP` + OPA allowlist (pattern-only) | **Done** |
-| US CapabilityStatement honesty | `/v1/fhir/metadata` limited resource set | **Done** |
-| Identity broker service | ITI-78 resolve + dynamic register; gateway HTTP client (ADR 0010) | **Done** |
-| Kubernetes + mesh + `ext_authz` | ADR 0002 target | Planned |
-| Identity broker | NCP federation / live PDQm | Planned |
-| HSM KMS | Replace software stand-in | Planned |
-| OPAL hardening | Auth/JWT, webhooks, bundle hash verify (ADR 0011) | **Done** |
-| SSRAA → UDAP | Replace shared-secret stub (milestones Jul/Nov 2026 → Jan 2027) | Planned |
-| FedRAMP ATO path | Agency sponsorship (Proc) | Planned |
-| EHDS secondary use | HealthData@EU | Planned |
-
----
-
-## Harness profile by phase
-
-| Phase | Profile |
-|-------|---------|
-| 0–1, 2a, 3 complete | **solo** |
-| 2b, 3 (parallel agents) | **fleet** — [init playbook](plan.md#fleet-initialization-playbook) |
-
----
-
-## Risk register (top 5)
-
-| Risk | Mitigation |
-|------|------------|
-| DPF collapse / Schrems III | No cross-border PHI default; SCC+TIA |
-| HAPI erasure vs search | ADR 0003 honest granularity |
-| AI Act scope creep | ADR 0005 classification gate |
-| Compose E2E cost / flake in CI | Hermetic `verify.sh` for stop-hook/CI unit; `demo-e2e` runs `adversarial.sh` then `demo.sh` (45m timeout, concurrency cancel) |
-| FedRAMP / TEFCA wording overclaim | ATO framing in mandate; SECURITY.md non-production; pattern-only TEFCA |
-
----
-
-## Related documents
-
-- [plan.md](plan.md)
-- [product-mandate.md](product-mandate.md)
-- [architecture/](architecture/)
-- [adr/](adr/)
+The [historical implementation plan](plan.md), [ADRs](adr/), and
+[delivery mandate history](../specs/MANDATE.md) remain available for provenance.
+For active work use [AGENTS.md](../AGENTS.md), [CONTRIBUTING.md](../CONTRIBUTING.md),
+and the [current product scope](product-mandate.md).

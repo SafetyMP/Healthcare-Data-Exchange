@@ -1,115 +1,108 @@
-# Product Mandate — Cloud Healthcare Exchange
+# Healthcare Data Exchange — product scope
 
-The repository that runs is the synthetic FHIR cell demo in the root README. It is not a health-information exchange. This mandate is the original vision.
+**Status:** Current product and contribution scope
 
-**Product name:** Cloud Healthcare Exchange  
-**Status:** Draft mandate (reference implementation + design authority)  
-**Last updated:** 2026-07-08
+**Updated:** November 14, 2026
 
----
+**Try it:** [Live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
 
-## Vision
+## Purpose
 
-Cloud Healthcare Exchange is a **globally distributed, multi-tenant health information exchange** that enables authorized clinical and administrative actors to access health data across organizational and jurisdictional boundaries **without centralizing protected health information (PHI)** in a global data plane.
+Help people understand how consent, requesting-team permissions, purpose, and
+regional restrictions combine to determine access to healthcare data. The product
+is a guided, synthetic learning workspace with readable decisions and a visible
+trail of the actions that produced them.
 
-The platform is architected as a **federation of regional jurisdiction cells**, each operating under local law and security baselines, connected by a **PHI-free global control plane** (routing, policy, tenant registry, AI governance metadata).
+The browser experience is the first entry point. A separate local reference
+backend uses FHIR R4, HAPI stores, a Go gateway, OPA, and OPAL to investigate service
+behavior. Both modes use synthetic data. Neither is a production health
+information exchange or a clinical record system.
 
-Success is measured by:
+This scope replaces the earlier broad Cloud Healthcare Exchange vision as the
+active product brief. The [original mandate remains available in history](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/bae1c21d9b3bbb5faf98d660ea39bf68d44f9e34/docs/product-mandate.md),
+along with the ADRs and earlier delivery records. Historical plans do not establish
+implemented capabilities or authorize new deployments.
 
-1. **Lawful cross-border and cross-network exchange** with default data residency in the home jurisdiction.
-2. **Interoperability** on FHIR R4, US Core, USCDI, and EHDS / TEFCA-aligned patterns.
-3. **Demonstrable alignment** with FedRAMP High baseline (410 controls), GDPR, and the EU AI Act — with explicit scope discipline (architecture toward authorization, not certification by code alone).
+## Who this serves
 
----
+| Audience | Task the project should support |
+|---|---|
+| First-time visitors and learners | Complete a coherent scenario without credentials, internal IDs, or infrastructure setup |
+| Product and design reviewers | Inspect patient context, decision explanations, consent changes, recovery paths, and accessibility |
+| Frontend developers | Reproduce the browser demo, change interactions, and verify behavior under the Pages subpath |
+| Backend and interoperability developers | Inspect synthetic FHIR access, credential-bound identity, policy decisions, and consent distribution in a local stack |
+| Security and governance reviewers | Distinguish demonstrated behavior, stubbed capabilities, assumptions, and untested claims |
 
-## Users and stakeholders
+Clinicians and patients may provide valuable design feedback, but the project does
+not deliver care, manage real consent, or process their records.
 
-| Actor | Need |
-|-------|------|
-| **Clinicians** | Minimum-necessary patient data at point of care, including cross-border encounters (EU) and QHIN-mediated exchange (US) |
-| **Patients** | Consent, transparency, erasure rights, EHDS primary/secondary use controls |
-| **National Contact Points (EU)** | Federated identity resolution to home jurisdiction MPI |
-| **Qualified Health Information Networks (US)** | TEFCA-facilitated FHIR exchange among US entities |
-| **Tenant operators** | Multi-tenant isolation, auditability, regional deployment |
-| **Compliance / security** | Residency evidence, policy-as-code, ATO-ready documentation |
-| **AI system operators** | Governance for **high-risk AI components only** (not deterministic routing) |
+## Core experience
 
----
+1. **Find the patient.** Search a small synthetic roster and retain the selected
+   patient across related tasks. Use example identifiers for identity matching.
+2. **Set the request context.** Make purpose and requesting team explicit. A team
+   preset simulates caller context in the browser; backend identity still comes
+   from verified credentials.
+3. **Understand the decision.** Show whether access is allowed, limited, denied,
+   or unavailable; explain the reason and display only the fields returned by the
+   decision. Keep technical payloads available as secondary detail.
+4. **Explore consent.** Review purpose-specific preferences, save a change, and
+   check the same request again. Preserve the requester when moving between pages.
+5. **Inspect boundaries.** Show that consent does not override region restrictions,
+   and that the derivative exception requires the permitted requesting team.
+6. **Review the trail.** Record simulated requests and changes in the current tab,
+   with enough context to understand why outcomes differ.
 
-## Tri-regime scope
+The optional [nine-checkpoint guide](guided-walkthrough.md) teaches this sequence
+through actual form actions. It starts only when requested, waits for matching
+results, and supports pause, resume, restart, and reset. Identity matching and the
+fixed AI oversight example support exploration without displacing the access and
+consent workflow.
 
-Cloud Healthcare Exchange targets **simultaneous alignment** with three regulatory frames. None is satisfied by software alone; each requires organizational process and, where applicable, formal authorization.
+## Product principles
 
-### United States — FedRAMP High baseline
+- **Context before mechanics.** Lead with the user's task and decision. Explain
+  backend terminology where it helps, without requiring it for the first journey.
+- **Visible consequences.** Show what changed after consent or requester changes.
+  Clear stale results when the request context changes.
+- **Purpose-specific consent.** Treatment, research, and limited sharing examples
+  have distinct rules; success in one scenario is not continuing permission.
+- **Accessible control.** Support keyboard navigation, readable status messages,
+  responsive layouts, and recovery after navigation or reload.
+- **Honest simulation.** Label the browser mode, use synthetic fixtures, and keep
+  session activity distinct from a production audit log.
+- **Preserved backend boundaries.** The frontend does not weaken credentials,
+  residency checks, policy sync, or human-oversight requirements in the reference stack.
+- **Evidence matched to claims.** A successful build, browser test, backend test,
+  deployment, and user study answer different questions.
 
-| In scope | Out of scope (clarification) |
-|----------|------------------------------|
-| Architecture toward **NIST SP 800-53 Rev 5 High** (410 controls) via FedRAMP baseline | Claiming FedRAMP High **authorization** without agency ATO |
-| **SA-9(5)** — processing, storage, and service location in **US jurisdiction** for High-impact data | **US-person citizenship** as a FedRAMP requirement (not a government-wide rule; agency-specific add-ons may apply) |
-| Continuous monitoring, incident response, personnel screening as **ATO path** obligations | Program/20x High shortcut (not available today for full High) |
-| TEFCA QHIN patterns; SSRAA for new FHIR nodes (2027-01-01) | Production GovCloud deployment in reference slice |
+## Acceptance and evidence
 
-### European Union — GDPR + EHDS
+| Product requirement | Appropriate check |
+|---|---|
+| Visitors can complete the intended sequence | Browser test through all nine checkpoints; direct review of the journey |
+| Decisions and consent transitions remain consistent | Fixture adapter tests and scenario tests for allowed, denied, revoked, and limited outcomes |
+| Request context survives navigation | Patient/purpose/team round-trip and browser-history tests |
+| Guide progress follows actual actions | Tests for wrong context, ordered actions, pause/resume, reload, and reset |
+| Static hosting works | Build/export, nested route reloads, no gateway traffic, and inspection of the published Pages site |
+| Interface is usable across input and viewport sizes | Keyboard and responsive review plus automated accessibility checks; these do not replace assistive-technology testing |
+| Backend behavior is maintained | Hermetic checks plus separate cooperative and adversarial Compose scenarios when backend/runtime claims are made |
+| The experience helps real users | Future user research; expert inspection and synthetic tests do not establish engagement or learning outcomes |
 
-| In scope | Out of scope (clarification) |
-|----------|------------------------------|
-| Default **no cross-border PHI**; data remains in EU jurisdiction cell | EU-wide master patient index (does not exist) |
-| Lawful basis, purpose limitation, minimization, erasure | Unqualified reliance on **EU-US Data Privacy Framework** (fragile post-2026 litigation) |
-| EHDS hooks: MyHealth@EU (primary), HealthData@EU / secure processing (secondary, opt-out) | Full EHDS secondary-use platform in reference slice |
-| SCCs + TIA + exporter-held keys when transfer is unavoidable | Routine cross-bloc PHI flows |
+See [experience redesign](experience-redesign.md), [live review](live-experience-review.md),
+and [walkthrough evidence](guided-walkthrough.md) for bounded results. Current
+remote run status belongs in [GitHub Actions](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions).
 
-### EU AI Act
+## Boundaries and next decisions
 
-| In scope | Out of scope (clarification) |
-|----------|------------------------------|
-| Governance layer for **actual AI features** (triage, risk scoring, etc.) | Treating the exchange platform itself as a high-risk AI system |
-| Art. 50 transparency labeling; human oversight gates for AI decisions | Full conformity assessment / Notified Body process |
-| Activity logging and traceability for AI components | Watermarking infrastructure in PoC |
+Out of scope are real patient data, clinical recommendations, production identity
+federation, production consent administration, clinical AI, security certification,
+and claims of legal compliance or deployment hardening. Browser simulation cannot
+prove live OPA/OPAL enforcement or actual regional data residency. The local
+backend retains development credentials, stubs, and its documented threat model.
 
-**Deterministic** record linkage, routing, and policy enforcement are **outside** EU AI Act high-risk scope.
-
----
-
-## Core product principles
-
-1. **Sovereignty by cell** — PHI, keys, and primary audit streams stay in the jurisdiction cell unless law and policy explicitly permit otherwise.
-2. **Global plane is config-only** — No PHI in the global control plane (routing tables, tenant registry, policy bundles, AI model registry metadata).
-3. **Policy-as-code** — Residency, purpose, consent, and minimum-necessary rules enforced at the Policy Enforcement Point (PEP) via OPA (Rego).
-4. **Federated identity** — Resolve patients via home jurisdiction (NCP→NCP, IHE PDQm / `$match`); no fictional global MPI.
-5. **Honest erasure** — Crypto-shred at **region/tenant** granularity on stock HAPI; per-subject shred only where search trade-offs are accepted.
-6. **Audit realism** — Sectoral retention obligations may require identifiable audit records; pseudonymize where permitted, do not claim zero identifiers.
-7. **Verify before claim** — Hermetic `verify.sh` for CI; compose E2E in `demo.sh` only.
-
----
-
-## Reference slice vs target state
-
-| | Reference slice (PoC) | Target state |
-|---|----------------------|--------------|
-| Cells | EU + US cells in compose; single global gateway routes to both | Per-cell region gateways in mesh |
-| FHIR | HAPI R4 + US Core samples | Full USCDI / EHDS coverage |
-| Policy | OPA HTTP + **OPAL consent sync (PoC)** | OPA Envoy `ext_authz` + hardened OPAL |
-| Keys | Software KMS stand-in | HSM / cloud KMS per region |
-| AI gov | FastAPI stub | Production model registry + incident reporting |
-| Auth | SSRAA stub + stub tenants | Full SSRAA / UDAP, EHDS identity |
-
----
-
-## Non-goals (this program increment)
-
-- FedRAMP ATO, GDPR DPA sign-off, or Notified Body conformity
-- Production Kubernetes, service mesh, Terraform/GovCloud
-- Cross-bloc PHI as the headline demo flow
-- Per-patient crypto-shred on unmodified HAPI search indexes
-
----
-
-## Related documents
-
-| Document | Purpose |
-|----------|---------|
-| [plan.md](plan.md) | Implementation plan, fleet gates, todos |
-| [architecture/overview.md](architecture/overview.md) | System architecture |
-| [architecture/compliance-mapping.md](architecture/compliance-mapping.md) | Control and legal mapping |
-| [roadmap.md](roadmap.md) | Regulatory deadlines and delivery phases |
-| [adr/](adr/) | Architecture decision records |
+Future work should address an observed user need and define how its result will be
+assessed. Production exchange, regulatory authorization, provider integration, and
+broader deployment require their own scope and evidence; they are not implied by
+this demo. See the [roadmap](roadmap.md) for proposed work and
+[architecture](architecture/overview.md) for current implementation boundaries.
