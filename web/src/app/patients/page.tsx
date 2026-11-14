@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { DEMO_CREDENTIALS, type ApiResult, getPatient } from "@/lib/api";
 import { DEMO_EVENT, DEMO_PATIENTS, IS_DEMO } from "@/lib/demo";
 import { cn } from "@/lib/utils";
+import { reportWalkthroughAction, type WalkthroughAction } from "@/lib/walkthrough";
+import { WalkthroughCheckpoint } from "@/components/walkthrough/guided-walkthrough";
 
 function returnedFields(data: Record<string, unknown>) {
   const source = typeof data.patient === "object" && data.patient !== null ? data.patient as Record<string, unknown> : data;
@@ -29,6 +31,14 @@ function returnedFields(data: Record<string, unknown>) {
   if (typeof source.gender === "string") rows.push({ label: "Administrative gender", value: source.gender });
   if (typeof source.id === "string") rows.push({ label: "Record ID", value: source.id });
   return rows;
+}
+
+function guideAccessAction(patientId: string, purpose: string, credential: string, response: ApiResult<Record<string, unknown>>): WalkthroughAction {
+  const body = !response.ok && typeof response.body === "object" && response.body !== null ? response.body as Record<string, unknown> : null;
+  const fields = response.ok ? returnedFields(response.data) : [];
+  return { kind: "access", patientId, purpose, credential, ok: response.ok,
+    reason: typeof body?.reason === "string" ? body.reason : undefined,
+    limited: response.ok && response.data.cross_bloc === true && fields.length === 1 && fields[0].label === "Record ID" };
 }
 
 export default function PatientsPage() {
@@ -76,6 +86,7 @@ function PatientAccessContent() {
     if (!IS_DEMO && version !== requestVersion.current) return;
     setResult(response);
     setLoading(false);
+    if (IS_DEMO) reportWalkthroughAction(guideAccessAction(patientId, purpose, credential, response));
   }
 
   const visiblePatients = DEMO_PATIENTS.filter((item) => `${item.name} ${item.id} ${item.identifier} ${item.region}`.toLowerCase().includes(search.toLowerCase().trim()));
@@ -125,6 +136,7 @@ function PatientAccessContent() {
             {result?.ok && <section className="rounded-xl border border-primary/25 bg-card p-6"><div className="flex items-start gap-3"><CircleCheck className="mt-0.5 h-6 w-6 shrink-0 text-primary" aria-hidden /><div><h2 className="text-lg font-semibold">Access allowed</h2><p className="mt-1 text-sm text-muted-foreground">{IS_DEMO ? "Simulated decision. " : "Gateway decision. "}Only the fields returned for this request appear below.</p></div></div><dl className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">{returnedFields(result.data).map((field) => <div key={field.label}><dt className="text-xs text-muted-foreground">{field.label}</dt><dd className="mt-1 break-words text-sm font-medium">{field.value}</dd></div>)}</dl>{result.data.cross_bloc === true && <p className="mt-4 rounded-lg bg-warning-muted p-3 text-sm">Limited cross-region derivative: identifying clinical fields are withheld.</p>}<Link href={consentHref} className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4">Manage consent<ArrowRight className="h-4 w-4" aria-hidden /></Link><ResponseDetails data={result.data} /></section>}
             {result && !result.ok && <section role="alert" className="rounded-xl border border-warning/40 bg-card p-6"><div className="flex items-start gap-3"><LockKeyhole className="mt-0.5 h-6 w-6 shrink-0 text-warning" aria-hidden /><div><h2 className="text-lg font-semibold">{denied ? "Access blocked" : "Unable to check access"}</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{result.status === 0 ? "The gateway could not be reached. Check that the local backend is running, then try again." : result.error}</p></div></div><div className="mt-5 flex flex-wrap gap-4 text-sm">{residencyDenied ? <Button onClick={() => credentialInput.current?.focus()}>Change requesting team<ArrowRight className="h-4 w-4" aria-hidden /></Button> : purposeDenied ? <Button onClick={() => purposeInput.current?.focus()}>Change purpose<ArrowRight className="h-4 w-4" aria-hidden /></Button> : null}<Link href={consentHref} className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">{residencyDenied || purposeDenied ? "View consent" : "Review consent"}<ArrowRight className="h-4 w-4" aria-hidden /></Link><p className="self-center text-xs text-muted-foreground">Consent alone does not override regional restrictions.</p></div><ResponseDetails data={result.body ?? { status: result.status, error: result.error }} /></section>}
           </div>
+          {IS_DEMO && result && <WalkthroughCheckpoint action={guideAccessAction(patientId, purpose, credential, result)} />}
         </div>
       </div>
     </div>

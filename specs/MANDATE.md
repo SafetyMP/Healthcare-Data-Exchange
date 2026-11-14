@@ -37,6 +37,20 @@ issues without changing backend authorization; add focused regression checks;
 independently review the fixes; pass frontend and required remote checks including
 CodeQL; deploy the reviewed commit and verify its public behavior.
 
+## Follow-up: in-app guided walkthrough (2026-11-14)
+
+The user explicitly requests a first-use guided walkthrough for consent, requesting
+teams and regional access, followed by a GitHub Pages update. This authorizes a
+frontend-only guide integrated with the existing synthetic forms. Historical
+fleet and backend authorization remain unchanged.
+
+Acceptance: discoverable start; clear reset disclosure; real action/result-driven
+progress; consent grant/revoke and purpose separation; requester preservation on
+consent round trips; regional denial and limited derivative example; pause/resume,
+reload and reset recovery; keyboard and mobile usability; no guide in live gateway
+mode; independent review, relevant local/remote tests, and verified Pages deployment.
+Native implementers use disjoint files; coordinator owns shell/page integration.
+
 ---
 
 # Historical multi-agent contract (phase 3; preserved)

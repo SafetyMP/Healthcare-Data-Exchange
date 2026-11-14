@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, CircleCheck, Eye, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 import { PatientSelector, ResponseDetails, useSelectedPatient } from "@/components/clinical/patient-selector";
 import { PageHeader } from "@/components/layout/page-header";
@@ -11,6 +11,10 @@ import { type ApiResult, postAiTriage } from "@/lib/api";
 import { DEMO_EVENT, IS_DEMO } from "@/lib/demo";
 
 export default function AiTriagePage() {
+  return <Suspense fallback={<p role="status">Loading patient context…</p>}><AiTriageContent /></Suspense>;
+}
+
+function AiTriageContent() {
   const { patientId, setPatientId } = useSelectedPatient();
   const [symptoms, setSymptoms] = useState("Example symptom A, example symptom B");
   const [storedResult, setResult] = useState<ApiResult<Record<string, unknown>> | null>(null);

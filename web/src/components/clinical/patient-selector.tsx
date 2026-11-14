@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { DEMO_PATIENTS, DEMO_RESET_EVENT } from "@/lib/demo";
 
@@ -28,6 +29,7 @@ export function resetSelectedPatient() {
 }
 
 export function useSelectedPatient() {
+  const requestedPatient = useSearchParams().get("patient");
   const [patientId, updatePatientId] = useState(defaultPatientId);
   const setPatientId = useCallback((value: string) => {
     if (!validPatientId(value)) return;
@@ -67,7 +69,7 @@ export function useSelectedPatient() {
       window.removeEventListener("popstate", restore);
       window.removeEventListener(DEMO_RESET_EVENT, reset);
     };
-  }, [setPatientId]);
+  }, [requestedPatient, setPatientId]);
   return { patientId, setPatientId, patient: DEMO_PATIENTS.find((patient) => patient.id === patientId) };
 }
 
