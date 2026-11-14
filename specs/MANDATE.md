@@ -1,4 +1,29 @@
-# MANDATE — multi-agent contract (phase 3)
+# MANDATE — current delivery and historical phase 3
+
+## Current delivery: experience redesign (2026-11-14)
+
+Status: IMPLEMENTED; publication is tracked by the Pages workflow. The user's explicit request to redesign
+Healthcare Data Exchange and host a GitHub Pages demo authorizes this new work.
+The historical phase-3 fleet below remains halted; no historical runtime is resumed.
+
+Scope: redesign the existing Next.js console around synthetic patient access,
+consent and understandable decisions; retain live gateway mode; add an isolated
+browser-local simulation and GitHub Pages static export; publish and verify demo.
+No policy, gateway, identity, consent-service or archived harness changes.
+
+Ownership: coordinator owns visual system, shell, overview and integration.
+Scoped native workers may own demo adapter, workflow pages, deployment/tests,
+and read-only independent review in disjoint paths. No corporate approval state changes.
+
+Acceptance: selection and search; readable allowed/denied access; consent
+grant/revoke and retry; clear simulation labels and reset; no demo API traffic;
+mobile and keyboard usability; typecheck, build, meaningful browser checks,
+independent review, required repository checks, and deployed Pages verification.
+Simulation checks are not live OPA, OPAL, HAPI or clinical validation.
+
+---
+
+# Historical multi-agent contract (phase 3; preserved)
 
 Status: HALTED  
 Signed: phase-3-parallel-2026-07-08  

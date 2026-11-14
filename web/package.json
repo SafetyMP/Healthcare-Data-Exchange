@@ -11,6 +11,10 @@
   "scripts": {
     "dev": "next dev --port 3100",
     "build": "next build",
+    "build:demo": "NEXT_PUBLIC_DEMO_MODE=true next build",
+    "preview:demo": "node scripts/serve-static.mjs",
+    "test:demo": "NEXT_PUBLIC_DEMO_MODE=true playwright test",
+    "verify:demo": "npm run test:unit && npm run typecheck && npm run build:demo && npm run test:demo",
     "start": "next start --port 3100",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -18,13 +22,14 @@
     "test:e2e:smoke": "playwright test --grep @smoke",
     "verify": "npm run typecheck && npm run build && npm run test:e2e:smoke",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "screenshots:rebuild-gif": "node scripts/capture-screenshots.mjs --from-existing"
+    "screenshots:rebuild-gif": "node scripts/capture-screenshots.mjs --from-existing",
+    "test:unit": "node --test tests/unit/api.test.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.27.0",
-    "next": "16.3.8",
+    "next": "16.4.6",
     "next-themes": "^0.4.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -37,8 +42,8 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "eslint": "^10.8.0",
-    "eslint-config-next": "16.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.4.6",
     "gifenc": "^1.0.3",
     "pngjs": "^7.0.0",
     "tailwindcss": "^4",
