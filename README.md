@@ -1,6 +1,6 @@
 # Healthcare Data Exchange
 
-**A guided synthetic demo of consent, requesting teams, and regional data access—with a separate FHIR, OPA, and OPAL reference backend.**
+**A synthetic disclosure desk for consent-aware regional access, with a FHIR, OPA and OPAL reference backend.**
 
 [**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
@@ -8,7 +8,7 @@
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
-[![Anna’s synthetic research request, with three ways to check access and a pilot cost worksheet](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+[![Disclosure desk showing a staged synthetic two-field packet](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
 Healthcare data access depends on more than finding a record. The purpose of a
 request, the requesting team's permissions, the patient's consent, and regional
@@ -22,7 +22,9 @@ certification.
 
 ## Try the privacy desk case
 
-A study coordinator asks the exchange’s data steward for Anna Mueller’s synthetic record. The bedside team uses treatment access for a different purpose. Choose the research request, switch the requesting region, or inspect the limited derivative that another team can obtain. Predict whether the model will deny access, allow access or limit fields, then choose **Run access check**. Replay Anna’s grant or withdrawal to compare the fields released and withheld with the original decision. Decide which claim the steward can sign off using the patient event, browser receipt and available endpoint observations. The case provides no receiver timestamps or measured propagation delay. **Reset tab demo** restores the initial synthetic state. **Open this access check** carries the same request into the full workspace. [Open the research request](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+The exchange data steward has three incoming requests for Anna Mueller’s synthetic EU record. Check the US derivative request, remove the name from the field manifest and stage the two remaining fields. Replay Anna’s withdrawal to see the packet cleared and the same request denied. The research and treatment requests let you compare consent and regional scope. [Open the disclosure desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+
+Release engineers can compare the mirror pointer with the published bundle, inspect a different working digest and identify what each receiver still needs to verify. [Operations guide](docs/exchange-operations.md) · [Policy release comparison](https://safetymp.github.io/Healthcare-Data-Exchange/#policy-provenance)
 
 The exchange director can keep the manual desk, introduce a checklist, or test a policy check alongside staff decisions. The worksheet estimates how many reviewer minutes per eligible request would cover integration, training and support. Its starting values are illustrative. Before expanding, the steward checks whether a shadow recommendation would release an unauthorized field or hold an eligible request. The operations director then compares the time saved against the better manual or checklist baseline and decides whether the team could reuse that time. [Explore the pilot worksheet](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs)
 
@@ -30,8 +32,8 @@ The audience comes from two operating perspectives. Maryland’s CRISP exchange 
 
 ## Try the guided walkthrough
 
-Open the [demo](https://safetymp.github.io/Healthcare-Data-Exchange/) and choose
-**Start guided walkthrough** under **Evidence & methods**. Nine checkpoints use the actual forms:
+Open [Patient access](https://safetymp.github.io/Healthcare-Data-Exchange/patients/) and choose
+**Start guided walkthrough**. Nine checkpoints use the actual forms:
 
 1. See a research request blocked when consent is absent.
 2. Grant research consent and check the same request again.
