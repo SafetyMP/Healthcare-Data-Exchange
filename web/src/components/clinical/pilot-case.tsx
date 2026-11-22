@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { CredentialProfile } from "@/lib/api";
-import { DEMO_PATIENTS, getDemoConsent, simulatePatient, type DemoPurpose } from "@/lib/demo";
-import { requesterPresets } from "./use-access-context";
+import { DEMO_EVENT, DEMO_PATIENTS, getDemoConsent, resetDemo, simulateConsent, simulatePatient, type DemoPurpose } from "@/lib/demo";
+import { resetSelectedPatient } from "./patient-selector";
+import { requesterPresets, resetAccessContext } from "./use-access-context";
 import { ArrowRightLeft, Files, Globe2, KeyRound, Users } from "lucide-react";
 import { WalkthroughLauncher } from "@/components/walkthrough/guided-walkthrough";
 import styles from "./pilot-case.module.css";
@@ -54,22 +55,70 @@ export function CasePage() {
   );
 }
 
+const possibleOutcomes = ["Deny access", "Allow access", "Limit fields"] as const;
+type Outcome = typeof possibleOutcomes[number];
+const fixtureFields = ["id", "resourceType", "name", "birthDate", "gender"];
+
+function checkRequest(patientId: string, purpose: DemoPurpose, requester: CredentialProfile) {
+  const result = simulatePatient(patientId, purpose, requester);
+  const fields = result.ok && Array.isArray(result.data.min_necessary_fields)
+    ? result.data.min_necessary_fields.filter((field): field is string => typeof field === "string")
+    : [];
+  const outcome: Outcome = !result.ok ? "Deny access" : result.data.exception_label === "cross_bloc_derivative" ? "Limit fields" : "Allow access";
+  return { fields, outcome, message: result.ok ? "The fixture permits these fields." : result.error };
+}
+
+type Check = ReturnType<typeof checkRequest>;
+type Lesson = { prediction: Outcome; first: Check; event?: { before: Check; after: Check; granted: boolean } };
+
+function subscribeToConsent(listener: () => void) {
+  window.addEventListener(DEMO_EVENT, listener);
+  return () => window.removeEventListener(DEMO_EVENT, listener);
+}
+
+function FieldReceipt({ title, check }: { title: string; check: Check }) {
+  return <div className={styles.receipt}>
+    <h4>{title} · {check.outcome}</h4>
+    <p><b>Released</b> {check.fields.join(", ") || "None"}</p>
+    <p><b>Withheld</b> {fixtureFields.filter(field => !check.fields.includes(field)).join(", ") || "None"}</p>
+  </div>;
+}
+
 function ResearchRequest() {
   const [selection, setSelection] = useState(0);
-  const [trace, setTrace] = useState<{ consent: boolean; fields: string[]; message: string } | null>(null);
+  const [prediction, setPrediction] = useState<Outcome | null>(null);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
   const scenario = comparisons[selection];
   const patient = DEMO_PATIENTS.find(item => item.id === "patient-eu-001");
+  const consent = useSyncExternalStore<boolean | null>(subscribeToConsent,
+    () => getDemoConsent("patient-eu-001", scenario.purpose), () => null);
+  const trace = lesson?.event?.after ?? lesson?.first;
   if (!patient) return null;
   const team = requesterPresets.find(item => item.value === scenario.requester);
   const query = new URLSearchParams({ patient: patient.id, purpose: scenario.purpose, requester: scenario.requester });
   function runCheck() {
-    if (!patient) return;
-    const consent = getDemoConsent(patient.id, scenario.purpose);
-    const result = simulatePatient(patient.id, scenario.purpose, scenario.requester);
-    const fields = result.ok && Array.isArray(result.data.min_necessary_fields)
-      ? result.data.min_necessary_fields.filter((field): field is string => typeof field === "string")
-      : [];
-    setTrace({ consent, fields, message: result.ok ? "Access allowed" : result.error });
+    if (!patient || !prediction) return;
+    setLesson({ prediction, first: checkRequest(patient.id, scenario.purpose, scenario.requester) });
+  }
+  function replayConsent() {
+    if (!patient || !lesson || !trace || consent === null) return;
+    const granted = !consent;
+    const update = simulateConsent(patient.id, scenario.purpose, granted);
+    if (update.ok) {
+      const after = checkRequest(patient.id, scenario.purpose, scenario.requester);
+      setLesson({ ...lesson, event: { before: trace, after, granted } });
+    }
+  }
+  function selectRequest(index: number) {
+    setSelection(index);
+    setPrediction(null);
+    setLesson(null);
+  }
+  function resetSession() {
+    resetSelectedPatient();
+    resetAccessContext();
+    resetDemo();
+    selectRequest(0);
   }
   return (
     <section id="research-request" className={styles.case} aria-label="Access request intake">
@@ -77,7 +126,7 @@ function ResearchRequest() {
         <legend>Request to review</legend>
         <div className={styles.options}>{comparisons.map((item, index) =>
           <label key={item.label}>
-            <input type="radio" name="request-scenario" checked={index === selection} onChange={() => { setSelection(index); setTrace(null); }} />
+            <input type="radio" name="request-scenario" checked={index === selection} onChange={() => selectRequest(index)} />
             {item.label}
           </label>
         )}</div>
@@ -89,6 +138,7 @@ function ResearchRequest() {
           <div><dt>Home region</dt><dd>{patient.organization} ({patient.region})</dd></div>
           <div><dt>Purpose</dt><dd>{purposeLabels[scenario.purpose]}</dd></div>
           <div><dt>Requested by</dt><dd>{team?.label}</dd></div>
+          <div><dt>Purpose consent</dt><dd>{consent === null ? "Loading preference" : consent ? "Granted" : "Withheld"}</dd></div>
         </dl>
       </div>
       <div className={styles.request}>
@@ -96,21 +146,45 @@ function ResearchRequest() {
           <h3>{scenario.question}</h3>
           <p>{scenario.detail}</p>
         </div>
+        <fieldset className={styles.predict}>
+          <legend>Predict the decision</legend>
+          <div className={styles.options}>{possibleOutcomes.map(outcome =>
+            <label key={outcome}><input type="radio" name="prediction" checked={outcome === prediction}
+              onChange={() => { setPrediction(outcome); setLesson(null); }} />{outcome}</label>
+          )}</div>
+        </fieldset>
         <div className={styles.requestActions}>
-          <button className="primary-link" type="button" onClick={runCheck}>Run access check</button>
+          <button className="primary-link" type="button" onClick={runCheck} disabled={!prediction || consent === null}>Run access check</button>
           <Link href={`/patients?${query}`}>Open this access check</Link>
         </div>
       </div>
       <figure className={styles.trace} aria-label="Synthetic access decision path" aria-live="polite">
-        <figcaption>Decision path</figcaption>
+        <figcaption>Decision path{lesson?.event ? lesson.event.granted ? " after Anna’s grant" : " after Anna’s withdrawal" : ""}</figcaption>
         <ol>
           <li><Users aria-hidden="true" /><span>Requester</span><strong>{team?.label}</strong></li>
-          <li><KeyRound aria-hidden="true" /><span>Purpose consent</span><strong>{trace ? trace.consent ? "Granted" : "Withheld" : "Awaiting check"}</strong></li>
+          <li><KeyRound aria-hidden="true" /><span>Purpose consent</span><strong>{consent === null ? "Loading" : consent ? "Granted" : "Withheld"}</strong></li>
           <li><Globe2 aria-hidden="true" /><span>Region</span><strong>{scenario.requester.startsWith("us-") ? "US team · EU record" : "EU team · EU record"}</strong></li>
           <li><Files aria-hidden="true" /><span>Returned fields</span><strong>{trace ? trace.fields.length ? trace.fields.join(", ") : "None" : "Awaiting check"}</strong></li>
         </ol>
-        {trace && <p><strong>Result</strong> {trace.message}</p>}
+        {lesson && <p><strong>{lesson.prediction === lesson.first.outcome ? "Prediction matched." : "Prediction differed."}</strong> For the first check, you chose {lesson.prediction.toLowerCase()} and the model returned {lesson.first.outcome.toLowerCase()}. {lesson.event ? "The diagram shows the latest check after Anna’s event." : lesson.first.message}</p>}
       </figure>
+      {lesson && <section className={styles.replay} aria-labelledby="patient-event">
+        <h3 id="patient-event">What if Anna changes her consent?</h3>
+        <p>Replay a synthetic patient event. Anna chooses whether to grant or withdraw consent for {purposeLabels[scenario.purpose].toLowerCase()}. As steward, check the same team and purpose again.</p>
+        <button type="button" className={styles.eventButton} onClick={replayConsent}>{consent ? "Replay Anna’s withdrawal" : "Replay Anna’s grant"}</button>
+        <div className={styles.receipts} aria-live="polite">
+          {lesson.event ? <>
+            <FieldReceipt title="Before the event" check={lesson.event.before} />
+            <FieldReceipt title={lesson.event.granted ? "After Anna’s grant" : "After Anna’s withdrawal"} check={lesson.event.after} />
+            <p>{lesson.event.after.message}</p>
+          </> : <FieldReceipt title="Current check" check={lesson.first} />}
+        </div>
+      </section>}
+      <details className={styles.session}>
+        <summary>Session settings and reset</summary>
+        <p>Consent and activity carry into the technical workspace and survive a reload in this tab when session storage is available. Predictions and comparisons clear when you leave or reload. Reset restores the original synthetic consents and clears activity and walkthrough progress.</p>
+        <button type="button" className={styles.eventButton} onClick={resetSession}>Reset tab demo</button>
+      </details>
     </section>
   );
 }

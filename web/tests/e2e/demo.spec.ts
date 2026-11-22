@@ -33,7 +33,10 @@ test.describe("Static synthetic demo", () => {
       await expect(intake.locator("dd").nth(1)).toHaveText(new RegExp(expectedPurpose, "i"));
       const expectedTeam = requester === "us-clinician" ? "US care team · limited cross-region access" : requester === "us-home" ? "US home care team" : "EU visiting care team";
       await expect(intake.locator("dd").nth(2)).toHaveText(expectedTeam);
+      await expect(page.getByRole("button", { name: "Run access check" })).toBeDisabled();
+      await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
       await page.getByRole("button", { name: "Run access check" }).click();
+      await expect(intake.getByText(purpose === "derivative" ? "Prediction matched." : "Prediction differed.", {exact: true})).toBeVisible();
       const flow = intake.getByRole("figure", { name: "Synthetic access decision path" });
       await expect(flow.getByRole("listitem").last()).toContainText(purpose === "derivative" ? "id, resourceType" : "None");
       await page.getByRole("link", { name: "Open this access check" }).click();
@@ -42,6 +45,40 @@ test.describe("Static synthetic demo", () => {
       await page.getByRole("button", { name: "Check access", exact: true }).click();
       await expect(page.getByRole("heading", { name: outcome, exact: true })).toBeVisible();
     }
+  });
+
+  test("patient events replay the same request, preserve tab consent and restore baseline on reset", async ({ page }) => {
+    await page.goto("./");
+    const predict = page.getByRole("radio", { name: "Deny access", exact: true });
+    const run = page.getByRole("button", { name: "Run access check" });
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Deny access" })).toBeVisible();
+    const allowed = page.getByRole("heading", { name: "After Anna’s grant · Allow access" }).locator("..");
+    await expect(allowed).toContainText("Withheld None");
+    await expect(allowed).toContainText("name, birthDate, gender");
+    await page.reload();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Granted");
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Allow access" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "After Anna’s withdrawal · Deny access" }).locator("..")).toContainText("Released None");
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await page.getByText("Session settings and reset").click();
+    await page.getByRole("button", { name: "Reset tab demo" }).click();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Withheld");
+
+    await page.getByRole("radio", { name: "Different region" }).check();
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "After Anna’s grant · Deny access" })).toBeVisible();
+    await expect(page.getByText(/different regions/, {exact: false}).first()).toBeVisible();
   });
 
   test("pilot worksheet distinguishes staffing value, shortfall and incomplete inputs", async ({ page }) => {
