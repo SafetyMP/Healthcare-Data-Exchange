@@ -6,7 +6,7 @@ function guide(page: Page) {
 }
 
 async function startWalkthrough(page: Page) {
-  await page.goto("./");
+  await page.goto("./patients/");
   await expect(page.getByText("Nine checkpoints, using synthetic data. Starting or restarting resets this tab’s demo consent and activity.", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Start guided walkthrough", exact: true }).first().click();
   await expectStep(page, 1);
@@ -187,7 +187,7 @@ test.describe("Guided synthetic walkthrough", () => {
 
   test("the mobile guide can start, pause and resume using the keyboard", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("./");
+    await page.goto("./patients/");
     await tabTo(page, page.getByRole("button", { name: "Start guided walkthrough", exact: true }).first());
     await page.keyboard.press("Enter");
     await expectLocked(page, 1);

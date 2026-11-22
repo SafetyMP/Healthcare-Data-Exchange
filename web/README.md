@@ -27,7 +27,7 @@ NEXT_PUBLIC_DEMO_MODE=true npm run dev
 # http://localhost:3100/Healthcare-Data-Exchange/
 ```
 
-The case landing traces a synthetic access decision and compares staff capacity with pilot cost. Under **Evidence & methods**, inspect fixture provenance, open the technical workspace, or choose **Start guided walkthrough**. From a workflow, **Return to case** takes you back to the intake.
+The disclosure desk evaluates three synthetic requests and stages a field-limited JSON preview. Replay a patient event to recheck the packet. The pilot worksheet compares staff capacity with cost. The compact technical reference links the fixture, receiving-gateway probe and pinned policy publication comparison. [Operations guide](../docs/exchange-operations.md)
 The guide covers research deny/grant/revoke, separate treatment consent, regional
 denial, the permitted limited derivative, and Activity. It checks actual form
 results, supports pause/resume across reloads, and is absent from gateway mode.

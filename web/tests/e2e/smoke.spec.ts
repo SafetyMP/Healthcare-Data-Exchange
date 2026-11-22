@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 test.describe("CHEX web smoke @smoke", () => {
   test("dashboard renders with accessible landmarks", async ({ page }) => {
     await page.goto("./");
-    await expect(page.getByRole("heading", { name: process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? "Privacy desk intake" : "The right data. The right access.", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? "Disclosure desk" : "Gateway reference", level: 1 })).toBeVisible();
     await expect(page.locator("#main-content")).toBeVisible();
     if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
       await expect(page.getByRole("region", { name: "Guided walkthrough", exact: true })).toHaveCount(0);

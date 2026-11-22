@@ -71,7 +71,7 @@ function ShellContent({ nav, children }: Props) {
     resetDemo();
     setNotice("Demo reset. Original patients and consent restored.");
   }
-  if (IS_DEMO && isCurrentPage(pathname, "/")) {
+  if (isCurrentPage(pathname, "/")) {
     return <main id="main-content" tabIndex={-1}>{children}</main>;
   }
   return (
