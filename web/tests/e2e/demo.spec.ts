@@ -19,6 +19,110 @@ async function checkResearch(page: Page, allowed: boolean) {
 }
 
 test.describe("Static synthetic demo", () => {
+  test("research desk presets open the matching access decision", async ({ page }) => {
+    for (const [label, purpose, requester, outcome] of [
+      ["Research request", "research", "eu-visiting", "Access blocked"],
+      ["US treatment", "treatment", "us-home", "Access blocked"],
+      ["US secondary use", "derivative", "us-clinician", "Access allowed"],
+    ]) {
+      await page.goto("./#research-request");
+      await page.getByRole("radio", { name: label, exact: true }).check();
+      const intake = page.getByRole("region", { name: "Access request intake" });
+      await expect(intake.getByRole("heading", { name: "Anna Mueller" })).toBeVisible();
+      const expectedPurpose = purpose === "derivative" ? "Derivative use" : purpose;
+      await expect(intake.locator("dd").nth(1)).toHaveText(new RegExp(expectedPurpose, "i"));
+      const expectedTeam = requester === "us-clinician" ? "US clinician team" : requester === "us-home" ? "US home care team" : "EU visiting care team";
+      await expect(intake.locator("dd").nth(2)).toHaveText(expectedTeam);
+      await expect(page.getByRole("button", { name: "Run access check" })).toBeDisabled();
+      await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
+      await page.getByRole("button", { name: "Run access check" }).click();
+      await expect(intake.getByText(purpose === "derivative" ? "Prediction matched." : "Prediction differed.", {exact: true})).toBeVisible();
+      const flow = intake.getByRole("figure", { name: "Synthetic access decision path" });
+      await expect(flow.getByRole("listitem").last()).toContainText(purpose === "derivative" ? "id, resourceType" : "None");
+      await page.getByRole("link", { name: "Open this access check" }).click();
+      await expect(page.getByLabel("Purpose of access")).toHaveValue(purpose);
+      await expect(page.getByLabel("Requesting team")).toHaveValue(requester);
+      await page.getByRole("button", { name: "Check access", exact: true }).click();
+      await expect(page.getByRole("heading", { name: outcome, exact: true })).toBeVisible();
+    }
+  });
+
+  test("patient events replay the same request, preserve tab consent and restore baseline on reset", async ({ page }) => {
+    await page.goto("./");
+    const predict = page.getByRole("radio", { name: "Deny access", exact: true });
+    const run = page.getByRole("button", { name: "Run access check" });
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Deny access" })).toBeVisible();
+    const allowed = page.getByRole("heading", { name: "After Anna’s grant · Allow access" }).locator("..");
+    await expect(allowed).toContainText("Withheld None");
+    await expect(allowed).toContainText("name, birthDate, gender");
+    await page.reload();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Granted");
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Allow access" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "After Anna’s withdrawal · Deny access" }).locator("..")).toContainText("Released None");
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await page.getByText("Session settings and reset").click();
+    await page.getByRole("button", { name: "Reset tab demo" }).click();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Withheld");
+
+    await page.getByRole("radio", { name: "US treatment" }).check();
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "After Anna’s grant · Deny access" })).toBeVisible();
+    await expect(page.getByText(/different regions/, {exact: false}).first()).toBeVisible();
+  });
+
+  test("steward distinguishes a simulated consent receipt from evidence at the receiving endpoint", async ({ page }) => {
+    await page.goto("./");
+    const intake = page.getByRole("region", { name: "Access request intake" });
+    await expect(intake.getByRole("radio", { name: "Limited return", exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "US secondary use", exact: true }).check();
+    await expect(intake.getByText("Derivative exception", { exact: true })).toBeVisible();
+    await expect(intake.getByText("id, resourceType", { exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
+    await intake.getByRole("button", { name: "Run access check" }).click();
+    await intake.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    const proof = intake.getByRole("group", { name: "Which claim can you sign off?" });
+    await expect(proof).toBeVisible();
+    await expect(intake.getByText("No endpoint observation", { exact: true })).toBeVisible();
+    const status = intake.getByRole("status");
+    await expect(status).toHaveText("");
+    const initialRegion = await status.elementHandle();
+    await proof.getByRole("button", { name: "The receiving endpoint enforced it" }).click();
+    expect(await initialRegion?.evaluate(node => node.isConnected && node.textContent?.includes("Request endpoint evidence before signing"))).toBe(true);
+    await expect(intake.getByText(/Request endpoint evidence before signing/)).toBeVisible();
+    await proof.getByRole("button", { name: "This browser replay withheld the fields" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toBeVisible();
+    await intake.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toHaveCount(0);
+    await expect(proof.getByRole("button", { name: "This browser replay returned the listed fields" })).toBeVisible();
+  });
+
+  test("pilot worksheet distinguishes staffing value, shortfall and incomplete inputs", async ({ page }) => {
+    await page.goto("./#pilot-costs");
+    await expect(page.getByText("$3,600 above cost", { exact: true })).toBeVisible();
+    const comparison = page.getByRole("figure", { name: "Year-one cost and staff capacity comparison" });
+    await expect(comparison).toContainText("$18,000");
+    await expect(page.getByText(/Break-even requires 4 minutes/)).toBeVisible();
+    const time = page.getByLabel("Minutes saved per request");
+    await time.fill("4");
+    await expect(page.getByText("$0 at break-even", { exact: true })).toBeVisible();
+    await time.fill("0");
+    await expect(comparison).toContainText("Staff capacity $0");
+    await expect(page.getByText("$14,400 shortfall", { exact: true })).toBeVisible();
+    await page.getByLabel("Eligible requests per month").fill("");
+    await expect(page.getByText(/Enter a whole number/)).toBeVisible();
+  });
+
   test("consent revoke, grant, retry and reload work without API traffic", async ({ page }) => {
     const apiRequests: string[] = [];
     page.on("request", (request) => {
@@ -197,7 +301,7 @@ test.describe("Static synthetic demo", () => {
   test("mobile overview fits and keyboard navigation reaches patient access", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("./");
-    await expect(page.getByRole("heading", { name: "The right data. The right access.", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Privacy desk intake", level: 1 })).toBeVisible();
     const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
     expect(width.content).toBeLessThanOrEqual(width.viewport);
 
@@ -205,14 +309,14 @@ test.describe("Static synthetic demo", () => {
     await expect(page.getByRole("link", { name: "Skip to main content", exact: true })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#main-content")).toBeFocused();
-    await page.getByRole("button", { name: "Open navigation", exact: true }).focus();
-    await page.keyboard.press("Enter");
-    const patientLink = page.getByRole("navigation", { name: "Mobile", exact: true })
-      .getByRole("link", { name: "Patient access", exact: true });
+    await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
+    const patientLink = page.getByRole("link", { name: "Open technical workspace" });
     await patientLink.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { name: "Patient access", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Mobile", exact: true })).toHaveCount(0);
+    await page.getByRole("link", { name: "Return to case" }).click();
+    await expect(page.getByRole("heading", { name: "Privacy desk intake" })).toBeVisible();
   });
 });
 

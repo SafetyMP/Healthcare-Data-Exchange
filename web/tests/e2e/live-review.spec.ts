@@ -162,21 +162,21 @@ test.describe("Published experience review regressions", () => {
 
   test("mobile keyboard menu supports Escape, same-route focus and active route", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("./");
+    await page.goto("./consent/");
     const menuButton = page.getByRole("button", { name: "Open navigation", exact: true });
     await tabTo(page, menuButton);
     await page.keyboard.press("Enter");
     let menu = page.getByRole("navigation", { name: "Mobile", exact: true });
-    const overview = menu.getByRole("link", { name: "Overview", exact: true });
-    await expect(overview).toHaveAttribute("aria-current", "page");
+    const sameRoute = menu.getByRole("link", { name: "Consent management", exact: true });
+    await expect(sameRoute).toHaveAttribute("aria-current", "page");
     await expect(menu.getByRole("link", { name: "Documentation (opens in a new tab)", exact: true })).toBeVisible();
-    await tabTo(page, overview);
+    await tabTo(page, sameRoute);
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
     await expect(menuButton).toBeFocused();
 
     await page.keyboard.press("Enter");
-    await tabTo(page, overview);
+    await tabTo(page, sameRoute);
     await page.keyboard.press("Enter");
     await expect(page.locator("#main-content")).toBeFocused();
     await expect(menu).toHaveCount(0);
@@ -196,7 +196,7 @@ test.describe("Published experience review regressions", () => {
 
   test("short desktop sidebar keeps its last links keyboard reachable", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 480 });
-    await page.goto("./");
+    await page.goto("./consent/");
     const documentation = page.locator(".desktop-sidebar").getByRole("link", { name: "Documentation", exact: true });
     await tabTo(page, documentation);
     await expect(documentation).toBeFocused();
@@ -215,10 +215,10 @@ test.describe("Published experience review regressions", () => {
       await page.goto("./");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       await expectDocumentFits(page);
-      for (const selector of [".intro-copy > p", ".scenario-card > p"]) {
-        expect(await page.locator(selector).evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
+      for (const selector of ["#research-request p", "#pilot-costs p"]) {
+        expect(await page.locator(selector).first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
       }
-      expect(await page.locator(".patient-name-link small").first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(12);
+      expect(await page.locator("#research-request dt").first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(12);
       await page.goto("./patients/");
       await expectDocumentFits(page);
       await expect(page.getByRole("button", { name: "Check access", exact: true })).toBeVisible();
