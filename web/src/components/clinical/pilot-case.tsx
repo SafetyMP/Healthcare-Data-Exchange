@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { CaseEvidence, caseLink, parseCaseRoute, type CaseStage } from "./case-evidence";
+import { CaseEvidence, caseLink, parseCaseRoute, requestedFields, projectPacket, type PacketPlan, type CaseStage } from "./case-evidence";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { CredentialProfile } from "@/lib/api";
-import { DEMO_EVENT, DEMO_PATIENTS, getDemoConsent, resetDemo, simulateConsent, simulatePatient, type DemoPurpose } from "@/lib/demo";
+import { DEMO_EVENT, DEMO_PATIENTS, getDemoConsent, previewPatient, resetDemo, simulateConsent, simulatePatient, type DemoPurpose } from "@/lib/demo";
 import { resetSelectedPatient } from "./patient-selector";
 import { requesterPresets, resetAccessContext } from "./use-access-context";
-import { ArrowRightLeft, Files, Globe2, KeyRound, Users } from "lucide-react";
+import { ArrowRightLeft, ClipboardList, FileText, Users } from "lucide-react";
 import styles from "./pilot-case.module.css";
 
 const comparisons = [
-  { label: "Research request", purpose: "research", requester: "eu-visiting", scope: "Regional access", question: "Can the study coordinator use Anna’s record?", detail: "A study coordinator requests Anna’s record through the EU visiting team. Anna has a separate preference for research and treatment." },
-  { label: "US treatment", purpose: "treatment", requester: "us-home", scope: "Regional access", question: "Can the US home team use Anna’s record?", detail: "A US team sends a treatment request for the EU-held record. Consider the team’s scope alongside Anna’s purpose-specific choice." },
-  { label: "US secondary use", purpose: "derivative", requester: "us-clinician", scope: "Derivative exception", question: "What can travel with this secondary-use request?", detail: "A US clinician requests a derivative of the European record. Use the requester’s scope and Anna’s current choice to predict the response." },
-] satisfies { label: string; purpose: DemoPurpose; requester: CredentialProfile; scope: string; question: string; detail: string }[];
+  { label: "Research request", id: "DX-105", purpose: "research", requester: "eu-visiting", scope: "EU visiting team", receiver: "Coordinator’s handoff", detail: "The study coordinator asks for the record ID and resource type to match a roster row, plus birth date to check the study’s age criterion." },
+  { label: "US treatment", id: "DX-106", purpose: "treatment", requester: "us-home", scope: "US home team", receiver: "US home team’s handoff", detail: "A US care team asks for five demographic fields to reconcile its intake record with the European chart." },
+  { label: "US secondary use", id: "DX-104", purpose: "derivative", requester: "us-clinician", scope: "US clinician team", receiver: "US clinician’s handoff", detail: "A US clinician asks for the ID, resource type and name to reconcile a secondary-use extract against a named list." },
+] satisfies { label: string; id: string; purpose: DemoPurpose; requester: CredentialProfile; scope: string; receiver: string; detail: string }[];
 
 const purposeLabels: Record<DemoPurpose, string> = {
   research: "Research",
@@ -36,8 +36,15 @@ export function CasePage() {
   const consent = useSyncExternalStore<boolean | null>(subscribeToConsent,
     () => getDemoConsent("patient-eu-001", scenario.purpose), () => null);
   const previousMode = useRef(false);
+  const previousSection = useRef("");
   useEffect(() => {
-    if (hash.startsWith("#pilot-costs/")) document.getElementById("pilot-costs")?.scrollIntoView();
+    const section = hash.split("/")[0];
+    if (section === "#pilot-costs" || (section === "#research-request" && previousSection.current === "#pilot-costs")) {
+      const target = document.getElementById(section.slice(1));
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "start" });
+    }
+    previousSection.current = section;
   }, [hash]);
   useEffect(() => {
     if (previousMode.current !== route.technical) {
@@ -47,28 +54,48 @@ export function CasePage() {
       target?.scrollIntoView({ block: "start" });
     }
   }, [route.technical]);
-  function select(index: number) {
+  const plan = route.snapshot && consent !== route.granted ? undefined : route.plan;
+  function caseHash(section: string, purpose: DemoPurpose, granted?: boolean, decision?: PacketPlan) {
+    return ["#" + section, purpose, ...(decision && granted !== undefined ? [granted ? "granted" : "withheld", "plan-" + decision] : []), ...(route.mirror ? ["mirror"] : [])].join("/");
+  }
+  function changeCase(index: number, granted?: boolean, decision?: PacketPlan) {
     setLastSelection(index);
-    window.history.replaceState(null, "", "#research-request/" + comparisons[index].purpose + (route.mirror ? "/mirror" : ""));
+    window.history.replaceState(null, "", caseHash("research-request", comparisons[index].purpose, granted, decision));
     window.dispatchEvent(new Event("hashchange"));
   }
-  const toEvidence = (stage: CaseStage) => caseLink(scenario.purpose, consent ?? scenario.purpose !== "research", stage, "selected", route.mirror);
+  const toEvidence = (stage: CaseStage) => caseLink(scenario.purpose, consent ?? scenario.purpose !== "research", stage, "selected", route.mirror, plan);
   return <div className={styles.casePage}>
     <header className={styles.masthead}><span><ArrowRightLeft aria-hidden="true" /> Healthcare Data Exchange</span>
-      <nav aria-label="Case sections"><a href={"#research-request/" + scenario.purpose + (route.mirror ? "/mirror" : "")}>Privacy desk</a>
-        {!route.technical && <a href={"#pilot-costs/" + scenario.purpose + (route.mirror ? "/mirror" : "")}>Pilot costs</a>}
-        <a href={route.technical ? caseLink(scenario.purpose, route.granted, route.stage, route.trial, route.mirror) : toEvidence("consent")}>Technical evidence</a></nav></header>
+      <nav aria-label="Case sections"><a href={caseHash("research-request", scenario.purpose, route.technical ? route.granted : consent ?? undefined, route.technical ? route.plan : plan)}>Privacy desk</a>
+        {!route.technical && <a href={caseHash("pilot-costs", scenario.purpose, consent ?? undefined, plan)}>Pilot costs</a>}
+        <a href={route.technical ? caseLink(scenario.purpose, route.granted, route.stage, route.trial, route.mirror, route.plan) : toEvidence("consent")}>Technical evidence</a></nav></header>
     <div className={styles.caseBody}>
       <div hidden={route.technical}>
-        <div className={styles.caseHeading}><p className={styles.kicker}>Research access · Synthetic case</p><h1>Privacy desk intake</h1>
-        <p>A study coordinator needs Anna Mueller’s record. As data steward, decide which fields the team may receive. The operations director then weighs a shadow pilot.</p></div>
+        <header className={styles.opening}>
+          <div><p className={styles.kicker}>Research operations · Synthetic case</p>
+            <h1>One open row on the study roster</h1>
+            <p>A visiting study team is checking a roster before its next screening review. Anna Mueller’s row has a record ID, but the coordinator needs a birth date to check the study’s age criterion. Anna’s demographic record sits with the European exchange.</p>
+            <p>The coordinator sends a request to the exchange’s privacy desk. If the packet is incomplete, the row stays open and both teams have to revisit it. Copying every demographic field would disclose details the coordinator never asked for.</p>
+          </div>
+          <figure className={styles.handoffMap}><figcaption>How a roster request changes hands</figcaption><ol>
+            <li><FileText aria-hidden="true"/><div><strong>European record holder</strong><span>Maintains the patient record and makes it available through its regional gateway.</span></div></li>
+            <li><ClipboardList aria-hidden="true"/><div><strong>Exchange data steward</strong><span>Checks the team, purpose and patient choice before preparing a field list.</span></div></li>
+            <li><Users aria-hidden="true"/><div><strong>Visiting study coordinator</strong><span>Reviews the roster row. The study team makes the eligibility decision.</span></div></li>
+          </ol></figure>
+        </header>
         {route.snapshot && consent !== null && consent !== route.granted && !route.technical && <aside className={styles.referenceCard}>
           <strong>Shared trial and this tab</strong><p>The shared request used {route.granted ? "granted" : "withheld"} consent. Anna’s current {scenario.purpose} preference in this tab is {consent ? "granted" : "withheld"}. You can replay her synthetic event to reproduce the shared input.</p>
           <button className={styles.secondary} type="button" onClick={() => simulateConsent("patient-eu-001", scenario.purpose, route.granted)}>Replay Anna’s shared {route.granted ? "grant" : "withdrawal"}</button>
         </aside>}
-        <ResearchRequest key={scenario.purpose} selection={index} onSelect={select} evidenceHref={toEvidence("fields")} />
+        <ResearchRequest key={scenario.purpose} selection={index} consent={consent} plan={plan} onChange={changeCase} evidenceHref={toEvidence("fields")} />
+        <section className={styles.framework} aria-labelledby="framework-heading">
+          <p className={styles.kicker}>The exchange framework</p><h2 id="framework-heading">What supports the steward’s decision?</h2>
+          <ol><li><strong>Identify the requester</strong><p>The connected gateway verifies the team’s credentials. The desk needs to know who is asking before it can assess the purpose.</p></li>
+            <li><strong>Check consent and region</strong><p>The policy engine evaluates the stated purpose, the patient’s choice and the regional access rule for this record.</p></li>
+            <li><strong>Limit the packet</strong><p>The gateway filters the record to permitted fields. The steward can narrow that list further or pause the handoff when the team’s need is unclear.</p></li></ol>
+          <a href={toEvidence("consent")}>Inspect the selected check</a>
+        </section>
         <PilotWorksheet scenario={scenario.label} />
-        <aside className={styles.referenceCard}><strong>Verify this request</strong><p>Follow the selected patient, requester and purpose through consent, policy, field release and receiving-gateway evidence.</p><a href={toEvidence("consent")}>Inspect the selected check</a></aside>
       </div>
       {route.technical && <CaseEvidence key={scenario.purpose} scenario={scenario} route={route} />}
     </div></div>;
@@ -80,158 +107,100 @@ export function GatewayReference() {
     <p className={styles.localLinks}><Link href="/patients">Open patient access</Link> · <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange#run-the-reference-backend">Backend setup</a> · <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/scripts/demo.sh">Receiving-gateway probe</a></p></div>;
 }
 
-const possibleOutcomes = ["Deny access", "Allow access", "Limit fields"] as const;
-type Outcome = typeof possibleOutcomes[number];
-const fixtureFields = ["id", "resourceType", "name", "birthDate", "gender"];
-
-function checkRequest(patientId: string, purpose: DemoPurpose, requester: CredentialProfile) {
-  const result = simulatePatient(patientId, purpose, requester);
-  const fields = result.ok && Array.isArray(result.data.min_necessary_fields)
-    ? result.data.min_necessary_fields.filter((field): field is string => typeof field === "string")
-    : [];
-  const outcome: Outcome = !result.ok ? "Deny access" : result.data.exception_label === "cross_bloc_derivative" ? "Limit fields" : "Allow access";
-  return { fields, outcome, message: result.ok ? "The fixture permits these fields." : result.error };
-}
-
-type Check = ReturnType<typeof checkRequest>;
-type Lesson = { prediction: Outcome; first: Check; event?: { before: Check; after: Check; granted: boolean } };
-
 function subscribeToConsent(listener: () => void) {
   window.addEventListener(DEMO_EVENT, listener);
   return () => window.removeEventListener(DEMO_EVENT, listener);
 }
 
-function FieldReceipt({ title, check }: { title: string; check: Check }) {
-  return <div className={styles.receipt}>
-    <h4>{title} · {check.outcome}</h4>
-    <p><b>Released</b> {check.fields.join(", ") || "None"}</p>
-    <p><b>Withheld</b> {fixtureFields.filter(field => !check.fields.includes(field)).join(", ") || "None"}</p>
-  </div>;
+const plans: { key: PacketPlan; label: string }[] = [
+  { key: "requested", label: "Prepare requested fields" },
+  { key: "identifiers", label: "Prepare identifiers only" },
+  { key: "hold", label: "Hold for steward review" },
+];
+const fieldLabels: Record<string, string> = { id: "Record ID", resourceType: "Resource type", birthDate: "Birth date", gender: "Gender", name: "Name" };
+type Handoff = { fields: string[]; explanation: string };
+
+function handoffFor(scenario: typeof comparisons[number], consent: boolean, plan: PacketPlan): Handoff {
+  if (plan === "hold") return { fields: [], explanation: "The steward has paused this packet. The requesting team waits for clarification. No access check is needed for a hold." };
+  const check = previewPatient("patient-eu-001", scenario.purpose, scenario.requester, consent);
+  if (!check.ok) return { fields: [], explanation: !consent
+    ? "Anna has withheld consent for this purpose. The team’s request stays pending. Only a new patient choice can change that consent input."
+    : "The team and record are in different regions. Even with consent, this treatment request cannot supply the intake record through this route." };
+  const allowed = Object.keys(check.data.patient as Record<string, unknown>);
+  const fields = projectPacket(scenario.purpose, plan, allowed);
+  let explanation: string;
+  if (!fields.length) explanation = "The request includes a name outside the permitted field list. The whole proposed packet stays at the desk. The clinician can ask for a narrower extract.";
+  else if (fields.includes("birthDate")) explanation = "The coordinator could match the roster row and review the birth date against the study criterion. The study team still determines eligibility.";
+  else explanation = scenario.purpose === "research"
+    ? "The coordinator could match the record ID, but the age check stays open. The roster still needs a permitted birth date."
+    : "The clinician could reconcile a record ID. Without a name, confirming a match against the named list needs another route.";
+  return { fields, explanation };
 }
 
-function ResearchRequest({ selection, onSelect, evidenceHref }: { selection: number; onSelect: (value: number) => void; evidenceHref: string }) {
-  const [prediction, setPrediction] = useState<Outcome | null>(null);
-  const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [claim, setClaim] = useState<"browser" | "endpoint" | null>(null);
+function ResearchRequest({ selection, consent, plan, onChange, evidenceHref }: {
+  selection: number; consent: boolean | null; plan?: PacketPlan;
+  onChange: (index: number, granted?: boolean, decision?: PacketPlan) => void; evidenceHref: string;
+}) {
   const scenario = comparisons[selection];
   const patient = DEMO_PATIENTS.find(item => item.id === "patient-eu-001");
-  const consent = useSyncExternalStore<boolean | null>(subscribeToConsent,
-    () => getDemoConsent("patient-eu-001", scenario.purpose), () => null);
-  const trace = lesson?.event?.after ?? lesson?.first;
+  const [before, setBefore] = useState<{ granted: boolean; count: number } | null>(null);
   if (!patient) return null;
   const team = scenario.requester === "us-clinician" ? "US clinician team" : requesterPresets.find(item => item.value === scenario.requester)?.label;
-  function runCheck() {
-    if (!patient || !prediction) return;
-    setClaim(null);
-    setLesson({ prediction, first: checkRequest(patient.id, scenario.purpose, scenario.requester) });
+  const receipt = plan && consent !== null ? handoffFor(scenario, consent, plan) : null;
+  function decide(next: PacketPlan) {
+    if (consent === null) return;
+    setBefore(null);
+    if (next !== "hold") simulatePatient("patient-eu-001", scenario.purpose, scenario.requester);
+    onChange(selection, consent, next);
   }
-  function replayConsent() {
-    if (!patient || !lesson || !trace || consent === null) return;
-    const granted = !consent;
-    const update = simulateConsent(patient.id, scenario.purpose, granted);
-    if (update.ok) {
-      const after = checkRequest(patient.id, scenario.purpose, scenario.requester);
-      setClaim(null);
-      setLesson({ ...lesson, event: { before: trace, after, granted } });
-    }
-  }
-  function selectRequest(index: number) {
-    onSelect(index);
-    setPrediction(null);
-    setLesson(null);
-    setClaim(null);
+  function replay() {
+    if (consent === null || !plan || !receipt) return;
+    if (!simulateConsent("patient-eu-001", scenario.purpose, !consent).ok) return;
+    setBefore({ granted: consent, count: receipt.fields.length });
+    if (plan !== "hold") simulatePatient("patient-eu-001", scenario.purpose, scenario.requester);
+    onChange(selection, !consent, plan);
   }
   function resetSession() {
     resetSelectedPatient();
     resetAccessContext();
     resetDemo();
-    selectRequest(0);
+    setBefore(null);
+    onChange(0);
   }
-  return (
-    <section id="research-request" tabIndex={-1} className={styles.case} aria-label="Access request intake">
-      <fieldset className={styles.selector}>
-        <legend>Request to review</legend>
-        <div className={styles.options}>{comparisons.map((item, index) =>
-          <label key={item.label}>
-            <input type="radio" name="request-scenario" checked={index === selection} onChange={() => selectRequest(index)} />
-            {item.label}
-          </label>
-        )}</div>
-      </fieldset>
-      <div className={`intro-copy ${styles.story}`}>
-        <p className={styles.recordId}>Synthetic patient · {patient.id}</p>
-        <h2>{patient.name}</h2>
-        <dl className={styles.facts}>
-          <div><dt>Home region</dt><dd>{patient.organization} ({patient.region})</dd></div>
-          <div><dt>Purpose</dt><dd>{purposeLabels[scenario.purpose]}</dd></div>
-          <div><dt>Requested by</dt><dd>{team}</dd></div>
-          <div><dt>Policy scope</dt><dd>{scenario.scope}</dd></div>
-          <div><dt>Purpose consent</dt><dd>{consent === null ? "Loading preference" : consent ? "Granted" : "Withheld"}</dd></div>
-        </dl>
-      </div>
-      <div className={styles.request}>
-        <div aria-live="polite">
-          <h3>{scenario.question}</h3>
-          <p>{scenario.detail}</p>
-        </div>
-        <fieldset className={styles.predict}>
-          <legend>Predict the decision</legend>
-          <div className={styles.options}>{possibleOutcomes.map(outcome =>
-            <label key={outcome}><input type="radio" name="prediction" checked={outcome === prediction}
-              onChange={() => { setPrediction(outcome); setLesson(null); }} />{outcome}</label>
-          )}</div>
-        </fieldset>
-        <div className={styles.requestActions}>
-          <button className="primary-link" type="button" onClick={runCheck} disabled={!prediction || consent === null}>Run access check</button>
-          <a href={evidenceHref}>Inspect this request’s field evidence</a>
-        </div>
-      </div>
-      <figure className={styles.trace} aria-label="Synthetic access decision path" aria-live="polite">
-        <figcaption>Decision path{lesson?.event ? lesson.event.granted ? " after Anna’s grant" : " after Anna’s withdrawal" : ""}</figcaption>
-        <ol>
-          <li><Users aria-hidden="true" /><span>Requester</span><strong>{team}</strong></li>
-          <li><KeyRound aria-hidden="true" /><span>Purpose consent</span><strong>{consent === null ? "Loading" : consent ? "Granted" : "Withheld"}</strong></li>
-          <li><Globe2 aria-hidden="true" /><span>Region</span><strong>{scenario.requester.startsWith("us-") ? "US team · EU record" : "EU team · EU record"}</strong></li>
-          <li><Files aria-hidden="true" /><span>Returned fields</span><strong>{trace ? trace.fields.length ? trace.fields.join(", ") : "None" : "Awaiting check"}</strong></li>
-        </ol>
-        {lesson && <p><strong>{lesson.prediction === lesson.first.outcome ? "Prediction matched." : "Prediction differed."}</strong> For the first check, you chose {lesson.prediction.toLowerCase()} and the model returned {lesson.first.outcome.toLowerCase()}. {lesson.event ? "The diagram shows the latest check after Anna’s event." : lesson.first.message}</p>}
-      </figure>
-      {lesson && <section className={styles.replay} aria-labelledby="patient-event">
-        <h3 id="patient-event">What if Anna changes her consent?</h3>
-        <p>Replay a synthetic patient event. Anna chooses whether to grant or withdraw consent for {purposeLabels[scenario.purpose].toLowerCase()}. As steward, check the same team and purpose again.</p>
-        <button type="button" className={styles.eventButton} onClick={replayConsent}>{consent ? "Replay Anna’s withdrawal" : "Replay Anna’s grant"}</button>
-        <div className={styles.receipts} aria-live="polite">
-          {lesson.event ? <>
-            <FieldReceipt title="Before the event" check={lesson.event.before} />
-            <FieldReceipt title={lesson.event.granted ? "After Anna’s grant" : "After Anna’s withdrawal"} check={lesson.event.after} />
-            <p>{lesson.event.after.message}</p>
-          </> : <FieldReceipt title="Current check" check={lesson.first} />}
-        </div>
-        {lesson.event && <div className={styles.proof}>
-          <h4>Evidence for the pilot record</h4>
-          <dl>
-            <div><dt>Patient event</dt><dd>Anna’s synthetic {lesson.event.granted ? "grant" : "withdrawal"} for {scenario.purpose}</dd></div>
-            <div><dt>Access check</dt><dd>Browser fixture · {lesson.event.after.outcome}</dd></div>
-            <div><dt>Receiving gateway</dt><dd>No endpoint observation</dd></div>
-          </dl>
-          <fieldset><legend>Which claim can you sign off?</legend>
-            <button type="button" aria-pressed={claim === "browser"} onClick={() => setClaim("browser")}>{lesson.event.after.fields.length ? "This browser replay returned the listed fields" : "This browser replay withheld the fields"}</button>
-            <button type="button" aria-pressed={claim === "endpoint"} onClick={() => setClaim("endpoint")}>The receiving endpoint enforced it</button>
-          </fieldset>
-          <div role="status" aria-atomic="true">{claim && <>
-            <strong>{claim === "browser" ? "Supported by the browser receipt." : "Request endpoint evidence before signing."}</strong>
-            <p>To verify propagation, correlate the recorded consent change with authenticated reads of the same patient, purpose and team at each receiving endpoint. Check the response status and returned fields. Measuring delay also requires comparable event and observation timestamps.</p>
-            <p>The repository’s separate Compose procedure changes research consent for patient-eu-002 and polls one gateway for 403, then 200 after a grant. This case did not run that probe. <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/scripts/demo.sh">Inspect the gateway probe</a></p>
-          </>}</div>
-        </div>}
+  return <section id="research-request" tabIndex={-1} className={styles.case} aria-label="Access request intake">
+    <fieldset className={styles.selector}><legend>Open a request file</legend><div className={styles.options}>
+      {comparisons.map((item, index) => <label key={item.id}><input type="radio" name="request-scenario" checked={index === selection} onChange={() => onChange(index)}/>{item.label}</label>)}
+    </div></fieldset>
+    <div className={styles.story}><p className={styles.recordId}>{scenario.id} · Synthetic record {patient.id}</p><h2>{patient.name}</h2>
+      <p>{scenario.detail}</p>
+      <dl className={styles.facts}>
+        <div><dt>Record holder</dt><dd>{patient.organization} ({patient.region})</dd></div>
+        <div><dt>Purpose</dt><dd>{purposeLabels[scenario.purpose]}</dd></div>
+        <div><dt>Requested by</dt><dd>{team}</dd></div>
+        <div><dt>Fields requested</dt><dd>{requestedFields[scenario.purpose].map(field => fieldLabels[field]).join(" · ")}</dd></div>
+        <div><dt>Purpose consent</dt><dd>{consent === null ? "Loading preference" : consent ? "Granted" : "Withheld"}</dd></div>
+      </dl>
+    </div>
+    <div className={styles.request}>
+      <h3>What would you prepare?</h3>
+      <p>Review the request alongside Anna’s recorded choice for this purpose. Propose a packet or pause the handoff. The identifiers-only packet contains the record ID and resource type.</p>
+      <div className={styles.packetActions} role="group" aria-label="Steward decision">{plans.map(item => <button key={item.key} type="button" disabled={consent === null} aria-pressed={plan === item.key} onClick={() => decide(item.key)}>{item.label}</button>)}</div>
+      {receipt && <section className={styles.packetResult} aria-label={scenario.receiver} aria-live="polite" aria-atomic="true">
+        <p className={styles.kicker}>Local packet preview</p><h3>{scenario.receiver}</h3><strong>{receipt.fields.length} fields prepared</strong>
+        {receipt.fields.length > 0 && <p>{receipt.fields.map(field => fieldLabels[field]).join(" · ")}</p>}<p>{receipt.explanation}</p>
       </section>}
-      <details className={styles.session}>
-        <summary>Session settings and reset</summary>
-        <p>Consent and activity survive a reload in this tab when session storage is available. Predictions and comparisons clear when you leave or reload. Reset restores the original synthetic consents and clears activity and walkthrough progress.</p>
-        <button type="button" className={styles.eventButton} onClick={resetSession}>Reset tab demo</button>
-      </details>
-    </section>
-  );
+      <div className={styles.requestActions}><a href={evidenceHref}>Inspect this request’s field evidence</a></div>
+    </div>
+    {receipt && <section className={styles.consentEvent}><div><h3>Replay a patient consent event</h3>
+      <p>Keep your packet choice and replay Anna’s {consent ? "withdrawal" : "grant"} for this purpose. The preview stays in this browser.</p></div>
+      <button type="button" className={styles.eventButton} onClick={replay}>{consent ? "Replay Anna’s withdrawal" : "Replay Anna’s grant"}</button>
+      {before && <p role="status">Same request and steward decision. {before.granted ? "Granted" : "Withheld"} consent prepared {before.count} fields. {consent ? "Granted" : "Withheld"} consent prepares {receipt.fields.length}.</p>}
+    </section>}
+    <details className={styles.session}><summary>Session settings and reset</summary>
+      <p>The request link carries the selected case and packet decision. Anna’s synthetic consent and activity are local to this tab. Reset restores the initial preferences and clears the decision.</p>
+      <button className={styles.eventButton} type="button" onClick={resetSession}>Reset tab demo</button>
+    </details>
+  </section>;
 }
 
 const assumptions = [
@@ -257,7 +226,7 @@ function PilotWorksheet({ scenario }: { scenario: string }) {
   const scale = Math.max(capacity, cost, 1);
   const breakEven = cost * 60 / (yearlyRequests * rate);
   return (
-    <section id="pilot-costs" className={styles.worksheet} aria-labelledby="pilot-heading">
+    <section id="pilot-costs" tabIndex={-1} className={styles.worksheet} aria-labelledby="pilot-heading">
       <div className={styles.business}>
         <span className={styles.kicker}>Exchange operations · funding decision</span>
         <h2 id="pilot-heading">Would faster review pay for a pilot?</h2>
@@ -295,7 +264,7 @@ function PilotWorksheet({ scenario }: { scenario: string }) {
         <details><summary>How exchange teams evaluate this kind of work</summary>
           <p>Maryland’s CRISP exchange describes investigators applying for research use and separate committees reviewing use cases. AHRQ’s exchange evaluation guide asks teams to identify stakeholders, objectives and feasible measures. Those sources informed the roles and pilot criteria in this fictional case. <a href="https://www.crisphealth.org/research/">CRISP research access</a> · <a href="https://digital.ahrq.gov/health-information-exchange-hie-evaluation-toolkit">AHRQ exchange evaluation guide</a></p>
         </details>
-        <p>ONC describes recording and maintaining patient choices. HL7’s FHIR R4 Consent model represents recipient, purpose, and policy context. The EU and US decisions above follow this project’s synthetic rules. <a href="https://healthit.gov/privacy-security/patient-consent-electronic-health-information-exchange/">ONC consent guidance</a> · <a href="https://hl7.org/fhir/R4/consent-definitions.html">HL7 Consent definitions</a></p>
+        <p>HL7 describes the Patient resource as demographic and administrative data. The study roster and age check are fictional uses of those fields. <a href="https://hl7.org/fhir/R4/patient.html">FHIR Patient</a> · ONC describes recording and maintaining patient choices. HL7’s FHIR R4 Consent model represents recipient, purpose, and policy context. The EU and US decisions above follow this project’s synthetic rules. <a href="https://healthit.gov/privacy-security/patient-consent-electronic-health-information-exchange/">ONC consent guidance</a> · <a href="https://hl7.org/fhir/R4/consent-definitions.html">HL7 Consent definitions</a></p>
       </div>
     </section>
   );

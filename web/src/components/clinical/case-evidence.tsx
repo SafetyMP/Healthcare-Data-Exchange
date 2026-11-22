@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CredentialProfile } from "@/lib/api";
 import { previewPatient, type DemoPurpose } from "@/lib/demo";
 import styles from "./pilot-case.module.css";
+import guide from "./case-evidence.module.css";
 
 const publication = {
   published: "69ef166ed5ccb51a19df0518a41695b1ed077ee23ca7a141a0104d1108766309",
@@ -39,18 +40,39 @@ const stages = ["consent", "fields", "receiver", "publication"] as const;
 const stageNames = { consent: "Consent and requester", fields: "Field manifest", receiver: "Receiving gateway", publication: "Published policy" };
 export type CaseStage = typeof stages[number];
 type Trial = "selected" | "opposite";
-export function caseLink(purpose: DemoPurpose, granted: boolean, stage: CaseStage, trial: Trial, mirror = false) {
-  return ["#technical", purpose, granted ? "granted" : "withheld", stage, trial, ...(mirror ? ["mirror"] : [])].join("/");
+export type PacketPlan = "requested" | "identifiers" | "hold";
+export const requestedFields: Record<DemoPurpose, string[]> = {
+  research: ["id", "resourceType", "birthDate"],
+  treatment: ["id", "resourceType", "name", "birthDate", "gender"],
+  derivative: ["id", "resourceType", "name"],
+};
+const identifiers = ["id", "resourceType"];
+const planLabels: Record<PacketPlan, string> = {
+  requested: "Prepare the requested fields",
+  identifiers: "Prepare the record identifiers",
+  hold: "Hold for steward review",
+};
+export function packetFields(purpose: DemoPurpose, plan: PacketPlan): string[] {
+  if (plan === "hold") return [];
+  return plan === "identifiers" ? identifiers : requestedFields[purpose];
+}
+export function projectPacket(purpose: DemoPurpose, plan: PacketPlan, allowed: string[]): string[] {
+  const fields = packetFields(purpose, plan);
+  return fields.every(field => allowed.includes(field)) ? fields : [];
+}
+export function caseLink(purpose: DemoPurpose, granted: boolean, stage: CaseStage, trial: Trial, mirror = false, plan?: PacketPlan) {
+  return ["#technical", purpose, granted ? "granted" : "withheld", stage, trial, ...(plan ? ["plan-" + plan] : []), ...(mirror ? ["mirror"] : [])].join("/");
 }
 export function parseCaseRoute(hash: string) {
-  const [view, request, consent, active, trial] = hash.split("/");
+  const parts = hash.split("/");
+  const [view, request, consent, active, trial] = parts;
   const purpose: DemoPurpose | undefined = request === "treatment" || request === "derivative" || request === "research" ? request : undefined;
   const stage: CaseStage = view === "#policy-provenance" ? "publication" : stages.find(value => value === active) ?? "consent";
-  return { mirror: hash.split("/").at(-1) === "mirror", snapshot: consent === "granted" || consent === "withheld", technical: view === "#technical" || view === "#policy-provenance", purpose, stage,
+  const plan = (["requested", "identifiers", "hold"] as const).find(value => parts.includes("plan-" + value));
+  return { mirror: parts.at(-1) === "mirror", snapshot: consent === "granted" || consent === "withheld", technical: view === "#technical" || view === "#policy-provenance", purpose, stage, plan,
     granted: consent === "granted" || (consent !== "withheld" && !!purpose && purpose !== "research"), trial: trial === "opposite" ? "opposite" as const : "selected" as const };
 }
 
-const requestedFields = { research: ["id", "resourceType", "name", "birthDate", "gender"], treatment: ["id", "resourceType", "name", "birthDate", "gender"], derivative: ["id", "resourceType", "name"] };
 const root = "https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/";
 type Scenario = { label: string; purpose: DemoPurpose; requester: CredentialProfile; scope: string };
 
@@ -62,45 +84,73 @@ function runTrial(scenario: Scenario, granted: boolean) {
 }
 type Receipt = ReturnType<typeof runTrial>;
 
-function FieldManifest({ receipt, purpose }: { receipt: Receipt; purpose: DemoPurpose }) {
+function packetDescription(purpose: DemoPurpose, receipt: Receipt, plan?: PacketPlan) {
+  if (!plan) return "Choose a packet in the case to trace the steward’s decision here.";
+  if (plan === "hold") return "The desk initiated no read and staged zero fields. The receiving team has no packet to work from.";
+  if (receipt.status !== 200) return "The access check denied the read. The proposed packet contains no releasable fields.";
+  const fields = packetFields(purpose, plan);
+  const packet = projectPacket(purpose, plan, receipt.fields);
+  const outside = fields.filter(field => !receipt.fields.includes(field));
+  if (!packet.length) return `The proposed packet includes ${outside.join(", ")} outside the rule’s allowance. It stays at the desk.`;
+  return `The local packet can contain ${packet.join(", ")}. Delivery would need a separate observation at the receiver.`;
+}
+
+function FieldManifest({ receipt, purpose, plan }: { receipt: Receipt; purpose: DemoPurpose; plan?: PacketPlan }) {
   const requested = requestedFields[purpose];
-  const [selected, setSelected] = useState(requested);
+  const permittedByPlan = packetFields(purpose, plan ?? "requested");
+  const [selected, setSelected] = useState(permittedByPlan);
   const [packet, setPacket] = useState<Record<string, unknown> | null>(null);
   const outside = selected.filter(field => !receipt.fields.includes(field));
+  const blocked = plan === "hold" || receipt.status !== 200 || !selected.length || outside.length > 0;
+  let status = "Ready to stage the selected fields.";
+  if (plan === "hold") status = "The steward held this packet. Return to the case to try a different decision.";
+  else if (receipt.status !== 200) status = "Policy denied this trial. No fields can be staged.";
+  else if (!selected.length) status = "Select at least one authorized field to stage a preview.";
+  else if (outside.length) status = outside.join(", ") + " falls outside the allowed scope.";
   return <div className={styles.manifestBox}><div><h3>Prepare the field manifest</h3>
-    <p>Build a local preview from this trial’s authorized response. Remove every selected field marked Withhold.</p>
-    {requested.map(field => <label key={field} className={styles.fieldRow}><span><input type="checkbox" checked={selected.includes(field)} onChange={() => {
+    <p>{plan === "hold" ? "Fields on the original request remain held. Change the decision at the desk to prepare a packet." : "Test a narrower local preview by removing fields. The case keeps your original decision."}</p>
+    {requested.map(field => <label key={field} className={styles.fieldRow}><span><input type="checkbox" disabled={!permittedByPlan.includes(field)} checked={selected.includes(field)} onChange={() => {
       setSelected(selected.includes(field) ? selected.filter(key => key !== field) : requested.filter(key => key === field || selected.includes(key))); setPacket(null);
-    }} />{field}</span><span>{receipt.fields.includes(field) ? "Authorized" : "Withhold"}</span></label>)}
-    <button className={styles.primary} type="button" disabled={receipt.status !== 200 || !selected.length || !!outside.length || !!packet}
+    }} />{field}</span><span>{plan === "hold" ? "Held" : !receipt.fields.includes(field) ? "Withhold" : permittedByPlan.includes(field) ? "Authorized" : "Outside plan"}</span></label>)}
+    <button className={styles.primary} type="button" disabled={blocked || !!packet}
       onClick={() => setPacket(Object.fromEntries(selected.map(field => [field, receipt.resource[field]])))}>Stage field preview</button></div>
-    <div><h3>Staged preview</h3><div role="status">{packet ? <><pre aria-label="Staged JSON">{JSON.stringify(packet, null, 2)}</pre><p>Local synthetic packet. No transfer occurred.</p></> : <p>{receipt.status !== 200 ? "Policy denied this trial. No fields can be staged." : !selected.length ? "Select at least one authorized field to stage a preview." : outside.length ? outside.join(", ") + " falls outside the allowed scope." : "Ready to stage the selected fields."}</p>}</div></div></div>;
+    <div><h3>Staged preview</h3><div role="status">{packet ? <><pre aria-label="Staged JSON">{JSON.stringify(packet, null, 2)}</pre><p>Local synthetic packet. No transfer occurred.</p></> : <p>{status}</p>}</div></div></div>;
 }
 
 export function CaseEvidence({ scenario, route }: { scenario: Scenario; route: ReturnType<typeof parseCaseRoute> }) {
   const baseline = runTrial(scenario, route.granted);
   const alternate = runTrial(scenario, !route.granted);
   const active = route.trial === "selected" ? baseline : alternate;
-  const href = (stage: CaseStage, trial = route.trial) => caseLink(scenario.purpose, route.granted, stage, trial, route.mirror);
-  const back = ["#research-request", scenario.purpose, route.granted ? "granted" : "withheld", ...(route.mirror ? ["mirror"] : [])].join("/");
-  return <article className={styles.technicalGuide} aria-label="Technical evidence for the selected request">
+  const held = route.plan === "hold";
+  const trialLabel = held ? "Hypothetical browser" : "Browser";
+  const href = (stage: CaseStage, trial = route.trial) => caseLink(scenario.purpose, route.granted, stage, trial, route.mirror, route.plan);
+  const back = ["#research-request", scenario.purpose, route.granted ? "granted" : "withheld", ...(route.plan ? ["plan-" + route.plan] : []), ...(route.mirror ? ["mirror"] : [])].join("/");
+  return <article className={styles.technicalGuide + " " + guide.guide} aria-label="Technical evidence for the selected request">
     <a href={back}>← Return to the selected privacy case</a>
-    <header className={styles.caseHeading}><p className={styles.kicker}>Technical evidence / Anna Mueller · patient-eu-001</p><h1 tabIndex={-1} id="technical-title">Trace the {scenario.purpose} request</h1><p>Follow the same EU record and requester through the access check. Compare the selected consent with a counterfactual patient event, then inspect what a receiver would still have to prove.</p></header>
-    <dl className={styles.techFacts}><div><dt>Request</dt><dd>{scenario.label}</dd></div><div><dt>Credential profile</dt><dd>{scenario.requester}</dd></div><div><dt>Policy scope</dt><dd>{scenario.scope}</dd></div></dl>
+    <header className={styles.caseHeading}><p className={styles.kicker}>Technical evidence / Anna Mueller · patient-eu-001</p><h1 tabIndex={-1} id="technical-title">Trace the {scenario.purpose} request</h1><p>Trace Anna’s synthetic EU Patient record from the access check to the packet the steward proposed.</p></header>
+    <dl className={styles.techFacts}><div><dt>Request</dt><dd>{scenario.label}</dd></div><div><dt>Credential profile</dt><dd>{scenario.requester}</dd></div><div><dt>Steward’s decision</dt><dd>{route.plan ? planLabels[route.plan] : "No packet selected"}</dd></div></dl>
     <nav className={styles.stageNav} aria-label="Implementation stages">{stages.map((stage, index) => <a key={stage} href={href(stage)} aria-current={stage === route.stage ? "step" : undefined}><span>{index + 1}</span>{stageNames[stage]}</a>)}</nav>
-    <section className={styles.trialPanel} aria-label="Consent trials"><h2>Compare trial receipts</h2>
-      <p>Both trials evaluate the same browser fixture. Only the consent input changes. Trial selection leaves the patient’s recorded preference in this tab intact.</p>
+    <section className={styles.trialPanel} aria-label="Consent trials"><h2>{held ? "If the desk had requested a read" : "Consent at the time of the read"}</h2>
+      <p>{held ? "The steward held this request without running an access check. Both trials below are hypothetical evaluations of the browser policy." : "Switch trials to test the same request against the opposite patient choice. Both checks run locally."}</p>
       <div className={styles.trialGrid}>{(["selected", "opposite"] as const).map((trial, index) => {
         const receipt = index === 0 ? baseline : alternate;
         return <a key={trial} href={href(route.stage, trial)} aria-current={route.trial === trial ? "true" : undefined}>
           <strong>{index === 0 ? "Selected consent" : "Opposite consent"} · {receipt.granted ? "Granted" : "Withheld"}</strong>
-          <span>Browser {receipt.status} · {receipt.fields.length} authorized fields</span><small>{receipt.fields.join(", ") || "No fields returned"}</small></a>;
+          <span>{trialLabel} {receipt.status} · {receipt.fields.length} {held ? "fields under that rule" : "authorized fields"}</span></a>;
       })}</div></section>
-    <section className={styles.stagePanel} aria-label={stageNames[route.stage]}><p className={styles.kicker}>{stageNames[route.stage]} / {active.granted ? "Granted trial" : "Withheld trial"}</p>
-      {route.stage === "consent" && <><h2>Evaluate the requester and purpose</h2><p>For Anna’s EU record, the {scenario.requester} credential requests {scenario.purpose} access. The patient’s {active.granted ? "grant" : "withheld consent"} and the region rule yield browser status {active.status}.</p><p>{active.reason}</p><a href={root + "web/src/lib/demo.ts"}>Browser fixture implementation</a> · <a href={root + "policy/authz.rego"}>Canonical Rego rules</a></>}
-      {route.stage === "fields" && <><FieldManifest key={String(active.granted)} receipt={active} purpose={scenario.purpose}/><a href={root+"fhir/samples/eu/patient-eu-001.json"}>Synthetic patient source</a></>}
-      {route.stage === "receiver" && <><h2>What can the steward sign?</h2><p>The selected {scenario.purpose} trial returned {active.status} and {active.fields.length} fields in this browser. No authenticated read, receiver timestamp or delivery acknowledgment exists for Anna’s case.</p><p>For a pilot, pair the recorded patient event with reads at each intended gateway using the same patient, purpose and credential. Compare status and returned fields. Measuring delay requires comparable clocks.</p><p>The separate Compose probe uses patient-eu-002 and polls one receiving gateway through a research withdrawal and grant.</p><a href={root+"scripts/demo.sh"}>Inspect the gateway probe</a> · <a href={root+"docs/adr/0008-opal-consent-sync.md"}>Consent distribution design</a></>}
-      {route.stage === "publication" && <><h2>Which rule bundle was published?</h2><PublicationCheck/><p>The mirror’s pinned Git digest identifies the published rules. Consent data travels through OPAL separately. A matching digest alone cannot establish this trial’s result at a receiver.</p><a href="https://github.com/SafetyMP/healthcare-policy#opal-bundle">Published policy mirror</a> · <a href="https://www.openpolicyagent.org/docs/management-status">OPA instance status</a></>}
+    <section className={styles.stagePanel} aria-label={stageNames[route.stage]}>
+      {held && <p className={styles.kicker}>Held request · Hypothetical policy evaluation</p>}
+      {route.stage === "consent" && <><h2>Which access rule applies?</h2><p>The connected gateway derives the requester’s region from verified credentials. Open Policy Agent (OPA) evaluates the purpose, regional scope and consent for that purpose. OPAL distributes patient consent changes separately from the rules.</p>
+        <p className={guide.observation}><strong>{trialLabel} {active.status}.</strong> {held ? "This trial models a read by" : "Requester"} {scenario.requester} for {scenario.purpose} with consent {active.granted ? "granted" : "withheld"}. {active.reason}</p>
+        <a href={root + "services/gateway/internal/requester/requester.go"}>Caller context</a> · <a href={root + "policy/authz.rego"}>OPA rule</a> · <a href={root + "web/src/lib/demo.ts"}>Browser fixture</a></>}
+      {route.stage === "fields" && <><h2>Which fields fit this packet?</h2><p>Following an allowed read, the connected gateway fetches the Patient from its home FHIR cell and filters it to OPA’s field list. The steward can then prepare a smaller packet for the stated task.</p>
+        <p className={guide.observation}><strong>{held ? "Held at the desk · 0 fields staged" : `${requestedFields[scenario.purpose].length} requested · ${active.fields.length} authorized`}</strong><br/>{packetDescription(scenario.purpose, active, route.plan)}</p>
+        <FieldManifest key={String(active.granted) + "/" + (route.plan ?? "")} receipt={active} purpose={scenario.purpose} plan={route.plan}/>
+        <a href={root+"services/gateway/internal/handlers/handlers.go"}>Gateway read</a> · <a href={root+"services/gateway/internal/fhir/client.go"}>Field filter</a> · <a href={root+"fhir/samples/eu/patient-eu-001.json"}>Patient fixture</a></>}
+      {route.stage === "receiver" && <><h2>What can the steward sign?</h2><p className={guide.observation}><strong>{held ? "Desk decision · hold." : `Browser ${active.status}.`}</strong> {packetDescription(scenario.purpose, active, route.plan)}</p>
+        <p>No authenticated read, receiver timestamp or delivery acknowledgment exists for Anna’s case. To check enforcement, the steward needs the patient event and a matching read at each intended gateway, including status, fields and comparable timestamps.</p>
+        <p>The Compose probe exercises a research withdrawal and grant on a different synthetic record, patient-eu-002, at one receiving gateway. <a href={root+"scripts/demo.sh"}>Gateway probe</a> · <a href={root+"docs/adr/0008-opal-consent-sync.md"}>Consent distribution</a></p></>}
+      {route.stage === "publication" && <><h2>Which rule bundle was published?</h2><p>The mirror’s pinned digest identifies the published rule files. Check the runtime separately to establish which rules and consent data the receiver used.</p><PublicationCheck/><a href={root + "scripts/sync-policy-repo.sh"}>Policy sync script</a> · <a href="https://github.com/SafetyMP/healthcare-policy#opal-bundle">Published policy mirror</a> · <a href="https://www.openpolicyagent.org/docs/management-status">OPA instance status</a></>}
     </section><footer className={styles.techFooter}><a href={back}>Return to {scenario.label.toLowerCase()}</a><a href={href(route.stage)}>Permalink to this stage and trial</a>{route.mirror && <a href="https://github.com/SafetyMP/healthcare-policy#follow-a-research-access-request">Return to the policy mirror case</a>}</footer>
   </article>;
 }
