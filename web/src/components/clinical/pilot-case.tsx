@@ -11,15 +11,15 @@ import { WalkthroughLauncher } from "@/components/walkthrough/guided-walkthrough
 import styles from "./pilot-case.module.css";
 
 const comparisons = [
-  { label: "Research request", purpose: "research", requester: "eu-visiting", question: "Does Anna’s treatment permission also cover research?", detail: "A study coordinator wants to use the record for research. In the initial case Anna permits bedside treatment and withholds research consent." },
-  { label: "Different region", purpose: "treatment", requester: "us-home", question: "Can the US home team read the same record for treatment?", detail: "Anna’s record belongs to the European cell. Keep treatment consent in place and see what changes when the requester is in the United States." },
-  { label: "Limited return", purpose: "derivative", requester: "us-clinician", question: "Which fields can the permitted US team receive?", detail: "The fixture gives one US team permission to request a limited derivative. Compare the returned fields with a full same-region response." },
-] satisfies { label: string; purpose: DemoPurpose; requester: CredentialProfile; question: string; detail: string }[];
+  { label: "Research request", purpose: "research", requester: "eu-visiting", scope: "Regional access", question: "Can the study coordinator use Anna’s record?", detail: "A study coordinator requests Anna’s record through the EU visiting team. Anna has a separate preference for research and treatment." },
+  { label: "US treatment", purpose: "treatment", requester: "us-home", scope: "Regional access", question: "Can the US home team use Anna’s record?", detail: "A US team sends a treatment request for the EU-held record. Consider the team’s scope alongside Anna’s purpose-specific choice." },
+  { label: "US secondary use", purpose: "derivative", requester: "us-clinician", scope: "Derivative exception", question: "What can travel with this secondary-use request?", detail: "A US clinician requests a derivative of the European record. Use the requester’s scope and Anna’s current choice to predict the response." },
+] satisfies { label: string; purpose: DemoPurpose; requester: CredentialProfile; scope: string; question: string; detail: string }[];
 
 const purposeLabels: Record<DemoPurpose, string> = {
   research: "Research",
   treatment: "Treatment",
-  derivative: "Limited derivative",
+  derivative: "Derivative use",
 };
 
 export function CasePage() {
@@ -88,16 +88,18 @@ function ResearchRequest() {
   const [selection, setSelection] = useState(0);
   const [prediction, setPrediction] = useState<Outcome | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [claim, setClaim] = useState<"browser" | "endpoint" | null>(null);
   const scenario = comparisons[selection];
   const patient = DEMO_PATIENTS.find(item => item.id === "patient-eu-001");
   const consent = useSyncExternalStore<boolean | null>(subscribeToConsent,
     () => getDemoConsent("patient-eu-001", scenario.purpose), () => null);
   const trace = lesson?.event?.after ?? lesson?.first;
   if (!patient) return null;
-  const team = requesterPresets.find(item => item.value === scenario.requester);
+  const team = scenario.requester === "us-clinician" ? "US clinician team" : requesterPresets.find(item => item.value === scenario.requester)?.label;
   const query = new URLSearchParams({ patient: patient.id, purpose: scenario.purpose, requester: scenario.requester });
   function runCheck() {
     if (!patient || !prediction) return;
+    setClaim(null);
     setLesson({ prediction, first: checkRequest(patient.id, scenario.purpose, scenario.requester) });
   }
   function replayConsent() {
@@ -106,6 +108,7 @@ function ResearchRequest() {
     const update = simulateConsent(patient.id, scenario.purpose, granted);
     if (update.ok) {
       const after = checkRequest(patient.id, scenario.purpose, scenario.requester);
+      setClaim(null);
       setLesson({ ...lesson, event: { before: trace, after, granted } });
     }
   }
@@ -113,6 +116,7 @@ function ResearchRequest() {
     setSelection(index);
     setPrediction(null);
     setLesson(null);
+    setClaim(null);
   }
   function resetSession() {
     resetSelectedPatient();
@@ -137,7 +141,8 @@ function ResearchRequest() {
         <dl className={styles.facts}>
           <div><dt>Home region</dt><dd>{patient.organization} ({patient.region})</dd></div>
           <div><dt>Purpose</dt><dd>{purposeLabels[scenario.purpose]}</dd></div>
-          <div><dt>Requested by</dt><dd>{team?.label}</dd></div>
+          <div><dt>Requested by</dt><dd>{team}</dd></div>
+          <div><dt>Policy scope</dt><dd>{scenario.scope}</dd></div>
           <div><dt>Purpose consent</dt><dd>{consent === null ? "Loading preference" : consent ? "Granted" : "Withheld"}</dd></div>
         </dl>
       </div>
@@ -161,7 +166,7 @@ function ResearchRequest() {
       <figure className={styles.trace} aria-label="Synthetic access decision path" aria-live="polite">
         <figcaption>Decision path{lesson?.event ? lesson.event.granted ? " after Anna’s grant" : " after Anna’s withdrawal" : ""}</figcaption>
         <ol>
-          <li><Users aria-hidden="true" /><span>Requester</span><strong>{team?.label}</strong></li>
+          <li><Users aria-hidden="true" /><span>Requester</span><strong>{team}</strong></li>
           <li><KeyRound aria-hidden="true" /><span>Purpose consent</span><strong>{consent === null ? "Loading" : consent ? "Granted" : "Withheld"}</strong></li>
           <li><Globe2 aria-hidden="true" /><span>Region</span><strong>{scenario.requester.startsWith("us-") ? "US team · EU record" : "EU team · EU record"}</strong></li>
           <li><Files aria-hidden="true" /><span>Returned fields</span><strong>{trace ? trace.fields.length ? trace.fields.join(", ") : "None" : "Awaiting check"}</strong></li>
@@ -179,6 +184,23 @@ function ResearchRequest() {
             <p>{lesson.event.after.message}</p>
           </> : <FieldReceipt title="Current check" check={lesson.first} />}
         </div>
+        {lesson.event && <div className={styles.proof}>
+          <h4>Evidence for the pilot record</h4>
+          <dl>
+            <div><dt>Patient event</dt><dd>Anna’s synthetic {lesson.event.granted ? "grant" : "withdrawal"} for {scenario.purpose}</dd></div>
+            <div><dt>Access check</dt><dd>Browser fixture · {lesson.event.after.outcome}</dd></div>
+            <div><dt>Receiving gateway</dt><dd>No endpoint observation</dd></div>
+          </dl>
+          <fieldset><legend>Which claim can you sign off?</legend>
+            <button type="button" aria-pressed={claim === "browser"} onClick={() => setClaim("browser")}>{lesson.event.after.fields.length ? "This browser replay returned the listed fields" : "This browser replay withheld the fields"}</button>
+            <button type="button" aria-pressed={claim === "endpoint"} onClick={() => setClaim("endpoint")}>The receiving endpoint enforced it</button>
+          </fieldset>
+          <div role="status" aria-atomic="true">{claim && <>
+            <strong>{claim === "browser" ? "Supported by the browser receipt." : "Request endpoint evidence before signing."}</strong>
+            <p>To verify propagation, correlate the recorded consent change with authenticated reads of the same patient, purpose and team at each receiving endpoint. Check the response status and returned fields. Measuring delay also requires comparable event and observation timestamps.</p>
+            <p>The repository’s separate Compose procedure changes research consent for patient-eu-002 and polls one gateway for 403, then 200 after a grant. This case did not run that probe. <a href="https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/scripts/demo.sh">Inspect the gateway probe</a></p>
+          </>}</div>
+        </div>}
       </section>}
       <details className={styles.session}>
         <summary>Session settings and reset</summary>

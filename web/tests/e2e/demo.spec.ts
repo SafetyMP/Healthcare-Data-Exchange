@@ -22,16 +22,16 @@ test.describe("Static synthetic demo", () => {
   test("research desk presets open the matching access decision", async ({ page }) => {
     for (const [label, purpose, requester, outcome] of [
       ["Research request", "research", "eu-visiting", "Access blocked"],
-      ["Different region", "treatment", "us-home", "Access blocked"],
-      ["Limited return", "derivative", "us-clinician", "Access allowed"],
+      ["US treatment", "treatment", "us-home", "Access blocked"],
+      ["US secondary use", "derivative", "us-clinician", "Access allowed"],
     ]) {
       await page.goto("./#research-request");
       await page.getByRole("radio", { name: label, exact: true }).check();
       const intake = page.getByRole("region", { name: "Access request intake" });
       await expect(intake.getByRole("heading", { name: "Anna Mueller" })).toBeVisible();
-      const expectedPurpose = purpose === "derivative" ? "Limited derivative" : purpose;
+      const expectedPurpose = purpose === "derivative" ? "Derivative use" : purpose;
       await expect(intake.locator("dd").nth(1)).toHaveText(new RegExp(expectedPurpose, "i"));
-      const expectedTeam = requester === "us-clinician" ? "US care team · limited cross-region access" : requester === "us-home" ? "US home care team" : "EU visiting care team";
+      const expectedTeam = requester === "us-clinician" ? "US clinician team" : requester === "us-home" ? "US home care team" : "EU visiting care team";
       await expect(intake.locator("dd").nth(2)).toHaveText(expectedTeam);
       await expect(page.getByRole("button", { name: "Run access check" })).toBeDisabled();
       await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
@@ -72,13 +72,39 @@ test.describe("Static synthetic demo", () => {
     await expect(run).toBeDisabled();
     await expect(page.locator("#research-request dd").last()).toHaveText("Withheld");
 
-    await page.getByRole("radio", { name: "Different region" }).check();
+    await page.getByRole("radio", { name: "US treatment" }).check();
     await predict.check();
     await run.click();
     await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
     await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
     await expect(page.getByRole("heading", { name: "After Anna’s grant · Deny access" })).toBeVisible();
     await expect(page.getByText(/different regions/, {exact: false}).first()).toBeVisible();
+  });
+
+  test("steward distinguishes a simulated consent receipt from evidence at the receiving endpoint", async ({ page }) => {
+    await page.goto("./");
+    const intake = page.getByRole("region", { name: "Access request intake" });
+    await expect(intake.getByRole("radio", { name: "Limited return", exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "US secondary use", exact: true }).check();
+    await expect(intake.getByText("Derivative exception", { exact: true })).toBeVisible();
+    await expect(intake.getByText("id, resourceType", { exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
+    await intake.getByRole("button", { name: "Run access check" }).click();
+    await intake.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    const proof = intake.getByRole("group", { name: "Which claim can you sign off?" });
+    await expect(proof).toBeVisible();
+    await expect(intake.getByText("No endpoint observation", { exact: true })).toBeVisible();
+    const status = intake.getByRole("status");
+    await expect(status).toHaveText("");
+    const initialRegion = await status.elementHandle();
+    await proof.getByRole("button", { name: "The receiving endpoint enforced it" }).click();
+    expect(await initialRegion?.evaluate(node => node.isConnected && node.textContent?.includes("Request endpoint evidence before signing"))).toBe(true);
+    await expect(intake.getByText(/Request endpoint evidence before signing/)).toBeVisible();
+    await proof.getByRole("button", { name: "This browser replay withheld the fields" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toBeVisible();
+    await intake.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toHaveCount(0);
+    await expect(proof.getByRole("button", { name: "This browser replay returned the listed fields" })).toBeVisible();
   });
 
   test("pilot worksheet distinguishes staffing value, shortfall and incomplete inputs", async ({ page }) => {
