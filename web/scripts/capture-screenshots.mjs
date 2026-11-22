@@ -27,7 +27,7 @@ const outDir = path.join(repoRoot, "docs", "assets");
 const baseUrl = process.env.SCREENSHOT_BASE_URL ?? "http://localhost:3100";
 
 const pages = [
-  { path: "/", file: "overview.png", name: "Overview", heading: "The right data. The right access." },
+  { path: "/", file: "overview.png", name: "Overview", heading: /^(Privacy desk intake|The right data\. The right access\.)$/ },
   { path: "/patients", file: "patients.png", name: "Patient lookup", heading: "Patient access" },
   { path: "/consent", file: "consent.png", name: "Consent", heading: "Consent management" },
   { path: "/ai-triage", file: "ai-triage.png", name: "AI triage", heading: "AI oversight" },

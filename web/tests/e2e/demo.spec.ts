@@ -19,6 +19,47 @@ async function checkResearch(page: Page, allowed: boolean) {
 }
 
 test.describe("Static synthetic demo", () => {
+  test("research desk presets open the matching access decision", async ({ page }) => {
+    for (const [label, purpose, requester, outcome] of [
+      ["Research request", "research", "eu-visiting", "Access blocked"],
+      ["Different region", "treatment", "us-home", "Access blocked"],
+      ["Limited return", "derivative", "us-clinician", "Access allowed"],
+    ]) {
+      await page.goto("./#research-request");
+      await page.getByRole("radio", { name: label, exact: true }).check();
+      const intake = page.getByRole("region", { name: "Access request intake" });
+      await expect(intake.getByRole("heading", { name: "Anna Mueller" })).toBeVisible();
+      const expectedPurpose = purpose === "derivative" ? "Limited derivative" : purpose;
+      await expect(intake.locator("dd").nth(1)).toHaveText(new RegExp(expectedPurpose, "i"));
+      const expectedTeam = requester === "us-clinician" ? "US care team · limited cross-region access" : requester === "us-home" ? "US home care team" : "EU visiting care team";
+      await expect(intake.locator("dd").nth(2)).toHaveText(expectedTeam);
+      await page.getByRole("button", { name: "Run access check" }).click();
+      const flow = intake.getByRole("figure", { name: "Synthetic access decision path" });
+      await expect(flow.getByRole("listitem").last()).toContainText(purpose === "derivative" ? "id, resourceType" : "None");
+      await page.getByRole("link", { name: "Open this access check" }).click();
+      await expect(page.getByLabel("Purpose of access")).toHaveValue(purpose);
+      await expect(page.getByLabel("Requesting team")).toHaveValue(requester);
+      await page.getByRole("button", { name: "Check access", exact: true }).click();
+      await expect(page.getByRole("heading", { name: outcome, exact: true })).toBeVisible();
+    }
+  });
+
+  test("pilot worksheet distinguishes staffing value, shortfall and incomplete inputs", async ({ page }) => {
+    await page.goto("./#pilot-costs");
+    await expect(page.getByText("$3,600 above cost", { exact: true })).toBeVisible();
+    const comparison = page.getByRole("figure", { name: "Year-one cost and staff capacity comparison" });
+    await expect(comparison).toContainText("$18,000");
+    await expect(page.getByText(/Break-even requires 4 minutes/)).toBeVisible();
+    const time = page.getByLabel("Minutes saved per request");
+    await time.fill("4");
+    await expect(page.getByText("$0 at break-even", { exact: true })).toBeVisible();
+    await time.fill("0");
+    await expect(comparison).toContainText("Staff capacity $0");
+    await expect(page.getByText("$14,400 shortfall", { exact: true })).toBeVisible();
+    await page.getByLabel("Eligible requests per month").fill("");
+    await expect(page.getByText(/Enter a whole number/)).toBeVisible();
+  });
+
   test("consent revoke, grant, retry and reload work without API traffic", async ({ page }) => {
     const apiRequests: string[] = [];
     page.on("request", (request) => {
@@ -197,7 +238,7 @@ test.describe("Static synthetic demo", () => {
   test("mobile overview fits and keyboard navigation reaches patient access", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("./");
-    await expect(page.getByRole("heading", { name: "The right data. The right access.", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Privacy desk intake", level: 1 })).toBeVisible();
     const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
     expect(width.content).toBeLessThanOrEqual(width.viewport);
 
@@ -205,14 +246,14 @@ test.describe("Static synthetic demo", () => {
     await expect(page.getByRole("link", { name: "Skip to main content", exact: true })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#main-content")).toBeFocused();
-    await page.getByRole("button", { name: "Open navigation", exact: true }).focus();
-    await page.keyboard.press("Enter");
-    const patientLink = page.getByRole("navigation", { name: "Mobile", exact: true })
-      .getByRole("link", { name: "Patient access", exact: true });
+    await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
+    const patientLink = page.getByRole("link", { name: "Open technical workspace" });
     await patientLink.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { name: "Patient access", exact: true })).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Mobile", exact: true })).toHaveCount(0);
+    await page.getByRole("link", { name: "Return to case" }).click();
+    await expect(page.getByRole("heading", { name: "Privacy desk intake" })).toBeVisible();
   });
 });
 

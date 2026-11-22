@@ -8,7 +8,7 @@
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
-![Healthcare Data Exchange patient access workspace with synthetic patients and readable access decisions](docs/assets/redesigned-workspace.jpg)
+[![Anna’s synthetic research request, with three ways to check access and a pilot cost worksheet](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
 Healthcare data access depends on more than finding a record. The purpose of a
 request, the requesting team's permissions, the patient's consent, and regional
@@ -20,10 +20,18 @@ outcomes are synthetic. It is an educational and product-design reference, not a
 clinical record system, a production health information exchange, or compliance
 certification.
 
+## Try the privacy desk case
+
+A study coordinator asks the exchange’s data steward for Anna Mueller’s synthetic record. The bedside team uses treatment access for a different purpose. Choose the research request, switch the requesting region, or inspect the limited derivative that another team can obtain. Use **Run access check** to trace the team, consent, region and returned fields. **Open this access check** carries the same request into the full workspace. [Open the research request](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+
+The exchange director can keep the manual desk, introduce a checklist, or test a policy check alongside staff decisions. The worksheet estimates how many reviewer minutes per eligible request would cover integration, training and support. Its starting values are illustrative. Before expanding, the steward checks whether a shadow recommendation would release an unauthorized field or hold an eligible request. The operations director then compares the time saved against the better manual or checklist baseline and decides whether the team could reuse that time. [Explore the pilot worksheet](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs)
+
+The audience comes from two operating perspectives. Maryland’s CRISP exchange describes the route from a research team’s request through governance review. AHRQ guides exchange evaluation teams to identify stakeholders and feasible measures before judging value. The demo assigns those decisions to a fictional steward and operations director. [CRISP research access](https://www.crisphealth.org/research/) · [AHRQ exchange evaluation guide](https://digital.ahrq.gov/health-information-exchange-hie-evaluation-toolkit)
+
 ## Try the guided walkthrough
 
 Open the [demo](https://safetymp.github.io/Healthcare-Data-Exchange/) and choose
-**Start guided walkthrough** on Overview. Nine checkpoints use the actual forms:
+**Start guided walkthrough** under **Evidence & methods**. Nine checkpoints use the actual forms:
 
 1. See a research request blocked when consent is absent.
 2. Grant research consent and check the same request again.
