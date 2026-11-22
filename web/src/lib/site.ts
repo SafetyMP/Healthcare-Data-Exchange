@@ -9,8 +9,8 @@ export type SiteRoute = typeof SITE_ROUTES[number];
 
 const pages: Record<SiteRoute, { title: string; description: string; liveDescription: string }> = {
   "/": {
-    title: "Guided synthetic access demo",
-    description: "Explore a guided healthcare data access demo: synthetic patients, consent, requesting teams and regional sharing rules. No backend setup or real patient data.",
+    title: "Research consent and pilot case",
+    description: "Decide how a study team can use Anna’s synthetic record. Compare consent receipts, field-level release and the case for a shadow pilot.",
     liveDescription: "Local gateway reference for synthetic patient access, purpose-specific consent and regional sharing rules. Requires the separate reference backend.",
   },
   "/patients": {
@@ -52,8 +52,9 @@ export function pageMetadata(route: SiteRoute): Metadata {
     // A local gateway session is a different execution mode, not a duplicate of Pages.
     return { title: { absolute: title }, description, robots: { index: false, follow: false } };
   }
+  if (route !== "/") return { title: { absolute: title }, description, alternates: { canonical: SITE_URL }, openGraph: null, twitter: null, robots: { index: false, follow: false } };
   const url = canonicalUrl(route);
-  const image = { url: new URL("social-preview.png", SITE_URL).href, width: 1280, height: 640, alt: "Healthcare Data Exchange — guided synthetic consent, requesting-team and regional-access demonstration" };
+  const image = { url: new URL("social-preview.png", SITE_URL).href, width: 1280, height: 640, alt: "Healthcare Data Exchange — synthetic research consent case and exchange pilot" };
   return {
     title: { absolute: title },
     description,
@@ -85,14 +86,14 @@ export function siteStructuredData() {
         "@id": `${SITE_URL}#application`,
         name: SITE_NAME,
         url: SITE_URL,
-        description: "A browser-local guided demonstration of synthetic patient access, consent, requesting-team identity and regional sharing boundaries. A separate FHIR, OPA and OPAL backend reference is available in the source repository. Not a production health-information exchange or a clinical system.",
+        description: "A browser-local research consent and pilot case with selected-request trials, field manifests and policy publication evidence. A separate FHIR, OPA and OPAL backend reference is available in the source repository. Not a production health-information exchange or a clinical system.",
         applicationCategory: "EducationalApplication",
         operatingSystem: "Web browser",
         isAccessibleForFree: true,
         license: `${REPOSITORY_URL}/blob/main/LICENSE`,
         sameAs: REPOSITORY_URL,
         image: new URL("social-preview.png", SITE_URL).href,
-        featureList: ["Nine-checkpoint guided walkthrough", "Synthetic patient access decisions", "Purpose-specific consent grant and revocation", "EU/US requesting-team and regional boundaries", "Limited derivative response", "Browser-tab activity history"],
+        featureList: ["Research, treatment and derivative requests", "Patient consent replay", "Pilot capacity worksheet", "Selected-request technical trials", "Field manifest and policy digest comparison"],
         isPartOf: { "@id": `${SITE_URL}#website` },
       },
     ],

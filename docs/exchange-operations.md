@@ -1,14 +1,16 @@
-# Exchange operations
+# Research consent and exchange operations
 
-The public workbench uses three synthetic requests for Anna Mueller’s EU record. A data steward prepares a packet for a requesting team. The patient controls the recorded consent for each purpose. [Open the disclosure desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+A study coordinator asks an exchange data steward to use Anna Mueller’s synthetic EU record. The case begins with the patient’s withheld research consent. Predict the outcome, check the access request and replay Anna’s grant or withdrawal. The steward can also select a US treatment request or US secondary use. The operations director decides whether a separately funded shadow pilot is justified. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
-| Request | Desk action | Observable consequence |
+| Selected request | With consent withheld | With consent granted |
 | --- | --- | --- |
-| DX-104, US derivative | Check policy, remove the requested name, then stage. Replay the patient’s withdrawal. | The first packet contains only `id` and `resourceType`. Withdrawal clears it and the same request returns a simulated 403. |
-| DX-105, EU research | Check with research consent withheld, then replay Anna’s grant. | The request changes from denied to allowed. The staged preview includes only selected fields. |
-| DX-106, US treatment | Check policy with treatment consent granted and hold the request. | The fixture denies the cross-region request. The steward can reopen a hold with an explicit recheck. |
+| Research, EU visiting team | Browser 403, no fields | Browser 200, five patient fields |
+| Treatment, US home team | Browser 403, no fields | Browser 403, regional restriction |
+| Derivative use, US clinician team | Browser 403, no fields | Browser 200, only `id` and `resourceType` |
 
-The browser uses its existing policy fixture to produce the resource. Packet preparation is a local field filter over that resource. No record is transmitted. The receipt describes a simulated check with no receiving gateway observation. [Browser fixture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts)
+## Inspect the same request
+
+Choose **Inspect this request’s field evidence**. The link carries the same patient, purpose, credential profile and selected consent. Compare the opposite consent trial, then select a stage. For a granted derivative request, trim the requested name and stage only the two authorized fields. Switching to the withheld trial clears the synthetic preview. Trial comparisons leave the patient’s recorded choice intact. Each stage links to sources and has a permalink. Use the return link to resume that case. [Derivative field trial](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/derivative/granted/fields/selected) · [Browser fixture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts)
 
 ## Evaluate the desk
 
@@ -18,7 +20,7 @@ The operations director compares matched requests using the manual desk, a check
 
 ## Verify a policy release
 
-A release engineer can inspect the pinned publication and compare a candidate SHA-256 with the published bundle and working source. Open **Policy release, consent updates and endpoint checks**, compare the prefilled mirror pointer, then load the working digest and compare again. The snapshot is pinned to the two linked repository revisions. [Publication comparison](https://safetymp.github.io/Healthcare-Data-Exchange/#policy-provenance)
+A release engineer can inspect the pinned publication and compare a candidate SHA-256 with the published bundle and working source. Open **Published policy**, compare the prefilled mirror pointer, then load the working digest and compare again. The snapshot is pinned to the two linked repository revisions. [Publication comparison](https://safetymp.github.io/Healthcare-Data-Exchange/#policy-provenance)
 
 For current checkouts, run these commands from Healthcare-Data-Exchange with the mirror beside it. They check the working stamp and compare the published commit’s rule content against the mirror files and pointer.
 

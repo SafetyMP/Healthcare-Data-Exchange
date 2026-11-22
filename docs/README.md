@@ -1,6 +1,6 @@
 # Healthcare Data Exchange documentation
 
-Start with the [live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+Start with the [research consent case](https://safetymp.github.io/Healthcare-Data-Exchange/)
 or the [repository overview](../README.md). Healthcare Data Exchange teaches
 synthetic consent, requesting-team permissions, and regional access through an
 interactive workspace. A separate local FHIR/OPA/OPAL backend supports service
@@ -10,7 +10,7 @@ experiments. Browser outcomes and backend enforcement are different evidence.
 
 | Your task | Read in this order |
 |---|---|
-| Explore the product | [Live demo](https://safetymp.github.io/Healthcare-Data-Exchange/) → [current product scope](product-mandate.md) → [guided walkthrough](guided-walkthrough.md) |
+| Explore the product | [Live demo](https://safetymp.github.io/Healthcare-Data-Exchange/) → [current product scope](product-mandate.md) → [selected-case evidence](exchange-operations.md) |
 | Review the design | [Experience redesign](experience-redesign.md) → [independent experience review](live-experience-review.md) → [roadmap](roadmap.md) |
 | Develop the frontend | [Web setup, modes and tests](../web/README.md) → [contribution guide](../CONTRIBUTING.md) |
 | Work on backend behavior | [Architecture](architecture/overview.md) → [data flows](architecture/data-flows.md) → [threat model](adr/0000-threat-model.md) → [contribution guide](../CONTRIBUTING.md) |
@@ -35,7 +35,7 @@ research, clinical validation, or blanket proof of deployment safety.
 |---|---|
 | [Experience redesign](experience-redesign.md) | Source-based friction hypotheses, implemented workflow, and verification boundaries |
 | [Independent live experience review](live-experience-review.md) | Reviewer-directed inspection, reproduced issues, fixes, and regression evidence |
-| [Guided walkthrough](guided-walkthrough.md) | Nine-checkpoint teaching sequence, action matching, pause/resume, and tests |
+| [Consent case and implementation evidence](exchange-operations.md) | Selected consent trial, field comparison, receiver uncertainty and mirror provenance |
 | [Earlier demo baseline](evidence/demo-baseline.md) | Historical backend evidence; retain its original scope and date |
 | [GitHub Actions](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions) | Per-run remote checks and deployment records |
 

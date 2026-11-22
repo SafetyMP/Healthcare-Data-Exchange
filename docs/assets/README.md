@@ -5,10 +5,7 @@ All patient examples are synthetic.
 
 ## Current social preview
 
-The preview matches the guided demo's forest-green, sage and cream palette. It
-presents the browser walkthrough and the separate FHIR · OPA · OPAL reference
-backend as two modes, without implying clinical readiness or a live backend on
-GitHub Pages.
+The clinical blue card introduces Anna’s research request, the sponsor’s pilot decision and its selected-case technical evidence. [Business case desktop](research-request-desktop.jpg) · [Mobile](research-request-mobile.jpg) · [Full business case](research-request-full.jpg) · [Technical trial](research-request-technical.jpg)
 
 | File | Purpose |
 |------|---------|
@@ -37,7 +34,7 @@ the GitHub Pages workflow.
 | File | Purpose |
 |------|---------|
 | [`redesigned-workspace.jpg`](redesigned-workspace.jpg) | Redesigned workspace reference image; a static illustration, not verification of current behavior |
-| [`demo.gif`](demo.gif) | Historical four-frame console tour (overview, patient lookup, consent and AI triage); not the current guided walkthrough |
+| [`demo.gif`](demo.gif) | Historical four-frame console tour (overview, patient lookup, consent and AI triage); historical compatibility forms |
 | [`overview.png`](overview.png) | Retained console overview capture |
 | [`patients.png`](patients.png) | Retained patient-access capture |
 | [`consent.png`](consent.png) | Retained consent-management capture |
@@ -45,7 +42,7 @@ the GitHub Pages workflow.
 | [`identity.png`](identity.png) | Retained identity-matching capture |
 
 These retained screenshots and GIF may lag the current interface. Prefer the
-[live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/) for current
+[research consent case](https://safetymp.github.io/Healthcare-Data-Exchange/) for current
 behavior. The capture utility remains available for an intentional refresh:
 
 ```bash

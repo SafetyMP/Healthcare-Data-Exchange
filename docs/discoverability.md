@@ -6,7 +6,7 @@ use that distinction so people and software agents can determine what runs.
 
 ## Repository surfaces
 
-The [README](../README.md) leads with the demo, walkthrough, audience paths,
+The [README](../README.md) leads with the consent case, technical evidence, audience paths,
 execution modes and checks. [Repository metadata](../.github/repository-metadata.json)
 records the intended GitHub description, homepage and topics; settings must be
 applied separately. Community files route contributions, support and private
@@ -24,14 +24,9 @@ and [social previews](https://docs.github.com/en/repositories/managing-your-repo
 
 ## Public demo surfaces
 
-All six public routes have server-rendered titles and descriptions, absolute
-canonical URLs under the GitHub Pages project path, Open Graph/Twitter cards and
-a shared social image. The static export contains readable initial content and
-ordinary navigation links. The walkthrough requires JavaScript.
+The public case has server-rendered metadata and a canonical URL at the project root. The technical guide uses shareable fragments to select the case, consent, stage and trial. Five older form URLs support inbound compatibility and have noindex metadata with the case as their canonical URL.
 
-The [sitemap generator](../web/src/app/sitemap.ts) publishes
-`https://safetymp.github.io/Healthcare-Data-Exchange/sitemap.xml` with all six
-canonical routes and no invented modification dates. Descriptive
+The [sitemap generator](../web/src/app/sitemap.ts) publishes only the case root. Descriptive
 `WebSite` and `SoftwareApplication` JSON-LD identify the educational software,
 source and license, without ratings, endorsements or clinical claims. This is
 not a claim of rich-result eligibility.
@@ -66,7 +61,7 @@ content remains the foundation.
 ## Verification and limits
 
 From `web/`, run `npm run verify:demo`. It includes metadata source tests and a
-check of the actual export's six HTML heads, canonicals, sitemap, schema and
+check of the actual export’s case head, compatibility noindex directives, sitemap, schema and
 public assets. After deployment, inspect public HTML and asset URLs and verify
 that the successful Pages run belongs to the merged commit.
 

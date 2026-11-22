@@ -7,7 +7,7 @@ FHIR/OPA/OPAL reference backend. Neither mode is a production clinical system.
 
 ## Choose your starting point
 
-1. Try the [live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+1. Try the [research consent case](https://safetymp.github.io/Healthcare-Data-Exchange/)
    and read the [project scope](docs/product-mandate.md).
 2. Read [AGENTS.md](AGENTS.md) for repository commands, boundaries and layout.
 3. Check existing [issues](https://github.com/SafetyMP/Healthcare-Data-Exchange/issues)

@@ -23,29 +23,21 @@ function load(mode) {
 
 const production = "https://safetymp.github.io/Healthcare-Data-Exchange/";
 
-test("all six public routes have unique metadata and query-free project canonicals", () => {
+test("the business case owns public discovery and compatibility forms point back to it", () => {
   const { site, sitemap } = load("true");
-  assert.equal(site.SITE_ROUTES.length, 6);
-  const titles = new Set();
-  const descriptions = new Set();
-  for (const route of site.SITE_ROUTES) {
+  const main = site.pageMetadata("/");
+  assert.equal(main.alternates.canonical, production);
+  assert.equal(main.openGraph.title, main.title.absolute);
+  assert.equal(main.twitter.card, "summary_large_image");
+  assert.equal(main.robots.index, true);
+  for (const route of site.SITE_ROUTES.filter(path => path !== "/")) {
     const metadata = site.pageMetadata(route);
-    const expected = route === "/" ? production : `${production}${route.slice(1)}/`;
-    assert.equal(metadata.alternates.canonical, expected);
-    assert.equal(metadata.openGraph.url, expected);
-    assert.equal(metadata.openGraph.title, metadata.title.absolute);
-    assert.equal(metadata.twitter.title, metadata.title.absolute);
-    assert.equal(metadata.openGraph.images[0].url, `${production}social-preview.png`);
-    assert.equal(metadata.twitter.card, "summary_large_image");
-    assert.equal(metadata.robots.index, true);
-    assert.equal(new URL(expected).search, "");
-    titles.add(metadata.title.absolute);
-    descriptions.add(metadata.description);
+    assert.equal(metadata.alternates.canonical, production);
+    assert.equal(metadata.robots.index, false);
+    assert.equal(metadata.openGraph, null);
   }
-  assert.equal(titles.size, 6);
-  assert.equal(descriptions.size, 6);
   assert.equal(sitemap.dynamic, "force-static");
-  assert.deepEqual(Array.from(sitemap.default(), (entry) => entry.url), Array.from(site.SITE_ROUTES, site.canonicalUrl));
+  assert.deepEqual(Array.from(sitemap.default(), entry => entry.url), [production]);
 });
 
 test("live mode does not advertise local gateway pages as the hosted simulation", () => {

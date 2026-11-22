@@ -9,7 +9,7 @@ const root = resolve(process.argv[2] ?? fileURLToPath(new URL("../out", import.m
 const base = "https://safetymp.github.io/Healthcare-Data-Exchange/";
 const routes = ["", "patients", "consent", "identity", "activity", "ai-triage"];
 const expectedTitles = [
-  "Healthcare Data Exchange | Guided synthetic access demo",
+  "Healthcare Data Exchange | Research consent and pilot case",
   "Patient access | Healthcare Data Exchange",
   "Consent management | Healthcare Data Exchange",
   "Identity matching | Healthcare Data Exchange",
@@ -34,7 +34,12 @@ for (const [index, route] of routes.entries()) {
   const links = tags(head, "link");
   const named = (name) => meta.find((entry) => entry.name === name)?.content;
   const property = (name) => meta.find((entry) => entry.property === name)?.content;
-  const canonical = `${base}${route ? `${route}/` : ""}`;
+  const canonical = base;
+  if (route) {
+    assert.match(named("robots") ?? "", /noindex/);
+    assert.deepEqual(links.filter(entry => entry.rel === "canonical").map(entry => entry.href), [base]);
+    continue;
+  }
   assert.deepEqual(links.filter((entry) => entry.rel === "canonical").map((entry) => entry.href), [canonical]);
   assert.ok((named("description") ?? "").length > 60, `${route}: descriptive snippet`);
   assert.doesNotMatch(named("robots") ?? "", /noindex|nofollow/);
@@ -59,7 +64,7 @@ for (const [index, route] of routes.entries()) {
 }
 const sitemap = readFileSync(resolve(root, "sitemap.xml"), "utf8");
 const locations = Array.from(sitemap.matchAll(/<loc>([^<]+)<\/loc>/g), (match) => decode(match[1]));
-assert.deepEqual(locations.sort(), canonicals.sort(), "sitemap contains exactly the six canonical routes");
+assert.deepEqual(locations.sort(), canonicals.sort(), "sitemap contains only the public business case");
 assert.doesNotMatch(sitemap, /<lastmod>/, "do not invent freshness timestamps");
 const image = readFileSync(resolve(root, "social-preview.png"));
 assert.equal(image.subarray(1, 4).toString(), "PNG");
@@ -72,4 +77,4 @@ const publicGuide = readFileSync(new URL("../public/llms.txt", import.meta.url),
 assert.equal(publicGuide, rootGuide, "root and public supplemental guides are byte-identical");
 assert.equal(readFileSync(resolve(root, "llms.txt"), "utf8"), publicGuide, "exported supplemental guide matches the tracked source");
 assert.equal(existsSync(resolve(root, "robots.txt")), false, "project-path robots.txt would not govern origin crawling");
-console.log("Discovery export verified: six HTML heads, canonicals, social metadata, JSON-LD, sitemap and public assets.");
+console.log("Discovery export verified: business case metadata, five compatibility noindex pages, JSON-LD, sitemap and public assets.");
