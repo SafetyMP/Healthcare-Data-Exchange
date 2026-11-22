@@ -1,13 +1,13 @@
 # Support
 
-Healthcare Data Exchange includes a guided browser demo and a separate reference
+Healthcare Data Exchange includes a synthetic research consent case and a separate reference
 backend. Identify which mode you are using when asking for help.
 
 ## Find the right starting point
 
 | Need | Start here |
 |---|---|
-| Explore consent, requesting teams and regional access | [Live demo](https://safetymp.github.io/Healthcare-Data-Exchange/) → **Start guided walkthrough** |
+| Explore consent, requesting teams and regional access | [Live demo](https://safetymp.github.io/Healthcare-Data-Exchange/) → **Privacy desk intake** |
 | Run the browser demo or live-gateway frontend locally | [Frontend guide](web/README.md) |
 | Understand scope and architecture | [Documentation index](docs/README.md) |
 | Report incorrect behavior | [Bug report](https://github.com/SafetyMP/Healthcare-Data-Exchange/issues/new?template=bug_report.yml) |
@@ -20,15 +20,10 @@ backend. Identify which mode you are using when asking for help.
 - **Access blocked:** this can be the intended result. Read the reason, then check the
   selected patient, purpose, requesting team and consent. Consent does not override
   regional restrictions.
-- **Next step is unavailable:** complete the action shown in the guide and check its
-  result. Saving consent alone does not complete a step that also requires an access check.
-- **Explored a different scenario:** **Return to this step** restores the intended
-  selections without changing consent. **Pause walkthrough** lets you explore freely.
-- **Need the starting state:** **Reset demo**, or **Restart walkthrough**, restores
-  this tab's simulated consent and clears activity. The guide explains its reset behavior
-  before starting. Save any useful observations before restarting.
-- **Progress was not restored:** progress is local to the browser tab. Private browsing,
-  unavailable browser storage, or closing the tab can affect persistence.
+- **Run access check is unavailable.** Predict deny, allow or limit fields before running the check.
+- **The field preview is unavailable.** Compare authorized fields for the selected trial. A denied trial releases no fields. Remove out-of-scope fields from an allowed trial before staging.
+- **Return to the case.** The return link retains the selected requester and purpose. A technical counterfactual leaves the recorded patient preference intact.
+- **Restore starting consent.** Open **Session settings and reset**, then choose **Reset tab demo**. Consent and activity persist in this tab when session storage is available.
 - **Unexpected layout or keyboard behavior:** report the page, browser, approximate
   viewport size, input method and the exact control involved.
 

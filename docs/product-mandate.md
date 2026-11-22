@@ -2,16 +2,14 @@
 
 **Status:** Current product and contribution scope
 
-**Updated:** November 14, 2026
+**Updated:** November 22, 2026
 
-**Try it:** [Live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/)
+**Try it:** [Research consent case](https://safetymp.github.io/Healthcare-Data-Exchange/)
 
 ## Purpose
 
 Help people understand how consent, requesting-team permissions, purpose, and
-regional restrictions combine to determine access to healthcare data. The product
-is a guided, synthetic learning workspace with readable decisions and a visible
-trail of the actions that produced them.
+regional restrictions combine to determine access to healthcare data. The public case follows a named research request, replays patient events and compares proposed pilot costs with usable review capacity.
 
 The browser experience is the first entry point. A separate local reference
 backend uses FHIR R4, HAPI stores, a Go gateway, OPA, and OPAL to investigate service
@@ -27,6 +25,8 @@ implemented capabilities or authorize new deployments.
 
 | Audience | Task the project should support |
 |---|---|
+| Exchange data steward | Review the requester, consent change and authorized fields before signing a case decision |
+| Exchange operations director | Compare manual review, checklist and shadow pilot costs against staff capacity |
 | First-time visitors and learners | Complete a coherent scenario without credentials, internal IDs, or infrastructure setup |
 | Product and design reviewers | Inspect patient context, decision explanations, consent changes, recovery paths, and accessibility |
 | Frontend developers | Reproduce the browser demo, change interactions, and verify behavior under the Pages subpath |
@@ -38,26 +38,12 @@ not deliver care, manage real consent, or process their records.
 
 ## Core experience
 
-1. **Find the patient.** Search a small synthetic roster and retain the selected
-   patient across related tasks. Use example identifiers for identity matching.
-2. **Set the request context.** Make purpose and requesting team explicit. A team
-   preset simulates caller context in the browser; backend identity still comes
-   from verified credentials.
-3. **Understand the decision.** Show whether access is allowed, limited, denied,
-   or unavailable; explain the reason and display only the fields returned by the
-   decision. Keep technical payloads available as secondary detail.
-4. **Explore consent.** Review purpose-specific preferences, save a change, and
-   check the same request again. Preserve the requester when moving between pages.
-5. **Inspect boundaries.** Show that consent does not override region restrictions,
-   and that the derivative exception requires the permitted requesting team.
-6. **Review the trail.** Record simulated requests and changes in the current tab,
-   with enough context to understand why outcomes differ.
+1. Review Anna Mueller’s research, US treatment or limited secondary-use request.
+2. Predict the decision, check the request and replay the patient’s grant or withdrawal. Compare fields and discuss what the browser receipt can establish.
+3. Carry the same request and selected consent into the technical guide. Compare an alternate consent trial, inspect fields and compare published policy evidence.
+4. As operations director, enter volume, time, rate and pilot cost, choose an option and identify what would justify expansion.
 
-The optional [nine-checkpoint guide](guided-walkthrough.md) teaches this sequence
-through actual form actions. It starts only when requested, waits for matching
-results, and supports pause, resume, restart, and reset. Identity matching and the
-fixed AI oversight example support exploration without displacing the access and
-consent workflow.
+The service reference retains the synthetic FHIR stores, gateway, policy, consent and identity services. Older browser form URLs remain available for compatibility. The public case, technical navigation and discovery surfaces lead to the selected consent case.
 
 ## Product principles
 
@@ -83,14 +69,14 @@ consent workflow.
 | Visitors can complete the intended sequence | Browser test through all nine checkpoints; direct review of the journey |
 | Decisions and consent transitions remain consistent | Fixture adapter tests and scenario tests for allowed, denied, revoked, and limited outcomes |
 | Request context survives navigation | Patient/purpose/team round-trip and browser-history tests |
-| Guide progress follows actual actions | Tests for wrong context, ordered actions, pause/resume, reload, and reset |
+| Technical trials retain case context | Stage, trial, shareable-link, keyboard return and grant/withdrawal checks |
 | Static hosting works | Build/export, nested route reloads, no gateway traffic, and inspection of the published Pages site |
 | Interface is usable across input and viewport sizes | Keyboard and responsive review plus automated accessibility checks; these do not replace assistive-technology testing |
 | Backend behavior is maintained | Hermetic checks plus separate cooperative and adversarial Compose scenarios when backend/runtime claims are made |
 | The experience helps real users | Future user research; expert inspection and synthetic tests do not establish engagement or learning outcomes |
 
 See [experience redesign](experience-redesign.md), [live review](live-experience-review.md),
-and [walkthrough evidence](guided-walkthrough.md) for bounded results. Current
+and [selected-case evidence](exchange-operations.md) for bounded results. Current
 remote run status belongs in [GitHub Actions](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions).
 
 ## Boundaries and next decisions

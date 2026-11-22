@@ -2,10 +2,7 @@
 
 [**Open the live demo**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Product scope](../docs/product-mandate.md) · [Repository guide](../README.md)
 
-The frontend presents synthetic patient access, purpose-specific consent,
-requesting teams, regional restrictions, and a readable activity trail. Its
-optional nine-checkpoint walkthrough teaches these through the actual forms.
-Identity matching and a fixed AI oversight example are secondary exploration tasks.
+The public case follows a study coordinator’s request for Anna Mueller’s record. The steward compares purpose-specific consent and field decisions. The exchange operations director compares pilot cost and capacity. The compact technical view keeps the selected request, consent trial and implementation stage in its link.
 
 The existing stack is **Next.js 16.4.6, React, TypeScript, and Tailwind CSS**. Use
 **Node.js 22** and **npm 10.9.2–10.x**, matching [package.json](package.json).
@@ -27,15 +24,11 @@ NEXT_PUBLIC_DEMO_MODE=true npm run dev
 # http://localhost:3100/Healthcare-Data-Exchange/
 ```
 
-The disclosure desk evaluates three synthetic requests and stages a field-limited JSON preview. Replay a patient event to recheck the packet. The pilot worksheet compares staff capacity with cost. The compact technical reference links the fixture, receiving-gateway probe and pinned policy publication comparison. [Operations guide](../docs/exchange-operations.md)
-The guide covers research deny/grant/revoke, separate treatment consent, regional
-denial, the permitted limited derivative, and Activity. It checks actual form
-results, supports pause/resume across reloads, and is absent from gateway mode.
-Starting or restarting resets this tab's simulated consent and activity.
+Choose **Inspect this request’s field evidence** in the case. Compare the opposite consent trial, filter a local packet, inspect endpoint uncertainty and compare the pinned mirror digest. Return to the selected request to resume the business case. [Operations guide](../docs/exchange-operations.md)
 
 The browser demo makes no gateway calls and requires no credentials. Session
 storage retains simulated consent, activity, and guide progress in the current
-tab. **Reset demo** restores starting preferences and clears activity and guide
+tab. **Reset tab demo** restores starting preferences and clears activity and guide
 progress. If storage is unavailable, state lasts only until reload. Do not enter
 real patient data. These fixture decisions are not evidence that OPA, OPAL, HAPI,
 or a clinical AI model ran.
@@ -132,11 +125,11 @@ Use the workflow run and the published site to distinguish a successful build
 from a successful deployment. See [maintainer settings](../docs/maintainer-github-settings.md)
 for repository configuration.
 
-## Routes and source map
+## Local gateway and compatibility routes
 
 | Route | Task |
 |---|---|
-| `/` | Orientation, guide start, scenarios, and links to workspace tasks |
+| `/` | Research request, pilot worksheet and selected-case technical stages |
 | `/patients/` | Search synthetic patients and inspect an access decision |
 | `/consent/` | Review and change purpose-specific consent |
 | `/identity/` | Resolve an example identifier into patient context |

@@ -19,89 +19,145 @@ async function checkResearch(page: Page, allowed: boolean) {
 }
 
 test.describe("Static synthetic demo", () => {
-  test("disclosure manifest excludes prohibited fields before staging and invalidates a packet on withdrawal", async ({ page }) => {
-    await page.goto("./#research-request");
-    const stage = page.getByRole("button", { name: "Stage packet" });
-    await expect(stage).toBeDisabled();
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await expect(page.getByText("Remove fields marked Withhold")).toBeVisible();
+  test("research desk presets open the matching access decision", async ({ page }) => {
+    for (const [label, purpose, requester, outcome] of [
+      ["Research request", "research", "eu-visiting", "Access blocked"],
+      ["US treatment", "treatment", "us-home", "Access blocked"],
+      ["US secondary use", "derivative", "us-clinician", "Access allowed"],
+    ]) {
+      await page.goto("./#research-request");
+      await page.getByRole("radio", { name: label, exact: true }).check();
+      const intake = page.getByRole("region", { name: "Access request intake" });
+      await expect(intake.getByRole("heading", { name: "Anna Mueller" })).toBeVisible();
+      const expectedPurpose = purpose === "derivative" ? "Derivative use" : purpose;
+      await expect(intake.locator("dd").nth(1)).toHaveText(new RegExp(expectedPurpose, "i"));
+      const expectedTeam = requester === "us-clinician" ? "US clinician team" : requester === "us-home" ? "US home care team" : "EU visiting care team";
+      await expect(intake.locator("dd").nth(2)).toHaveText(expectedTeam);
+      await expect(page.getByRole("button", { name: "Run access check" })).toBeDisabled();
+      await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
+      await page.getByRole("button", { name: "Run access check" }).click();
+      await expect(intake.getByText(purpose === "derivative" ? "Prediction matched." : "Prediction differed.", {exact: true})).toBeVisible();
+      const flow = intake.getByRole("figure", { name: "Synthetic access decision path" });
+      await expect(flow.getByRole("listitem").last()).toContainText(purpose === "derivative" ? "id, resourceType" : "None");
+      await page.getByRole("link", { name: "Inspect this request’s field evidence" }).click();
+      await expect(page.getByRole("heading", { name: "Trace the " + purpose + " request" })).toBeVisible();
+      await expect(page.getByText(requester, { exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Selected consent/ })).toContainText(outcome === "Access blocked" ? "Browser 403" : "Browser 200");
+      await page.getByRole("link", { name: "← Return to the selected privacy case" }).click();
+      await expect(intake.getByRole("radio", { name: label, exact: true })).toBeChecked();
+    }
+  });
+
+  test("patient events replay the same request, preserve tab consent and restore baseline on reset", async ({ page }) => {
+    await page.goto("./");
+    const predict = page.getByRole("radio", { name: "Deny access", exact: true });
+    const run = page.getByRole("button", { name: "Run access check" });
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Deny access" })).toBeVisible();
+    const allowed = page.getByRole("heading", { name: "After Anna’s grant · Allow access" }).locator("..");
+    await expect(allowed).toContainText("Withheld None");
+    await expect(allowed).toContainText("name, birthDate, gender");
+    await page.reload();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Granted");
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await expect(page.getByRole("heading", { name: "Before the event · Allow access" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "After Anna’s withdrawal · Deny access" }).locator("..")).toContainText("Released None");
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await page.getByText("Session settings and reset").click();
+    await page.getByRole("button", { name: "Reset tab demo" }).click();
+    await expect(run).toBeDisabled();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Withheld");
+
+    await page.getByRole("radio", { name: "US treatment" }).check();
+    await predict.check();
+    await run.click();
+    await page.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(page.getByRole("heading", { name: "After Anna’s grant · Deny access" })).toBeVisible();
+    await expect(page.getByText(/different regions/, {exact: false}).first()).toBeVisible();
+  });
+
+  test("steward distinguishes a simulated consent receipt from evidence at the receiving endpoint", async ({ page }) => {
+    await page.goto("./");
+    const intake = page.getByRole("region", { name: "Access request intake" });
+    await expect(intake.getByRole("radio", { name: "Limited return", exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "US secondary use", exact: true }).check();
+    await expect(intake.getByText("Derivative exception", { exact: true })).toBeVisible();
+    await expect(intake.getByText("id, resourceType", { exact: true })).toHaveCount(0);
+    await intake.getByRole("radio", { name: "Limit fields", exact: true }).check();
+    await intake.getByRole("button", { name: "Run access check" }).click();
+    await intake.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    const proof = intake.getByRole("group", { name: "Which claim can you sign off?" });
+    await expect(proof).toBeVisible();
+    await expect(intake.getByText("No endpoint observation", { exact: true })).toBeVisible();
+    const status = intake.getByRole("status");
+    await expect(status).toHaveText("");
+    const initialRegion = await status.elementHandle();
+    await proof.getByRole("button", { name: "The receiving endpoint enforced it" }).click();
+    expect(await initialRegion?.evaluate(node => node.isConnected && node.textContent?.includes("Request endpoint evidence before signing"))).toBe(true);
+    await expect(intake.getByText(/Request endpoint evidence before signing/)).toBeVisible();
+    await proof.getByRole("button", { name: "This browser replay withheld the fields" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toBeVisible();
+    await intake.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    await expect(intake.getByText(/Supported by the browser receipt/)).toHaveCount(0);
+    await expect(proof.getByRole("button", { name: "This browser replay returned the listed fields" })).toBeVisible();
+  });
+
+  test("selected technical trial supports direct entry, field minimization and a return to unchanged patient consent", async ({ page }) => {
+    await page.goto("./#technical/derivative/granted/fields/selected");
+    const stage = page.getByRole("button", { name: "Stage field preview" });
     await expect(stage).toBeDisabled();
     await page.getByRole("checkbox", { name: /name/ }).uncheck();
-    await page.getByRole("button", { name: "Hold request" }).click();
+    await page.getByRole("checkbox", { name: /^id/ }).uncheck();
+    await page.getByRole("checkbox", { name: /^resourceType/ }).uncheck();
+    await expect(page.getByText("Select at least one authorized field to stage a preview.")).toBeVisible();
     await expect(stage).toBeDisabled();
-    await page.getByRole("checkbox", { name: /resourceType/ }).uncheck();
-    await page.getByRole("checkbox", { name: /resourceType/ }).check();
-    await expect(stage).toBeDisabled();
-    await page.getByRole("button", { name: "Recheck and reopen" }).click();
+    await page.getByRole("checkbox", { name: /^id/ }).check();
+    await page.getByRole("checkbox", { name: /^resourceType/ }).check();
     await stage.click();
     expect(JSON.parse(await page.getByLabel("Staged JSON").innerText())).toEqual({ id: "patient-eu-001", resourceType: "Patient" });
-    await page.getByText("Replay a patient consent event", { exact: true }).click();
-    await page.getByRole("button", { name: "Replay patient withdrawal" }).click();
+    await page.getByRole("link", { name: /Opposite consent/ }).click();
+    await expect(stage).toBeDisabled();
     await expect(page.getByLabel("Staged JSON")).toHaveCount(0);
-    await expect(page.getByText(/Before: 200 · id, resourceType. After: 403 · no fields/)).toBeVisible();
-    await expect(stage).toBeDisabled();
-    await page.getByRole("button", { name: "Replay patient grant" }).click();
-    await expect(stage).toBeEnabled();
-    await page.getByRole("checkbox", { name: /name/ }).check();
-    await expect(stage).toBeDisabled();
-  });
-
-  test("disclosure queue retains draft work and distinguishes consent from regional eligibility", async ({ page }) => {
-    await page.goto("./");
-    await page.getByRole("button", { name: /DX-105/ }).click();
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await expect(page.getByText(/403 · consent_required/)).toBeVisible();
-    await page.getByText("Replay a patient consent event", { exact: true }).click();
-    await page.getByRole("button", { name: "Replay patient grant" }).click();
-    await page.getByRole("button", { name: "Stage packet" }).click();
-    expect(Object.keys(JSON.parse(await page.getByLabel("Staged JSON").innerText()))).toEqual(["id", "resourceType", "birthDate"]);
-    await page.getByRole("button", { name: /DX-106/ }).click();
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await expect(page.getByText(/403 · residency_denied/)).toBeVisible();
-    await page.getByRole("button", { name: "Hold request" }).click();
-    await expect(page.getByRole("button", { name: /DX-106/ })).toContainText("On hold");
-    await page.getByRole("button", { name: /DX-105/ }).click();
-    await expect(page.getByLabel("Staged JSON")).toContainText("birthDate");
-    await page.getByText("Session and reset", { exact: true }).click();
-    await page.getByRole("button", { name: "Reset tab demo" }).click();
-    await expect(page.getByRole("button", { name: /DX-104/ })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("button", { name: /DX-105/ })).toContainText("Unreviewed");
-    await page.getByRole("button", { name: /DX-105/ }).click();
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await expect(page.getByText(/403 · consent_required/)).toBeVisible();
-  });
-
-  test("a staged disclosure packet is discarded on reload while patient decisions persist in the tab", async ({ page }) => {
-    await page.goto("./");
-    await page.getByRole("button", { name: /DX-105/ }).click();
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await page.getByText("Replay a patient consent event", { exact: true }).click();
-    await page.getByRole("button", { name: "Replay patient grant" }).click();
-    await page.getByRole("button", { name: "Stage packet" }).click();
+    await page.getByRole("link", { name: /Receiving gateway/ }).click();
+    await expect(page.getByText(/No authenticated read/)).toBeVisible();
+    await expect(page.getByRole("link", { name: "Permalink to this stage and trial" })).toHaveAttribute("href", "#technical/derivative/granted/receiver/opposite");
     await page.reload();
-    await page.getByRole("button", { name: /DX-105/ }).click();
-    await expect(page.getByLabel("Staged JSON")).toHaveCount(0);
-    await page.getByRole("button", { name: "Check policy" }).click();
-    await expect(page.getByText(/200 · In-region access/)).toBeVisible();
+    await expect(page.getByRole("link", { name: /Opposite consent/ })).toHaveAttribute("aria-current","true");
+    await page.getByRole("link", { name: "← Return to the selected privacy case" }).click();
+    await expect(page.getByRole("radio", { name: "US secondary use" })).toBeChecked();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Granted");
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: "Trace the derivative request" })).toBeVisible();
   });
 
-  test("mirror digest comparison distinguishes a publication from the working policy", async ({ page }) => {
+  test("a shared mirror trial preserves its origin and asks before replaying a different patient preference", async ({ page }) => {
+    await page.goto("./#technical/research/granted/receiver/opposite/mirror");
+    await expect(page.getByRole("link", { name: "Return to the policy mirror case" })).toHaveAttribute("href", /healthcare-policy#follow-a-research-access-request$/);
+    await page.getByRole("link", { name: /Published policy/ }).first().click();
+    await expect(page).toHaveURL(/publication\/opposite\/mirror$/);
+    await page.getByRole("link", { name: "← Return to the selected privacy case" }).click();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Withheld");
+    await page.getByRole("button", { name: "Replay Anna’s shared grant" }).click();
+    await expect(page.locator("#research-request dd").last()).toHaveText("Granted");
+    await page.getByRole("link", { name: "Pilot costs" }).click();
+    await expect(page).toHaveURL(/pilot-costs\/research\/mirror$/);
+    await page.getByRole("link", { name: "Inspect this request’s field evidence" }).click();
+    await expect(page).toHaveURL(/research\/granted\/fields\/selected\/mirror$/);
+  });
+
+  test("publication evidence compares recorded digests without claiming recipient activation", async ({ page }) => {
     await page.goto("./#policy-provenance");
-    const guide = page.locator("#policy-provenance");
-    if (!await guide.getByRole("button", { name: "Compare digest" }).isVisible()) await guide.locator("summary").click();
-    const compare = guide.getByRole("button", { name: "Compare digest" });
-    await compare.click();
-    await expect(guide.getByRole("status")).toContainText("Matches the published bundle digest");
-    await guide.getByRole("button", { name: "Load working digest" }).click();
-    await expect(guide.getByRole("status")).toBeEmpty();
-    await compare.click();
-    await expect(guide.getByRole("status")).toContainText("working tree only");
-    await guide.getByLabel("Candidate bundle digest").fill("0".repeat(64));
-    await compare.click();
-    await expect(guide.getByRole("status")).toContainText("Digest differs");
-    await guide.getByLabel("Candidate bundle digest").fill("x");
-    await compare.click();
-    await expect(guide.getByRole("status")).toContainText("64-character");
+    await page.getByRole("button", { name: "Compare digest" }).click();
+    await expect(page.getByText(/Matches the published bundle digest/)).toBeVisible();
+    await page.getByRole("button", { name: "Load working digest" }).click();
+    await page.getByRole("button", { name: "Compare digest" }).click();
+    await expect(page.getByText(/Matches the canonical working tree only/)).toBeVisible();
   });
 
   test("pilot worksheet distinguishes staffing value, shortfall and incomplete inputs", async ({ page }) => {
@@ -295,31 +351,30 @@ test.describe("Static synthetic demo", () => {
     await expect(page.getByRole("navigation", { name: "Mobile", exact: true })).toHaveCount(0);
   });
 
-  test("mobile disclosure desk supports keyboard actions and an accessible technical reference", async ({ page }) => {
+  test("mobile case and technical reference support keyboard return and keep the same prediction", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("./");
-    await expect(page.getByRole("heading", { name: "Disclosure desk", level: 1 })).toBeVisible();
-    const width = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: innerWidth }));
-    expect(width.content).toBeLessThanOrEqual(width.viewport);
-
     await page.keyboard.press("Tab");
-    await expect(page.getByRole("link", { name: "Skip to main content", exact: true })).toBeFocused();
+    await expect(page.getByRole("link", { name: "Skip to main content" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#main-content")).toBeFocused();
-    await expect(page.getByRole("navigation", { name: "Primary" })).toHaveCount(0);
-    const check = page.getByRole("button", { name: "Check policy" });
-    await check.focus();
+    await page.getByRole("radio", { name: "Deny access" }).check();
+    await page.getByRole("button", { name: "Run access check" }).click();
+    await page.getByRole("button", { name: "Replay Anna’s grant" }).click();
+    const evidence = page.getByRole("link", { name: "Inspect this request’s field evidence" });
+    await evidence.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByText("Remove fields marked Withhold")).toBeVisible();
-    await page.getByRole("checkbox", { name: /name/ }).uncheck();
-    await page.getByRole("button", { name: "Stage packet" }).click();
-    await expect(page.getByLabel("Staged JSON")).toContainText("patient-eu-001");
-    await page.getByRole("link", { name: "Technical reference" }).click();
-    await page.locator("#policy-provenance summary").focus();
-    await page.keyboard.press("Enter");
-    await expect(page.getByRole("link", { name: "Published policy mirror" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Trace the research request" })).toBeFocused();
+    await expect(page.getByRole("link", { name: /Selected consent/ })).toContainText("Browser 200");
+    await expect(page.getByRole("link", { name: /Opposite consent/ })).toContainText("Browser 403");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
     expect(accessibility.violations).toEqual([]);
+    await page.getByRole("link", { name: "← Return to the selected privacy case" }).click();
+    await expect(page.getByRole("region", { name: "Access request intake" })).toBeFocused();
+    await expect(page.getByText("After Anna’s grant · Allow access")).toBeVisible();
+    await page.getByRole("button", { name: "Run a shadow pilot" }).click();
+    await expect(page.getByText(/Your assumptions cover first-year cost/)).toBeVisible();
   });
 });
 

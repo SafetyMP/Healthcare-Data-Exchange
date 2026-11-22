@@ -1,6 +1,6 @@
 # Healthcare Data Exchange
 
-**A synthetic disclosure desk for consent-aware regional access, with a FHIR, OPA and OPAL reference backend.**
+**A research consent case for an exchange privacy steward and pilot sponsor, with a FHIR, OPA and OPAL reference backend.**
 
 [**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
@@ -8,7 +8,7 @@
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
-[![Disclosure desk showing a staged synthetic two-field packet](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+[![Anna’s research access request and its consent decision at the privacy desk](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
 Healthcare data access depends on more than finding a record. The purpose of a
 request, the requesting team's permissions, the patient's consent, and regional
@@ -22,44 +22,19 @@ certification.
 
 ## Try the privacy desk case
 
-The exchange data steward has three incoming requests for Anna Mueller’s synthetic EU record. Check the US derivative request, remove the name from the field manifest and stage the two remaining fields. Replay Anna’s withdrawal to see the packet cleared and the same request denied. The research and treatment requests let you compare consent and regional scope. [Open the disclosure desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+A study coordinator asks for Anna Mueller’s synthetic EU record. Predict whether the exchange should deny, allow or limit access. Compare research, US treatment and US secondary use. Replay the patient’s grant or withdrawal and decide which claims the browser receipt supports. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
-Release engineers can compare the mirror pointer with the published bundle, inspect a different working digest and identify what each receiver still needs to verify. [Operations guide](docs/exchange-operations.md) · [Policy release comparison](https://safetymp.github.io/Healthcare-Data-Exchange/#policy-provenance)
+Choose **Inspect this request’s field evidence** to carry the patient, requester, purpose and selected consent into the compact implementation guide. Compare the opposite consent without changing the patient’s tab preference, trim an authorized field preview, and inspect what a receiving gateway has yet to show. The stage and trial have shareable links. [Technical example](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/research/withheld/fields/selected) · [Operations guide](docs/exchange-operations.md)
 
 The exchange director can keep the manual desk, introduce a checklist, or test a policy check alongside staff decisions. The worksheet estimates how many reviewer minutes per eligible request would cover integration, training and support. Its starting values are illustrative. Before expanding, the steward checks whether a shadow recommendation would release an unauthorized field or hold an eligible request. The operations director then compares the time saved against the better manual or checklist baseline and decides whether the team could reuse that time. [Explore the pilot worksheet](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs)
 
 The audience comes from two operating perspectives. Maryland’s CRISP exchange describes the route from a research team’s request through governance review. AHRQ guides exchange evaluation teams to identify stakeholders and feasible measures before judging value. The demo assigns those decisions to a fictional steward and operations director. [CRISP research access](https://www.crisphealth.org/research/) · [AHRQ exchange evaluation guide](https://digital.ahrq.gov/health-information-exchange-hie-evaluation-toolkit)
 
-## Try the guided walkthrough
-
-Open [Patient access](https://safetymp.github.io/Healthcare-Data-Exchange/patients/) and choose
-**Start guided walkthrough**. Nine checkpoints use the actual forms:
-
-1. See a research request blocked when consent is absent.
-2. Grant research consent and check the same request again.
-3. Revoke consent and verify that the next request is blocked.
-4. Check treatment separately from research.
-5. Switch requesting teams to encounter a regional restriction.
-6. Confirm that saving consent does not override that restriction.
-7. See why choosing a limited purpose alone does not grant permission.
-8. Use the permitted team preset and inspect the limited derivative response.
-9. Review the simulated decisions and consent changes in Activity.
-
-The guide waits for matching form results before allowing you to continue. Pause
-and resume it, reload the page, or explore freely. Starting or restarting the
-guide resets this tab's simulated consent and activity; **Reset demo** also clears
-guide progress. Browser session storage retains state across reloads when available.
-
-Outside the guide, search four synthetic patients, compare purposes and teams,
-resolve example identifiers, or inspect a fixed AI oversight example. The AI
-example does not provide a clinical assessment. See the [walkthrough design](docs/guided-walkthrough.md)
-and [experience notes](docs/experience-redesign.md).
-
 ## Choose your starting point
 
 | You want to… | Start here |
 |---|---|
-| Understand consent and access decisions | [Live guided demo](https://safetymp.github.io/Healthcare-Data-Exchange/) |
+| Understand consent and access decisions | [Research consent case](https://safetymp.github.io/Healthcare-Data-Exchange/) |
 | Review the experience or suggest improvements | [Product scope](docs/product-mandate.md), [independent experience review](docs/live-experience-review.md) |
 | Run or change the frontend | [Web workspace guide](web/README.md) |
 | Investigate FHIR, policy enforcement, or consent distribution | [Reference backend setup](#run-the-reference-backend), [architecture](docs/architecture/overview.md) |
@@ -70,7 +45,7 @@ and [experience notes](docs/experience-redesign.md).
 | | Browser demo on GitHub Pages | Local reference backend |
 |---|---|---|
 | Purpose | Explore the experience and synthetic access scenarios | Exercise service integration and policy enforcement |
-| Data and state | Four fixture patients; tab-local simulated consent and activity | Synthetic FHIR R4 patients in EU and US HAPI stores; local consent service |
+| Data and state | Anna’s record from the four-patient fixture set; tab-local consent and activity | Synthetic FHIR R4 patients in EU and US HAPI stores; local consent service |
 | Decisions | Simplified browser fixture rules | Go gateway, verified demo credentials, OPA policy and OPAL consent distribution |
 | Setup | Open a URL | Docker Compose plus the local frontend |
 | Evidence | Frontend interactions, accessibility checks, static route behavior | Hermetic service tests and separate Compose scenarios |

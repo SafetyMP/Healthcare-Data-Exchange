@@ -1,32 +1,22 @@
 # Healthcare Data Exchange
 
-> A guided synthetic demonstration of how consent, requesting teams, and regional boundaries affect patient access, with a separate FHIR, OPA, and OPAL backend reference.
+> A synthetic research consent case for an exchange data steward, with a pilot-cost decision for the operations director and a technical evidence guide for the same request.
 
-The GitHub Pages demo runs in the browser with four synthetic patients and session-local state. It does not call the backend. The local backend reference demonstrates credential-based access and consent distribution. Neither mode is a production health-information exchange, clinical record system, compliance certification, or clinical AI tool.
+## Business case
 
-This supplemental reading index follows the emerging llms.txt proposal. It is not a search standard and does not guarantee discovery, indexing, ranking, ingestion, or citations.
+- [Privacy desk intake](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request) follows Anna Mueller’s research, treatment and derivative requests, the requesting team, purpose and patient consent.
+- [Pilot economics](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs) compares matched reviewer time, eligible volume and first-year cost.
+- [Selected request evidence](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/research/withheld/consent/selected) compares two synthetic consent trials and traces the authorized fields.
+- [Publication evidence](https://safetymp.github.io/Healthcare-Data-Exchange/#policy-provenance) compares a pinned mirror pointer with the published policy bundle.
 
-## Start here
+## Implementation and verification
 
-- [Interactive demo and guided walkthrough](https://safetymp.github.io/Healthcare-Data-Exchange/): Patient access, consent changes, requesting-team boundaries, and a limited derivative example.
-- [Project overview](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/README.md): Purpose, two operating modes, setup, and evidence limits.
-- [Product mandate](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/product-mandate.md): Intended audience, supported experience, and scope.
-- [Documentation index](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/README.md): Current guides, architecture references, and historical material.
-- [Web setup and verification](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/README.md): Static export, gateway mode, route behavior, tests, and GitHub Pages.
+- [Operations guide](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/exchange-operations.md)
+- [Project scope](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/README.md)
+- [Browser fixture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts)
+- [Canonical policy](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/policy/authz.rego)
+- [Reference backend](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/architecture/overview.md)
+- [Receiving-gateway probe](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/scripts/demo.sh)
+- [Contributing](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/CONTRIBUTING.md)
 
-## Contributing and agent context
-
-- [Contributor guide](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/CONTRIBUTING.md): Contribution workflow and required checks.
-- [Agent entry point](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/AGENTS.md): Repository boundaries, commands, and progressive source navigation.
-- [Agent guide](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/agent-guide.md): Task-to-source map, modes, routes, checks, and evidence boundaries.
-- [Security policy](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/SECURITY.md): Synthetic-data limits and private vulnerability reporting.
-- [Discoverability](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/discoverability.md): Public metadata and crawlable resources, with their limitations.
-
-## Implementation and backend reference
-
-- [Browser simulation](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts): Synthetic fixtures, consent state, access outcomes, and session activity.
-- [Guided walkthrough](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/walkthrough.ts): Action/result checkpoints for consent and regional access.
-- [API adapter](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/api.ts): Explicit demo/live separation and gateway request contracts.
-- [Backend architecture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/architecture/overview.md): The separately run HAPI FHIR, OPA, OPAL, and service reference.
-- [Canonical authorization policy](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/policy/authz.rego): Consent, regional restrictions, and the limited derivative exception.
-- [Threat model](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/docs/adr/0000-threat-model.md): Backend assumptions and scoped security boundaries.
+Browser results are illustrative. Endpoint enforcement and timing require separate observations at each destination.

@@ -1,39 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
   <title id="title">Healthcare Data Exchange</title>
-  <desc id="description">Consent. Requesting teams. Regional access. A guided synthetic demo with a separate FHIR, OPA and OPAL reference backend.</desc>
-  <rect width="1280" height="640" fill="#173c32"/>
-  <path d="M850 0H1280V470H1080C930 470 850 335 850 180Z" fill="#214b3d"/>
+  <desc id="description">Can the study team use Anna’s record? A synthetic research request and pilot decision with selected-case technical evidence.</desc>
+  <rect width="1280" height="640" fill="#12314b"/>
+  <path d="M850 0H1280V470H1080C930 470 850 335 850 180Z" fill="#184764"/>
   <g font-family="Arial, Helvetica, sans-serif">
-    <!-- Product mark: the same sage and forest palette as the demo. -->
-    <rect x="64" y="54" width="46" height="46" rx="12" fill="#d5e8ad"/>
-    <path d="M80 77h14M87 70v14" stroke="#214d3b" stroke-width="3" stroke-linecap="round"/>
-    <text x="128" y="83" fill="#d5e3d6" font-size="17" letter-spacing="2.4">EXPLORE THE EXCHANGE</text>
+    <!-- Product mark: the clinical blue palette used in the consent case. -->
+    <rect x="64" y="54" width="46" height="46" rx="12" fill="#abdfff"/>
+    <path d="M80 77h14M87 70v14" stroke="#14425e" stroke-width="3" stroke-linecap="round"/>
+    <text x="128" y="83" fill="#dbeaf5" font-size="17" letter-spacing="2.4">RESEARCH ACCESS CASE</text>
 
-    <text x="60" y="211" fill="#f6f7ef" font-size="72" font-weight="700" letter-spacing="-2.5">Healthcare</text>
-    <text x="60" y="292" fill="#f6f7ef" font-size="72" font-weight="700" letter-spacing="-2.5">Data Exchange</text>
-    <text x="64" y="355" fill="#d5e8ad" font-size="25">Consent. Requesting teams. Regional access.</text>
-    <text x="64" y="410" fill="#c0d3c5" font-size="20">Follow the decisions behind a patient-data request.</text>
+    <text x="60" y="211" fill="#f9fcff" font-size="72" font-weight="700" letter-spacing="-2.5">Healthcare</text>
+    <text x="60" y="292" fill="#f9fcff" font-size="72" font-weight="700" letter-spacing="-2.5">Data Exchange</text>
+    <text x="64" y="355" fill="#abdfff" font-size="25">Can the study team use Anna’s record?</text>
+    <text x="64" y="410" fill="#c7deeb" font-size="20">Review patient consent, field decisions and the case for a pilot.</text>
 
     <!-- A conceptual regional-access diagram, not a live status display. -->
-    <text x="887" y="150" fill="#d5e3d6" font-size="13" letter-spacing="2">REGIONAL ACCESS</text>
-    <path d="M942 252v34h168v-34M1026 286v35" fill="none" stroke="#8bab92" stroke-width="2"/>
-    <rect x="882" y="176" width="120" height="76" rx="14" fill="#eff3e7"/>
-    <rect x="1050" y="176" width="120" height="76" rx="14" fill="#eff3e7"/>
-    <text x="942" y="222" text-anchor="middle" fill="#254d39" font-size="23" font-weight="700">EU cell</text>
-    <text x="1110" y="222" text-anchor="middle" fill="#254d39" font-size="23" font-weight="700">US cell</text>
-    <circle cx="1026" cy="286" r="5" fill="#d5e8ad"/>
-    <rect x="906" y="321" width="240" height="86" rx="14" fill="#d5e8ad"/>
-    <path d="M931 353l8-3 8 3v9c0 8-8 12-8 12s-8-4-8-12Z" fill="none" stroke="#254d39" stroke-width="2" stroke-linejoin="round"/>
-    <text x="963" y="359" fill="#254d39" font-size="20" font-weight="700">Access check</text>
-    <text x="963" y="383" fill="#426148" font-size="15">Purpose + consent</text>
+    <text x="887" y="150" fill="#dbeaf5" font-size="13" letter-spacing="2">REGIONAL ACCESS</text>
+    <path d="M942 252v34h168v-34M1026 286v35" fill="none" stroke="#8ab6d0" stroke-width="2"/>
+    <rect x="882" y="176" width="120" height="76" rx="14" fill="#eef7ff"/>
+    <rect x="1050" y="176" width="120" height="76" rx="14" fill="#eef7ff"/>
+    <text x="942" y="222" text-anchor="middle" fill="#164262" font-size="23" font-weight="700">EU cell</text>
+    <text x="1110" y="222" text-anchor="middle" fill="#164262" font-size="23" font-weight="700">US cell</text>
+    <circle cx="1026" cy="286" r="5" fill="#abdfff"/>
+    <rect x="906" y="321" width="240" height="86" rx="14" fill="#abdfff"/>
+    <path d="M931 353l8-3 8 3v9c0 8-8 12-8 12s-8-4-8-12Z" fill="none" stroke="#164262" stroke-width="2" stroke-linejoin="round"/>
+    <text x="963" y="359" fill="#164262" font-size="20" font-weight="700">Access check</text>
+    <text x="963" y="383" fill="#345975" font-size="15">Purpose + consent</text>
 
     <!-- The public browser demo and reference backend are separate modes. -->
-    <path d="M64 477H1216" stroke="#50705b"/>
-    <rect x="64" y="510" width="8" height="64" rx="4" fill="#d5e8ad"/>
-    <text x="92" y="534" fill="#f6f7ef" font-size="24" font-weight="700">Guided synthetic demo</text>
-    <text x="92" y="567" fill="#c0d3c5" font-size="18">Browser-based walkthrough</text>
-    <path d="M565 510v64" stroke="#50705b"/>
-    <text x="606" y="534" fill="#f6f7ef" font-size="23" font-weight="700">FHIR · OPA · OPAL reference backend</text>
-    <text x="606" y="567" fill="#c0d3c5" font-size="18">Separate local development stack</text>
+    <path d="M64 477H1216" stroke="#53809a"/>
+    <rect x="64" y="510" width="8" height="64" rx="4" fill="#abdfff"/>
+    <text x="92" y="534" fill="#f9fcff" font-size="24" font-weight="700">Privacy desk and pilot costs</text>
+    <text x="92" y="567" fill="#c7deeb" font-size="18">Steward review and director decision</text>
+    <path d="M565 510v64" stroke="#53809a"/>
+    <text x="606" y="534" fill="#f9fcff" font-size="23" font-weight="700">Trace the selected consent trial</text>
+    <text x="606" y="567" fill="#c7deeb" font-size="18">Fields, gateway observations and published policy</text>
   </g>
 </svg>

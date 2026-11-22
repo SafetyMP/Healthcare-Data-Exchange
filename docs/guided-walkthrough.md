@@ -1,4 +1,6 @@
-# Guided walkthrough — November 14, 2026
+# Historical walkthrough design — November 14, 2026
+
+This document records the earlier guided forms. The public product now starts with the consent research case and follows the same request into a compact technical guide. [Current case and technical evidence](exchange-operations.md)
 
 The user requested an in-app guide for first-time visitors to the published
 synthetic demo. The existing forms and decisions remain the learning surface.
