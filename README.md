@@ -1,21 +1,16 @@
 # Healthcare Data Exchange
 
-**A research consent case for an exchange privacy steward and pilot sponsor, with a FHIR, OPA and OPAL reference backend.**
+Anna’s study roster has a record ID, but the coordinator still needs her birth date to check an age requirement. As the exchange’s data steward, you decide what the team can receive. Releasing extra fields exposes Anna’s information. Holding an authorized packet sends both teams back to the same row.
 
-[**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
+In the synthetic case, the desk checks the requester, purpose and consent, then compares the steward’s proposed field list with the fields the rule allows. Try sending the requested fields, preparing identifiers only, or holding the request. The receiver’s view shows what the study team could do with your decision. The team still determines eligibility. [Open the disclosure desk](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Inspect the packet calculation](web/src/components/clinical/case-evidence.tsx)
 
-**For exchange operators.** Anna has withdrawn research permission. The privacy officer needs to know what the European gateway will do when the same team asks again. Inspect the source and receiver records, decide what you can report, and try the other evidence file. The companion guide traces the same decision through the rule mirror and consent-data update. [Open the operator case](https://safetymp.github.io/Healthcare-Data-Exchange/#operator) · [Operator technical guide](https://safetymp.github.io/Healthcare-Data-Exchange/#operator-guide)
+**For exchange operators.** When Anna withdraws research permission, the privacy officer asks whether a particular gateway will deny the next matching request. Inspect the withdrawal, the published rule and two possible receiver records. [Open the operator case](https://safetymp.github.io/Healthcare-Data-Exchange/#operator) · [Operator technical guide](https://safetymp.github.io/Healthcare-Data-Exchange/#operator-guide)
 
 [![Pages checks and deployment](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml)
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
 [![Anna’s research access request and its consent decision at the privacy desk](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/)
-
-Healthcare data access depends on more than finding a record. The purpose of a
-request, the requesting team's permissions, the patient's consent, and regional
-restrictions can all change what is returned. This project makes those decisions
-visible and lets you explore how they interact.
 
 The public demo works without an account or backend setup. All patients and
 outcomes are synthetic. It is an educational and product-design reference, not a
@@ -24,11 +19,9 @@ certification.
 
 ## Try the privacy desk case
 
-A study coordinator needs a birth date to check one roster row. Inspect Anna Mueller’s synthetic EU request as the exchange steward. Prepare the requested fields, prepare identifiers only, or hold the packet and see what the receiving team can do. Replay Anna’s grant or withdrawal and trace the same decision through the technical guide. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/)
-
 Choose **Inspect this request’s field evidence** to carry the patient, requester, purpose and selected consent into the compact implementation guide. Compare the opposite consent without changing the patient’s tab preference, trim an authorized field preview, and inspect what a receiving gateway has yet to show. The stage and trial have shareable links. [Technical example](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/research/withheld/fields/selected) · [Operations guide](docs/exchange-operations.md)
 
-The exchange director can keep the manual desk, introduce a checklist, or test a policy check alongside staff decisions. The worksheet estimates how many reviewer minutes per eligible request would cover integration, training and support. Its starting values are illustrative. Before expanding, the steward checks whether a shadow recommendation would release an unauthorized field or hold an eligible request. The operations director then compares the time saved against the better manual or checklist baseline and decides whether the team could reuse that time. [Explore the pilot worksheet](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs)
+Before funding a rollout, the exchange director can compare the desk with a manual review or a checklist. Give both teams the same requests, including withdrawals. Have the steward score excess fields released and authorized requests held, then compare review minutes and escalations. The pilot worksheet uses illustrative inputs so the team can test what would justify the extra work. [Explore the pilot worksheet](https://safetymp.github.io/Healthcare-Data-Exchange/#pilot-costs)
 
 The audience comes from two operating perspectives. Maryland’s CRISP exchange describes the route from a research team’s request through governance review. AHRQ guides exchange evaluation teams to identify stakeholders and feasible measures before judging value. The demo assigns those decisions to a fictional steward and operations director. [CRISP research access](https://www.crisphealth.org/research/) · [AHRQ exchange evaluation guide](https://digital.ahrq.gov/health-information-exchange-hie-evaluation-toolkit)
 
