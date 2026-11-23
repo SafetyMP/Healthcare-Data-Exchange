@@ -19,6 +19,32 @@ async function checkResearch(page: Page, allowed: boolean) {
 }
 
 test.describe("Static synthetic demo", () => {
+  test("a first-time reviewer follows the treatment evidence and compares two different empty packets", async ({ page }) => {
+    await page.goto("./#research-request/treatment/granted/plan-hold");
+    await expect(page.getByRole("heading", { name: "Two teams checking one intake record" })).toBeVisible();
+    const intake = page.getByRole("region", { name: "Access request intake" });
+    const help = intake.locator("details").filter({ has: page.getByText("Walk me through this request", { exact: true }) });
+    await help.locator("summary").click();
+    await expect(help).toContainText("requesting team is in the US");
+    await help.getByRole("button", { name: "Next clue" }).click();
+    await expect(help).toContainText("Granted means she agreed to this use");
+    await help.getByRole("button", { name: "Next clue" }).click();
+    await expect(help).toContainText("The record ID points to Anna’s entry");
+    await help.getByRole("button", { name: "Explore packet choices" }).click();
+    await expect(intake.getByRole("button", { name: "Prepare requested fields", exact: true })).toBeFocused();
+    await expect(intake.getByRole("button", { name: "Hold for steward review" })).toHaveAttribute("aria-pressed", "true");
+    await intake.getByRole("button", { name: "Compare requested fields" }).click();
+    await expect(intake.getByRole("status")).toContainText("Steward paused the request");
+    await expect(intake.getByRole("status")).toContainText("Region check stopped the read (0 fields)");
+    await expect(page).toHaveURL(/treatment\/granted\/plan-requested$/);
+    await intake.getByRole("button", { name: "Replay Anna’s withdrawal" }).click();
+    await expect(intake.getByRole("status")).toContainText("Before the change · Region check stopped the read.");
+    await expect(intake.getByRole("status")).toContainText("Current result · Consent check stopped the read (0 fields)");
+    await intake.getByRole("radio", { name: "Research request", exact: true }).check();
+    await expect(intake.getByRole("status")).toHaveCount(0);
+    await expect(intake.getByRole("region", { name: "Coordinator’s handoff" })).toHaveCount(0);
+  });
+
   test("each desk request carries its team, consent and steward decision into the guide", async ({ page }) => {
     for (const [label, purpose, team, status] of [
       ["Research request", "research", "eu-visiting", 403],

@@ -2,6 +2,8 @@
 
 The EU visiting study team needs a birth date to review an age criterion on Anna Mueller’s synthetic roster row. Open the steward’s request file, compare the fields requested with Anna’s purpose-specific consent, then prepare the requested packet, prepare identifiers only or hold it for review. Try the same decision after a synthetic consent change. The US treatment and secondary-use files give the steward different requester and regional constraints. The operations director can compare this approach with manual review and a checklist. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
+For a first visit, open **Walk me through this request**. Follow the team’s location, Anna’s consent for the stated purpose and the fields the receiver needs. **Explore packet choices** takes you to the decision without making it for you. After a decision, **Change one thing and compare** keeps either consent or the packet fixed and shows why the outcome changed, even when both trials produced zero fields.
+
 | Selected request | With consent withheld | With consent granted |
 | --- | --- | --- |
 | Research, EU visiting team | Browser 403, no fields | Browser 200, five patient fields |

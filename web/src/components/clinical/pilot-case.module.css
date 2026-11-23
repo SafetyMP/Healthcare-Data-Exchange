@@ -189,3 +189,13 @@
 .framework p { line-height: 1.5; }
 .framework a { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: .18em; }
 @media (max-width: 700px) { .framework ol { grid-template-columns: 1fr; gap: .65rem; } }
+
+.readAlong { margin-top: .8rem; background: #fff; border: 1px solid #b7cdbf; border-radius: .4rem; }
+.readAlong summary { padding: .65rem .8rem; color: var(--primary); cursor: pointer; font-weight: 650; }
+.readAlongBody { padding: 0 .8rem .75rem; }
+.readAlongBody small { color: var(--muted-foreground); }
+.readAlongBody h3 { margin: .2rem 0; font-weight: 650; }
+.readAlongBody p { line-height: 1.5; }
+.readAlongBody button { margin: .6rem .5rem 0 0; border: 1px solid #6d8a7c; border-radius: .3rem; padding: .4rem .75rem; }
+.readAlongBody button:disabled { opacity: .55; }
+.compareActions { display: flex; flex-wrap: wrap; gap: .5rem; }

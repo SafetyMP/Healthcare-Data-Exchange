@@ -22,6 +22,27 @@ const purposeLabels: Record<DemoPurpose, string> = {
   derivative: "Derivative use",
 };
 
+const introductions = {
+  research: {
+    title: "One open row on the study roster", team: "Visiting study coordinator",
+    need: "Anna Mueller’s row on a study roster has a record ID. The coordinator needs her birth date to check an age requirement before the next screening review. Anna’s record is held in Europe.",
+    cost: "Without the date, the row stays open and both teams have to revisit it. Copying every field could disclose details the coordinator never asked for.",
+    task: "Reviews the age requirement. The study team decides whether Anna is eligible.",
+  },
+  treatment: {
+    title: "Two teams checking one intake record", team: "US home care team",
+    need: "A US care team is checking whether its intake record matches Anna Mueller’s European patient record. It asks for basic details such as her name and birth date before relying on the match.",
+    cost: "If the desk cannot prepare the information, the care team must find another way to confirm the match. A mistaken match could attach the information to the wrong chart.",
+    task: "Checks whether the two records belong to the same person.",
+  },
+  derivative: {
+    title: "A name missing from a second list", team: "US clinician team",
+    need: "A US clinician wants to reuse information collected during care to check a separate list. This is called secondary use. The clinician asks for an extract, a copy containing just Anna Mueller’s record ID, its type and her name.",
+    cost: "The name would help the clinician check a match. Including it also reveals who the record describes. The steward needs to review the request before preparing the extract.",
+    task: "Tries to match an extract to a named list for a secondary use.",
+  },
+};
+
 function subscribeRoute(listener: () => void) {
   window.addEventListener("hashchange", listener);
   return () => window.removeEventListener("hashchange", listener);
@@ -33,6 +54,7 @@ export function CasePage() {
   const [lastSelection, setLastSelection] = useState(0);
   const index = route.purpose ? comparisons.findIndex(item => item.purpose === route.purpose) : lastSelection;
   const scenario = comparisons[index];
+  const intro = introductions[scenario.purpose];
   const consent = useSyncExternalStore<boolean | null>(subscribeToConsent,
     () => getDemoConsent("patient-eu-001", scenario.purpose), () => null);
   const previousMode = useRef(false);
@@ -72,15 +94,15 @@ export function CasePage() {
     <div className={styles.caseBody}>
       <div hidden={route.technical}>
         <header className={styles.opening}>
-          <div><p className={styles.kicker}>Research operations · Synthetic case</p>
-            <h1>One open row on the study roster</h1>
-            <p>A visiting study team is checking a roster before its next screening review. Anna Mueller’s row has a record ID, but the coordinator needs a birth date to check the study’s age criterion. Anna’s demographic record sits with the European exchange.</p>
-            <p>The coordinator sends a request to the exchange’s privacy desk. If the packet is incomplete, the row stays open and both teams have to revisit it. Copying every demographic field would disclose details the coordinator never asked for.</p>
+          <div><p className={styles.kicker}>{purposeLabels[scenario.purpose]} · Synthetic case</p>
+            <h1>{intro.title}</h1>
+            <p>A health information exchange lets one organization request information held by another. Here you’re the data steward, the person who reviews what the receiving team needs and what can be shared.</p>
+            <p>{intro.need} {intro.cost}</p>
           </div>
-          <figure className={styles.handoffMap}><figcaption>How a roster request changes hands</figcaption><ol>
-            <li><FileText aria-hidden="true"/><div><strong>European record holder</strong><span>Maintains the patient record and makes it available through its regional gateway.</span></div></li>
+          <figure className={styles.handoffMap}><figcaption>How the request changes hands</figcaption><ol>
+            <li><FileText aria-hidden="true"/><div><strong>European record holder</strong><span>Keeps Anna’s record. Its gateway is the service that checks incoming requests.</span></div></li>
             <li><ClipboardList aria-hidden="true"/><div><strong>Exchange data steward</strong><span>Checks the team, purpose and patient choice before preparing a field list.</span></div></li>
-            <li><Users aria-hidden="true"/><div><strong>Visiting study coordinator</strong><span>Reviews the roster row. The study team makes the eligibility decision.</span></div></li>
+            <li><Users aria-hidden="true"/><div><strong>{intro.team}</strong><span>{intro.task}</span></div></li>
           </ol></figure>
         </header>
         {route.snapshot && consent !== null && consent !== route.granted && !route.technical && <aside className={styles.referenceCard}>
@@ -118,12 +140,12 @@ const plans: { key: PacketPlan; label: string }[] = [
   { key: "hold", label: "Hold for steward review" },
 ];
 const fieldLabels: Record<string, string> = { id: "Record ID", resourceType: "Resource type", birthDate: "Birth date", gender: "Gender", name: "Name" };
-type Handoff = { fields: string[]; explanation: string };
+type Handoff = { fields: string[]; finding: string; explanation: string };
 
 function handoffFor(scenario: typeof comparisons[number], consent: boolean, plan: PacketPlan): Handoff {
-  if (plan === "hold") return { fields: [], explanation: "The steward has paused this packet. The requesting team waits for clarification. No access check is needed for a hold." };
+  if (plan === "hold") return { fields: [], finding: "Steward paused the request", explanation: "The steward has paused this packet. The requesting team waits for clarification. No access check is needed for a hold." };
   const check = previewPatient("patient-eu-001", scenario.purpose, scenario.requester, consent);
-  if (!check.ok) return { fields: [], explanation: !consent
+  if (!check.ok) return { fields: [], finding: !consent ? "Consent check stopped the read" : "Region check stopped the read", explanation: !consent
     ? "Anna has withheld consent for this purpose. The team’s request stays pending. Only a new patient choice can change that consent input."
     : "The team and record are in different regions. Even with consent, this treatment request cannot supply the intake record through this route." };
   const allowed = Object.keys(check.data.patient as Record<string, unknown>);
@@ -134,7 +156,32 @@ function handoffFor(scenario: typeof comparisons[number], consent: boolean, plan
   else explanation = scenario.purpose === "research"
     ? "The coordinator could match the record ID, but the age check stays open. The roster still needs a permitted birth date."
     : "The clinician could reconcile a record ID. Without a name, confirming a match against the named list needs another route.";
-  return { fields, explanation };
+  return { fields, finding: fields.length ? "Packet ready to preview" : "Proposed packet exceeds the field allowance", explanation };
+}
+
+function EvidenceWalkthrough({ purpose, consent, onFinish }: {
+  purpose: DemoPurpose; consent: boolean | null; onFinish: () => void;
+}) {
+  const [step, setStep] = useState(0);
+  const teamRegion = purpose === "research" ? "Europe" : "the US";
+  const use = { research: "screening a study roster", treatment: "caring for Anna", derivative: "reusing a limited extract for a separate task" }[purpose];
+  const need = { research: "Which field would let the coordinator check the age requirement?", treatment: "Which details could the team compare with its local intake record?", derivative: "Which detail would help the clinician check a name on the other list?" }[purpose];
+  const clues = [
+    { title: "Where is the request coming from?", text: `Anna’s record is held in Europe. The requesting team is in ${teamRegion}. The exchange checks that route as well as the reason for asking.` },
+    { title: "What has Anna agreed to?", text: `This team is asking for information to use in ${use}. Consent is Anna’s permission to use her record for that reason. ${consent === null ? "Her choice is loading." : consent ? "Granted means she agreed to this use." : "Withheld means she has not given permission for this use."} She can make a different choice for another purpose.` },
+    { title: "What does the team actually need?", text: `A field is one piece of a record. The record ID points to Anna’s entry. The resource type says what kind of entry it is (“Patient”). Birth date is a separate field. ${need}` },
+  ];
+  return <details className={styles.readAlong}>
+    <summary>Walk me through this request</summary>
+    <div className={styles.readAlongBody}>
+      <div aria-live="polite" aria-atomic="true"><small>Evidence {step + 1} of {clues.length}</small>
+        <h3>{clues[step].title}</h3><p>{clues[step].text}</p>
+      </div>
+      <div><button type="button" disabled={step === 0} onClick={() => setStep(step - 1)}>Back</button>
+        {step < clues.length - 1 ? <button type="button" onClick={() => setStep(step + 1)}>Next clue</button>
+          : <button type="button" onClick={onFinish}>Explore packet choices</button>}</div>
+    </div>
+  </details>;
 }
 
 function ResearchRequest({ selection, consent, plan, onChange, evidenceHref }: {
@@ -143,20 +190,25 @@ function ResearchRequest({ selection, consent, plan, onChange, evidenceHref }: {
 }) {
   const scenario = comparisons[selection];
   const patient = DEMO_PATIENTS.find(item => item.id === "patient-eu-001");
-  const [before, setBefore] = useState<{ granted: boolean; count: number } | null>(null);
+  const firstChoice = useRef<HTMLButtonElement>(null);
+  const [comparison, setComparison] = useState<{ plan: PacketPlan; consent: boolean; message: string } | null>(null);
   if (!patient) return null;
   const team = scenario.requester === "us-clinician" ? "US clinician team" : requesterPresets.find(item => item.value === scenario.requester)?.label;
   const receipt = plan && consent !== null ? handoffFor(scenario, consent, plan) : null;
   function decide(next: PacketPlan) {
     if (consent === null) return;
-    setBefore(null);
+    if (receipt && plan && plan !== next) {
+      const label = plans.find(item => item.key === plan)?.label;
+      setComparison({ plan: next, consent, message: `Previous choice · ${label}. ${receipt.finding} · ${receipt.fields.length} fields prepared. Anna’s consent stayed the same.` });
+    } else setComparison(null);
     if (next !== "hold") simulatePatient("patient-eu-001", scenario.purpose, scenario.requester);
     onChange(selection, consent, next);
   }
   function replay() {
     if (consent === null || !plan || !receipt) return;
     if (!simulateConsent("patient-eu-001", scenario.purpose, !consent).ok) return;
-    setBefore({ granted: consent, count: receipt.fields.length });
+    const nextReceipt = handoffFor(scenario, !consent, plan);
+    setComparison({ plan, consent: !consent, message: `Same request and steward decision. ${consent ? "Granted" : "Withheld"} consent prepared ${receipt.fields.length} fields. ${!consent ? "Granted" : "Withheld"} consent prepares ${nextReceipt.fields.length}. Before the change · ${receipt.finding}.` });
     if (plan !== "hold") simulatePatient("patient-eu-001", scenario.purpose, scenario.requester);
     onChange(selection, !consent, plan);
   }
@@ -164,7 +216,7 @@ function ResearchRequest({ selection, consent, plan, onChange, evidenceHref }: {
     resetSelectedPatient();
     resetAccessContext();
     resetDemo();
-    setBefore(null);
+    setComparison(null);
     onChange(0);
   }
   return <section id="research-request" tabIndex={-1} className={styles.case} aria-label="Access request intake">
@@ -180,21 +232,29 @@ function ResearchRequest({ selection, consent, plan, onChange, evidenceHref }: {
         <div><dt>Fields requested</dt><dd>{requestedFields[scenario.purpose].map(field => fieldLabels[field]).join(" · ")}</dd></div>
         <div><dt>Purpose consent</dt><dd>{consent === null ? "Loading preference" : consent ? "Granted" : "Withheld"}</dd></div>
       </dl>
+      <EvidenceWalkthrough purpose={scenario.purpose} consent={consent} onFinish={() => firstChoice.current?.focus()}/>
     </div>
     <div className={styles.request}>
       <h3>What would you prepare?</h3>
-      <p>Review the request alongside Anna’s recorded choice for this purpose. Propose a packet or pause the handoff. The identifiers-only packet contains the record ID and resource type.</p>
-      <div className={styles.packetActions} role="group" aria-label="Steward decision">{plans.map(item => <button key={item.key} type="button" disabled={consent === null} aria-pressed={plan === item.key} onClick={() => decide(item.key)}>{item.label}</button>)}</div>
+      <p>A packet is the set of fields you propose to share. Try the team’s full request, just the record ID and type, or a hold that pauses work before a read. Each choice previews what the receiving team could do.</p>
+      <div className={styles.packetActions} role="group" aria-label="Steward decision">{plans.map(item => <button key={item.key} ref={item.key === "requested" ? firstChoice : undefined} type="button" disabled={consent === null} aria-pressed={plan === item.key} onClick={() => decide(item.key)}>{item.label}</button>)}</div>
       {receipt && <section className={styles.packetResult} aria-label={scenario.receiver} aria-live="polite" aria-atomic="true">
-        <p className={styles.kicker}>Local packet preview</p><h3>{scenario.receiver}</h3><strong>{receipt.fields.length} fields prepared</strong>
+        <p className={styles.kicker}>Local packet preview</p><h3>{scenario.receiver}</h3><p>{receipt.finding}</p><strong>{receipt.fields.length} fields prepared</strong>
         {receipt.fields.length > 0 && <p>{receipt.fields.map(field => fieldLabels[field]).join(" · ")}</p>}<p>{receipt.explanation}</p>
       </section>}
       <div className={styles.requestActions}><a href={evidenceHref}>Inspect this request’s field evidence</a></div>
     </div>
-    {receipt && <section className={styles.consentEvent}><div><h3>Replay a patient consent event</h3>
-      <p>Keep your packet choice and replay Anna’s {consent ? "withdrawal" : "grant"} for this purpose. The preview stays in this browser.</p></div>
-      <button type="button" className={styles.eventButton} onClick={replay}>{consent ? "Replay Anna’s withdrawal" : "Replay Anna’s grant"}</button>
-      {before && <p role="status">Same request and steward decision. {before.granted ? "Granted" : "Withheld"} consent prepared {before.count} fields. {consent ? "Granted" : "Withheld"} consent prepares {receipt.fields.length}.</p>}
+    {receipt && <section className={styles.consentEvent} aria-label="Compare one change">
+      <div><h3>Change one thing and compare</h3>
+        <p>{plan === "hold" ? "Keep Anna’s choice and try the requested packet. What happens when the desk actually checks the request?"
+          : !consent ? "Keep the team and packet fixed. Try a scenario where Anna grants permission, then look again at what the team could use."
+          : scenario.purpose === "treatment" ? "Keep the team and packet fixed. Try a scenario where Anna withdraws permission and compare the reasons for the result."
+          : "Keep Anna’s consent fixed and change the packet size. Which part of the team’s task can it complete?"}</p></div>
+      <div className={styles.compareActions}>
+        {(plan === "hold" || (consent && scenario.purpose !== "treatment")) && <button type="button" className={styles.eventButton} onClick={() => decide(plan === "requested" ? "identifiers" : "requested")}>{plan === "requested" ? "Compare identifiers only" : "Compare requested fields"}</button>}
+        <button type="button" className={styles.eventButton} onClick={replay}>{consent ? "Replay Anna’s withdrawal" : "Replay Anna’s grant"}</button>
+      </div>
+      {comparison && comparison.plan === plan && comparison.consent === consent && <p role="status">{comparison.message} <strong>Current result · {receipt.finding} ({receipt.fields.length} fields).</strong></p>}
     </section>}
     <details className={styles.session}><summary>Session settings and reset</summary>
       <p>The request link carries the selected case and packet decision. Anna’s synthetic consent and activity are local to this tab. Reset restores the initial preferences and clears the decision.</p>
@@ -264,7 +324,7 @@ function PilotWorksheet({ scenario }: { scenario: string }) {
         <details><summary>How exchange teams evaluate this kind of work</summary>
           <p>Maryland’s CRISP exchange describes investigators applying for research use and separate committees reviewing use cases. AHRQ’s exchange evaluation guide asks teams to identify stakeholders, objectives and feasible measures. Those sources informed the roles and pilot criteria in this fictional case. <a href="https://www.crisphealth.org/research/">CRISP research access</a> · <a href="https://digital.ahrq.gov/health-information-exchange-hie-evaluation-toolkit">AHRQ exchange evaluation guide</a></p>
         </details>
-        <p>HL7 describes the Patient resource as demographic and administrative data. The study roster and age check are fictional uses of those fields. <a href="https://hl7.org/fhir/R4/patient.html">FHIR Patient</a> · ONC describes recording and maintaining patient choices. HL7’s FHIR R4 Consent model represents recipient, purpose, and policy context. The EU and US decisions above follow this project’s synthetic rules. <a href="https://healthit.gov/privacy-security/patient-consent-electronic-health-information-exchange/">ONC consent guidance</a> · <a href="https://hl7.org/fhir/R4/consent-definitions.html">HL7 Consent definitions</a></p>
+        <p>HL7 describes the Patient resource as demographic and administrative data. The study roster and age check are fictional uses of those fields. <a href="https://hl7.org/fhir/R4/patient.html">FHIR Patient</a> · ONC explains how organizations exchange information electronically and maintain patient choices. <a href="https://healthit.gov/health-it-basics/hie/">What is health information exchange?</a> HL7’s FHIR R4 Consent model represents recipient, purpose, and policy context. The EU and US decisions above follow this project’s synthetic rules. <a href="https://healthit.gov/privacy-security/patient-consent-electronic-health-information-exchange/">ONC consent guidance</a> · <a href="https://hl7.org/fhir/R4/consent-definitions.html">HL7 Consent definitions</a></p>
       </div>
     </section>
   );
