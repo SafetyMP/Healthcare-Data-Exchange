@@ -42,6 +42,12 @@ The audience comes from two operating perspectives. Maryland’s CRISP exchange 
 | Investigate FHIR, policy enforcement, or consent distribution | [Reference backend setup](#run-the-reference-backend), [architecture](docs/architecture/overview.md) |
 | Contribute with a coding agent | [Contributing](CONTRIBUTING.md), then [AGENTS.md](AGENTS.md) |
 
+## Trace the disclosure decision in code
+
+1. **Reconstruct the steward’s packet.** The browser evaluates a synthetic patient, requester, purpose and consent choice. The field manifest then checks whether every proposed field is available for the selected plan. Holding the request stages zero fields. The case never transmits the packet. [Browser access model](web/src/lib/demo.ts) · [Packet projection and guide](web/src/components/clinical/case-evidence.tsx) · [Steward decision tests](web/tests/e2e/demo.spec.ts)
+2. **Follow a connected patient read.** The Go gateway resolves the caller, asks Open Policy Agent (OPA) for a decision, and on an allowed read fetches the patient from the routed FHIR store. It filters the response to the fields specified by the policy and records the result. The study team still assesses eligibility. [Gateway read handler](services/gateway/internal/handlers/handlers.go) · [Canonical access rule](policy/authz.rego) · [Policy tests](policy/authz_test.rego)
+3. **Trace a withdrawal at the receiver.** In the separate operator case the patient and request stay fixed while the available gateway observation changes. Its guide follows the published rule, the consent service’s separate OPAL data update and the result observed at one gateway. The two receiver files are fictional. The local Compose probe exercises a research read against a running gateway. [Operator evidence model](web/src/components/clinical/operator-model.ts) · [Consent update publisher](services/consent-service/chex_consent/opal_publish.py) · [Running gateway probe](scripts/demo.sh)
+
 ## Two execution modes
 
 | | Browser demo on GitHub Pages | Local reference backend |
