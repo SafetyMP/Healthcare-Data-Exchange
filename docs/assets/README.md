@@ -5,7 +5,7 @@ All patient examples are synthetic.
 
 ## Current social preview
 
-The clinical blue card introduces Anna’s research request, the sponsor’s pilot decision and its selected-case technical evidence. [Business case desktop](research-request-desktop.jpg) · [Mobile](research-request-mobile.jpg) · [Full business case](research-request-full.jpg) · [Technical trial](research-request-technical.jpg)
+The study roster case shows the record holder, exchange steward and receiving coordinator. The technical guide traces the selected packet and consent trial. [Business case desktop](research-request-desktop.jpg) · [Mobile](research-request-mobile.jpg) · [Full business case](research-request-full.jpg) · [Technical trial](research-request-technical.jpg)
 
 | File | Purpose |
 |------|---------|

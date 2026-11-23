@@ -4,6 +4,8 @@
 
 [**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
+**For exchange operators.** Anna has withdrawn research permission. The privacy officer needs to know what the European gateway will do when the same team asks again. Inspect the source and receiver records, decide what you can report, and try the other evidence file. The companion guide traces the same decision through the rule mirror and consent-data update. [Open the operator case](https://safetymp.github.io/Healthcare-Data-Exchange/#operator) · [Operator technical guide](https://safetymp.github.io/Healthcare-Data-Exchange/#operator-guide)
+
 [![Pages checks and deployment](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml)
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
@@ -22,7 +24,7 @@ certification.
 
 ## Try the privacy desk case
 
-A study coordinator asks for Anna Mueller’s synthetic EU record. Predict whether the exchange should deny, allow or limit access. Compare research, US treatment and US secondary use. Replay the patient’s grant or withdrawal and decide which claims the browser receipt supports. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+A study coordinator needs a birth date to check one roster row. Inspect Anna Mueller’s synthetic EU request as the exchange steward. Prepare the requested fields, prepare identifiers only, or hold the packet and see what the receiving team can do. Replay Anna’s grant or withdrawal and trace the same decision through the technical guide. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
 
 Choose **Inspect this request’s field evidence** to carry the patient, requester, purpose and selected consent into the compact implementation guide. Compare the opposite consent without changing the patient’s tab preference, trim an authorized field preview, and inspect what a receiving gateway has yet to show. The stage and trial have shareable links. [Technical example](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/research/withheld/fields/selected) · [Operations guide](docs/exchange-operations.md)
 
@@ -39,6 +41,12 @@ The audience comes from two operating perspectives. Maryland’s CRISP exchange 
 | Run or change the frontend | [Web workspace guide](web/README.md) |
 | Investigate FHIR, policy enforcement, or consent distribution | [Reference backend setup](#run-the-reference-backend), [architecture](docs/architecture/overview.md) |
 | Contribute with a coding agent | [Contributing](CONTRIBUTING.md), then [AGENTS.md](AGENTS.md) |
+
+## Trace the disclosure decision in code
+
+1. **Reconstruct the steward’s packet.** The browser evaluates a synthetic patient, requester, purpose and consent choice. The field manifest then checks whether every proposed field is available for the selected plan. Holding the request stages zero fields. The case never transmits the packet. [Browser access model](web/src/lib/demo.ts) · [Packet projection and guide](web/src/components/clinical/case-evidence.tsx) · [Steward decision tests](web/tests/e2e/demo.spec.ts)
+2. **Follow a connected patient read.** The Go gateway resolves the caller, asks Open Policy Agent (OPA) for a decision, and on an allowed read fetches the patient from the routed FHIR store. It filters the response to the fields specified by the policy and records the result. The study team still assesses eligibility. [Gateway read handler](services/gateway/internal/handlers/handlers.go) · [Canonical access rule](policy/authz.rego) · [Policy tests](policy/authz_test.rego)
+3. **Trace a withdrawal at the receiver.** In the separate operator case the patient and request stay fixed while the available gateway observation changes. Its guide follows the published rule, the consent service’s separate OPAL data update and the result observed at one gateway. The two receiver files are fictional. The local Compose probe exercises a research read against a running gateway. [Operator evidence model](web/src/components/clinical/operator-model.ts) · [Consent update publisher](services/consent-service/chex_consent/opal_publish.py) · [Running gateway probe](scripts/demo.sh)
 
 ## Two execution modes
 

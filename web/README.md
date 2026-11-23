@@ -4,6 +4,8 @@
 
 The public case follows a study coordinator’s request for Anna Mueller’s record. The steward compares purpose-specific consent and field decisions. The exchange operations director compares pilot cost and capacity. The compact technical view keeps the selected request, consent trial and implementation stage in its link.
 
+The operator case asks what the privacy officer can say after Anna withdraws research permission. Compare two receiver files for the same request. Follow the selected file and decision into the technical guide, then return or reload its link to resume. All receiver evidence is synthetic. [Operator case](https://safetymp.github.io/Healthcare-Data-Exchange/#operator) · [Operator guide](https://safetymp.github.io/Healthcare-Data-Exchange/#operator-guide)
+
 The existing stack is **Next.js 16.4.6, React, TypeScript, and Tailwind CSS**. Use
 **Node.js 22** and **npm 10.9.2–10.x**, matching [package.json](package.json).
 

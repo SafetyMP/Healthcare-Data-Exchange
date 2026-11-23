@@ -1,6 +1,8 @@
 # Research consent and exchange operations
 
-A study coordinator asks an exchange data steward to use Anna Mueller’s synthetic EU record. The case begins with the patient’s withheld research consent. Predict the outcome, check the access request and replay Anna’s grant or withdrawal. The steward can also select a US treatment request or US secondary use. The operations director decides whether a separately funded shadow pilot is justified. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+The EU visiting study team needs a birth date to review an age criterion on Anna Mueller’s synthetic roster row. Open the steward’s request file, compare the fields requested with Anna’s purpose-specific consent, then prepare the requested packet, prepare identifiers only or hold it for review. Try the same decision after a synthetic consent change. The US treatment and secondary-use files give the steward different requester and regional constraints. The operations director can compare this approach with manual review and a checklist. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+
+For a first visit, open **Walk me through this request**. Follow the team’s location, Anna’s consent for the stated purpose and the fields the receiver needs. **Explore packet choices** takes you to the decision without making it for you. After a decision, **Change one thing and compare** keeps either consent or the packet fixed and shows why the outcome changed, even when both trials produced zero fields.
 
 | Selected request | With consent withheld | With consent granted |
 | --- | --- | --- |
@@ -10,7 +12,7 @@ A study coordinator asks an exchange data steward to use Anna Mueller’s synthe
 
 ## Inspect the same request
 
-Choose **Inspect this request’s field evidence**. The link carries the same patient, purpose, credential profile and selected consent. Compare the opposite consent trial, then select a stage. For a granted derivative request, trim the requested name and stage only the two authorized fields. Switching to the withheld trial clears the synthetic preview. Trial comparisons leave the patient’s recorded choice intact. Each stage links to sources and has a permalink. Use the return link to resume that case. [Derivative field trial](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/derivative/granted/fields/selected) · [Browser fixture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts)
+Choose **Inspect this request’s field evidence**. The link carries the same patient, purpose, credential profile and selected consent, plus the steward’s packet decision when one has been made. Compare the opposite consent trial, then select a stage. The three-field research request can return a local packet with the ID, resource type and birth date even when the rule allows five fields. For a granted derivative request, trim the requested name and stage only the two authorized fields. Switching to the withheld trial clears the synthetic preview. Trial comparisons leave the patient’s recorded choice intact. Each stage links to sources and has a permalink. Use the return link to resume that case. [Derivative field trial](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/derivative/granted/fields/selected) · [Browser fixture](https://github.com/SafetyMP/Healthcare-Data-Exchange/blob/main/web/src/lib/demo.ts)
 
 ## Evaluate the desk
 

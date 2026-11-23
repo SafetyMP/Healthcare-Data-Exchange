@@ -9,7 +9,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   workers: process.env.CI ? 4 : undefined,
-  testIgnore: isDemo ? undefined : ["**/demo.spec.ts", "**/live-review.spec.ts", "**/walkthrough.spec.ts"],
+  testIgnore: isDemo ? undefined : ["**/demo.spec.ts", "**/operator.spec.ts", "**/live-review.spec.ts", "**/walkthrough.spec.ts"],
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
