@@ -10,7 +10,7 @@
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)
 
-[![Anna’s research access request and its consent decision at the privacy desk](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+[![Anna’s research access request and its consent decision at the privacy desk](docs/assets/research-request-desktop.jpg)](https://safetymp.github.io/Healthcare-Data-Exchange/)
 
 Healthcare data access depends on more than finding a record. The purpose of a
 request, the requesting team's permissions, the patient's consent, and regional
@@ -24,7 +24,7 @@ certification.
 
 ## Try the privacy desk case
 
-A study coordinator needs a birth date to check one roster row. Inspect Anna Mueller’s synthetic EU request as the exchange steward. Prepare the requested fields, prepare identifiers only, or hold the packet and see what the receiving team can do. Replay Anna’s grant or withdrawal and trace the same decision through the technical guide. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/#research-request)
+A study coordinator needs a birth date to check one roster row. Inspect Anna Mueller’s synthetic EU request as the exchange steward. Prepare the requested fields, prepare identifiers only, or hold the packet and see what the receiving team can do. Replay Anna’s grant or withdrawal and trace the same decision through the technical guide. [Open the privacy desk](https://safetymp.github.io/Healthcare-Data-Exchange/)
 
 Choose **Inspect this request’s field evidence** to carry the patient, requester, purpose and selected consent into the compact implementation guide. Compare the opposite consent without changing the patient’s tab preference, trim an authorized field preview, and inspect what a receiving gateway has yet to show. The stage and trial have shareable links. [Technical example](https://safetymp.github.io/Healthcare-Data-Exchange/#technical/research/withheld/fields/selected) · [Operations guide](docs/exchange-operations.md)
 
