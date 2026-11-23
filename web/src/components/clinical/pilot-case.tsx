@@ -9,6 +9,8 @@ import { resetSelectedPatient } from "./patient-selector";
 import { requesterPresets, resetAccessContext } from "./use-access-context";
 import { ArrowRightLeft, ClipboardList, FileText, Users } from "lucide-react";
 import styles from "./pilot-case.module.css";
+import { OperatorCasePage } from "./operator-case";
+import { parseOperatorRoute } from "./operator-model";
 
 const comparisons = [
   { label: "Research request", id: "DX-105", purpose: "research", requester: "eu-visiting", scope: "EU visiting team", receiver: "Coordinator’s handoff", detail: "The study coordinator asks for the record ID and resource type to match a roster row, plus birth date to check the study’s age criterion." },
@@ -50,6 +52,12 @@ function subscribeRoute(listener: () => void) {
 
 export function CasePage() {
   const hash = useSyncExternalStore(subscribeRoute, () => window.location.hash, () => "");
+  const operator = parseOperatorRoute(hash);
+  if (operator) return <OperatorCasePage route={operator} />;
+  return <DisclosureCase hash={hash} />;
+}
+
+function DisclosureCase({ hash }: { hash: string }) {
   const route = parseCaseRoute(hash);
   const [lastSelection, setLastSelection] = useState(0);
   const index = route.purpose ? comparisons.findIndex(item => item.purpose === route.purpose) : lastSelection;
@@ -90,7 +98,8 @@ export function CasePage() {
     <header className={styles.masthead}><span><ArrowRightLeft aria-hidden="true" /> Healthcare Data Exchange</span>
       <nav aria-label="Case sections"><a href={caseHash("research-request", scenario.purpose, route.technical ? route.granted : consent ?? undefined, route.technical ? route.plan : plan)}>Privacy desk</a>
         {!route.technical && <a href={caseHash("pilot-costs", scenario.purpose, consent ?? undefined, plan)}>Pilot costs</a>}
-        <a href={route.technical ? caseLink(scenario.purpose, route.granted, route.stage, route.trial, route.mirror, route.plan) : toEvidence("consent")}>Technical evidence</a></nav></header>
+        <a href={route.technical ? caseLink(scenario.purpose, route.granted, route.stage, route.trial, route.mirror, route.plan) : toEvidence("consent")}>Technical evidence</a>
+        <a href="#operator">Exchange operator case</a></nav></header>
     <div className={styles.caseBody}>
       <div hidden={route.technical}>
         <header className={styles.opening}>

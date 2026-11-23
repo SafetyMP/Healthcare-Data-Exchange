@@ -4,6 +4,8 @@
 
 [**Open the live demo →**](https://safetymp.github.io/Healthcare-Data-Exchange/) · [Frontend setup](web/README.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
+**For exchange operators.** Anna has withdrawn research permission. The privacy officer needs to know what the European gateway will do when the same team asks again. Inspect the source and receiver records, decide what you can report, and try the other evidence file. The companion guide traces the same decision through the rule mirror and consent-data update. [Open the operator case](https://safetymp.github.io/Healthcare-Data-Exchange/#operator) · [Operator technical guide](https://safetymp.github.io/Healthcare-Data-Exchange/#operator-guide)
+
 [![Pages checks and deployment](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/pages.yml)
 [![Reference backend checks](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/portfolio-verify.yml)
 [![CodeQL](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml/badge.svg)](https://github.com/SafetyMP/Healthcare-Data-Exchange/actions/workflows/codeql.yml)

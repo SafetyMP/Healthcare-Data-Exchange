@@ -14,7 +14,7 @@ const publication = {
   pointerUrl: "https://github.com/SafetyMP/healthcare-policy/blob/b544d2f377e491eb0d43d2fcdb4078743e9fc94c/.harness/canonical-pointer",
 };
 
-function PublicationCheck() {
+export function PublicationCheck() {
   const [candidate, setCandidate] = useState(publication.mirror);
   const [result, setResult] = useState("");
   function compare() {
